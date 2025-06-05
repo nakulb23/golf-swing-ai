@@ -1,0 +1,563 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXContainerItemProxy section */
+		CFB40C562DF20679005A1B24 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = CFB40C3D2DF20678005A1B24 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = CFB40C442DF20678005A1B24;
+			remoteInfo = "Golf Swing AI";
+		};
+		CFB40C602DF20679005A1B24 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = CFB40C3D2DF20678005A1B24 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = CFB40C442DF20678005A1B24;
+			remoteInfo = "Golf Swing AI";
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		CFB40C452DF20678005A1B24 /* Golf Swing AI.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Golf Swing AI.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		CFB40C552DF20679005A1B24 /* Golf Swing AITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Golf Swing AITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		CFB40C5F2DF20679005A1B24 /* Golf Swing AIUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Golf Swing AIUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		CFB40C472DF20678005A1B24 /* Golf Swing AI */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = "Golf Swing AI";
+			sourceTree = "<group>";
+		};
+		CFB40C582DF20679005A1B24 /* Golf Swing AITests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = "Golf Swing AITests";
+			sourceTree = "<group>";
+		};
+		CFB40C622DF20679005A1B24 /* Golf Swing AIUITests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = "Golf Swing AIUITests";
+			sourceTree = "<group>";
+		};
+/* End PBXFileSystemSynchronizedRootGroup section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		CFB40C422DF20678005A1B24 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CFB40C522DF20679005A1B24 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CFB40C5C2DF20679005A1B24 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		CFB40C3C2DF20678005A1B24 = {
+			isa = PBXGroup;
+			children = (
+				CFB40C472DF20678005A1B24 /* Golf Swing AI */,
+				CFB40C582DF20679005A1B24 /* Golf Swing AITests */,
+				CFB40C622DF20679005A1B24 /* Golf Swing AIUITests */,
+				CFB40C462DF20678005A1B24 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		CFB40C462DF20678005A1B24 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				CFB40C452DF20678005A1B24 /* Golf Swing AI.app */,
+				CFB40C552DF20679005A1B24 /* Golf Swing AITests.xctest */,
+				CFB40C5F2DF20679005A1B24 /* Golf Swing AIUITests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		CFB40C442DF20678005A1B24 /* Golf Swing AI */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = CFB40C692DF20679005A1B24 /* Build configuration list for PBXNativeTarget "Golf Swing AI" */;
+			buildPhases = (
+				CFB40C412DF20678005A1B24 /* Sources */,
+				CFB40C422DF20678005A1B24 /* Frameworks */,
+				CFB40C432DF20678005A1B24 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				CFB40C472DF20678005A1B24 /* Golf Swing AI */,
+			);
+			name = "Golf Swing AI";
+			packageProductDependencies = (
+			);
+			productName = "Golf Swing AI";
+			productReference = CFB40C452DF20678005A1B24 /* Golf Swing AI.app */;
+			productType = "com.apple.product-type.application";
+		};
+		CFB40C542DF20679005A1B24 /* Golf Swing AITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = CFB40C6C2DF20679005A1B24 /* Build configuration list for PBXNativeTarget "Golf Swing AITests" */;
+			buildPhases = (
+				CFB40C512DF20679005A1B24 /* Sources */,
+				CFB40C522DF20679005A1B24 /* Frameworks */,
+				CFB40C532DF20679005A1B24 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				CFB40C572DF20679005A1B24 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				CFB40C582DF20679005A1B24 /* Golf Swing AITests */,
+			);
+			name = "Golf Swing AITests";
+			packageProductDependencies = (
+			);
+			productName = "Golf Swing AITests";
+			productReference = CFB40C552DF20679005A1B24 /* Golf Swing AITests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		CFB40C5E2DF20679005A1B24 /* Golf Swing AIUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = CFB40C6F2DF20679005A1B24 /* Build configuration list for PBXNativeTarget "Golf Swing AIUITests" */;
+			buildPhases = (
+				CFB40C5B2DF20679005A1B24 /* Sources */,
+				CFB40C5C2DF20679005A1B24 /* Frameworks */,
+				CFB40C5D2DF20679005A1B24 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				CFB40C612DF20679005A1B24 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				CFB40C622DF20679005A1B24 /* Golf Swing AIUITests */,
+			);
+			name = "Golf Swing AIUITests";
+			packageProductDependencies = (
+			);
+			productName = "Golf Swing AIUITests";
+			productReference = CFB40C5F2DF20679005A1B24 /* Golf Swing AIUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		CFB40C3D2DF20678005A1B24 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1620;
+				LastUpgradeCheck = 1620;
+				TargetAttributes = {
+					CFB40C442DF20678005A1B24 = {
+						CreatedOnToolsVersion = 16.2;
+					};
+					CFB40C542DF20679005A1B24 = {
+						CreatedOnToolsVersion = 16.2;
+						TestTargetID = CFB40C442DF20678005A1B24;
+					};
+					CFB40C5E2DF20679005A1B24 = {
+						CreatedOnToolsVersion = 16.2;
+						TestTargetID = CFB40C442DF20678005A1B24;
+					};
+				};
+			};
+			buildConfigurationList = CFB40C402DF20678005A1B24 /* Build configuration list for PBXProject "Golf Swing AI" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = CFB40C3C2DF20678005A1B24;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = CFB40C462DF20678005A1B24 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				CFB40C442DF20678005A1B24 /* Golf Swing AI */,
+				CFB40C542DF20679005A1B24 /* Golf Swing AITests */,
+				CFB40C5E2DF20679005A1B24 /* Golf Swing AIUITests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		CFB40C432DF20678005A1B24 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CFB40C532DF20679005A1B24 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CFB40C5D2DF20679005A1B24 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		CFB40C412DF20678005A1B24 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CFB40C512DF20679005A1B24 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		CFB40C5B2DF20679005A1B24 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		CFB40C572DF20679005A1B24 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = CFB40C442DF20678005A1B24 /* Golf Swing AI */;
+			targetProxy = CFB40C562DF20679005A1B24 /* PBXContainerItemProxy */;
+		};
+		CFB40C612DF20679005A1B24 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = CFB40C442DF20678005A1B24 /* Golf Swing AI */;
+			targetProxy = CFB40C602DF20679005A1B24 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		CFB40C672DF20679005A1B24 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.2;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		CFB40C682DF20679005A1B24 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.2;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		CFB40C6A2DF20679005A1B24 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "\"Golf Swing AI/Preview Content\"";
+				DEVELOPMENT_TEAM = 9627R7543L;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "nakulb.Golf-Swing-AI";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		CFB40C6B2DF20679005A1B24 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "\"Golf Swing AI/Preview Content\"";
+				DEVELOPMENT_TEAM = 9627R7543L;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "nakulb.Golf-Swing-AI";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		CFB40C6D2DF20679005A1B24 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 9627R7543L;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.2;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "nakulb.Golf-Swing-AITests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Golf Swing AI.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Golf Swing AI";
+			};
+			name = Debug;
+		};
+		CFB40C6E2DF20679005A1B24 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 9627R7543L;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.2;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "nakulb.Golf-Swing-AITests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Golf Swing AI.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Golf Swing AI";
+			};
+			name = Release;
+		};
+		CFB40C702DF20679005A1B24 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 9627R7543L;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "nakulb.Golf-Swing-AIUITests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = "Golf Swing AI";
+			};
+			name = Debug;
+		};
+		CFB40C712DF20679005A1B24 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 9627R7543L;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "nakulb.Golf-Swing-AIUITests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = "Golf Swing AI";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		CFB40C402DF20678005A1B24 /* Build configuration list for PBXProject "Golf Swing AI" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				CFB40C672DF20679005A1B24 /* Debug */,
+				CFB40C682DF20679005A1B24 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		CFB40C692DF20679005A1B24 /* Build configuration list for PBXNativeTarget "Golf Swing AI" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				CFB40C6A2DF20679005A1B24 /* Debug */,
+				CFB40C6B2DF20679005A1B24 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		CFB40C6C2DF20679005A1B24 /* Build configuration list for PBXNativeTarget "Golf Swing AITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				CFB40C6D2DF20679005A1B24 /* Debug */,
+				CFB40C6E2DF20679005A1B24 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		CFB40C6F2DF20679005A1B24 /* Build configuration list for PBXNativeTarget "Golf Swing AIUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				CFB40C702DF20679005A1B24 /* Debug */,
+				CFB40C712DF20679005A1B24 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = CFB40C3D2DF20678005A1B24 /* Project object */;
+}
