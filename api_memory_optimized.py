@@ -116,10 +116,21 @@ async def predict_swing(file: UploadFile = File(...)):
     try:
         # Load predictor only when needed
         predictor = get_swing_predictor()
+        
+        print(f"🔍 Processing video: {tmp_path}")
         result = predictor(tmp_path)
+        print(f"🎯 Prediction result: {result}")
         
         if result is None:
-            raise HTTPException(status_code=400, detail="Failed to process video")
+            print("❌ Predictor returned None")
+            raise HTTPException(status_code=400, detail="Failed to process video - no result returned")
+        
+        # Validate result structure
+        required_keys = ['predicted_label', 'confidence', 'confidence_gap', 'all_probabilities', 'physics_features']
+        missing_keys = [key for key in required_keys if key not in result]
+        if missing_keys:
+            print(f"❌ Missing keys in result: {missing_keys}")
+            raise HTTPException(status_code=500, detail=f"Invalid prediction result: missing {missing_keys}")
         
         response = {
             "predicted_label": result['predicted_label'],
@@ -130,12 +141,18 @@ async def predict_swing(file: UploadFile = File(...)):
                 "avg_plane_angle": float(result['physics_features'][0]),
                 "plane_analysis": get_plane_analysis(result['physics_features'][0])
             },
-            "extraction_status": result['extraction_status']
+            "extraction_status": result.get('extraction_status', 'unknown')
         }
         
+        print(f"✅ Returning response: {response}")
         return JSONResponse(content=response)
         
+    except HTTPException:
+        raise
     except Exception as e:
+        print(f"❌ Prediction error: {str(e)}")
+        import traceback
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Prediction failed: {str(e)}")
     finally:
         if os.path.exists(tmp_path):
