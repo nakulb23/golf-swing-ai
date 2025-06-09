@@ -1,26 +1,26 @@
 # Golf Swing AI - Optimized Dependencies (Full Functionality)
-# Standard PyTorch (auto-detects CPU), headless OpenCV saves ~50MB
+# Compatible versions for Render deployment, headless OpenCV saves ~50MB
 
-# Core ML libraries (lightweight versions)
-torch==2.0.0
-numpy==1.24.3
-scikit-learn==1.3.0
-joblib==1.3.1
-scipy==1.11.1
+# Core ML libraries (compatible versions)
+torch>=2.0.0
+numpy>=1.21.0
+scikit-learn>=1.0.0
+joblib>=1.1.0
+scipy>=1.7.0
 
-# Computer Vision (headless = smaller)
-opencv-python-headless==4.8.0.76
-mediapipe==0.10.0
+# Computer Vision (headless = smaller, compatible versions)
+opencv-python-headless>=4.5.0
+mediapipe>=0.10.5
 
 # Web Framework
-fastapi==0.100.0
-uvicorn[standard]==0.23.0
-python-multipart==0.0.6
+fastapi>=0.100.0
+uvicorn[standard]>=0.20.0
+python-multipart>=0.0.6
 
-# Utilities (minimal versions)
-matplotlib==3.7.2
-pillow==10.0.0
-tqdm==4.65.0
+# Utilities (compatible versions)
+matplotlib>=3.5.0
+pillow>=9.0.0
+tqdm>=4.64.0
 
-# Total: ~300MB vs 550MB+ original
-# Savings: ~250MB while keeping ALL features
+# Note: Using >= for better compatibility with Render's Python environment
+# Still saves ~200MB while maintaining all features
