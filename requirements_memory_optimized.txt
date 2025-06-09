@@ -1,8 +1,8 @@
 # Golf Swing AI - Optimized Dependencies (Full Functionality)
-# CPU-only PyTorch saves ~150MB, headless OpenCV saves ~50MB
+# Standard PyTorch (auto-detects CPU), headless OpenCV saves ~50MB
 
-# Core ML libraries (CPU-only versions)
-torch==2.0.0+cpu --extra-index-url https://download.pytorch.org/whl/cpu
+# Core ML libraries (lightweight versions)
+torch==2.0.0
 numpy==1.24.3
 scikit-learn==1.3.0
 joblib==1.3.1
