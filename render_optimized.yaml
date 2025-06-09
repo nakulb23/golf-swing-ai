@@ -3,8 +3,8 @@ services:
     name: golf-swing-ai-optimized
     env: python
     plan: free  # 512MB RAM limit
-    buildCommand: "pip install -r requirements_lightweight.txt"
-    startCommand: "python api_lightweight.py"
+    buildCommand: "pip install -r requirements_memory_optimized.txt"
+    startCommand: "python api_memory_optimized.py"
     healthCheckPath: "/health"
     envVars:
       - key: PYTHON_VERSION
@@ -14,4 +14,4 @@ services:
       - key: PYTHONUNBUFFERED
         value: "1"
       - key: WEB_CONCURRENCY
-        value: "1"  # Single worker for memory optimization
+        value: "1"  # Single worker to save memory
