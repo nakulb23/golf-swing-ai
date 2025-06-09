@@ -69,12 +69,12 @@ async def health_check():
     return {"status": "healthy", "memory_optimized": True, "full_functionality": True}
 
 def get_swing_predictor():
-    """Load improved swing predictor with backswing priority"""
+    """Load pure physics predictor - no ML bias, just biomechanics"""
     global _prediction_cache
     
     if 'predictor' not in _prediction_cache:
-        from predict_with_backswing_priority import predict_with_backswing_priority
-        _prediction_cache['predictor'] = predict_with_backswing_priority
+        from predict_pure_physics import predict_with_pure_physics
+        _prediction_cache['predictor'] = predict_with_pure_physics
         gc.collect()  # Clean up after loading
     
     return _prediction_cache['predictor']
