@@ -15,7 +15,8 @@ from pathlib import Path
 # Add current directory to path for imports
 sys.path.append(str(Path(__file__).parent))
 
-from predict_physics_based import predict_with_physics_model
+from predict_multi_angle import predict_with_multi_angle_model
+from predict_physics_based import predict_with_physics_model  # Keep for fallback
 from golf_chatbot import CaddieChat
 from ball_tracking import GolfBallTracker
 
@@ -71,12 +72,23 @@ async def health_check():
 @app.post("/predict")
 async def predict_swing(file: UploadFile = File(...)):
     """
-    Predict golf swing plane classification from video file
+    Enhanced multi-angle golf swing plane classification from video file
+    
+    NEW FEATURES:
+    - Automatic camera angle detection (side-on, front-on, behind, angled)
+    - View-invariant analysis with coordinate transformation
+    - Angle-specific feature weighting for improved accuracy
+    - Enhanced insights based on camera perspective
     
     Returns:
     - predicted_label: Classification result (on_plane, too_steep, too_flat)
     - confidence: Prediction confidence (0-1)
-    - physics_insights: Key swing mechanics analysis
+    - camera_angle: Detected camera perspective
+    - angle_confidence: Camera detection confidence
+    - feature_reliability: Reliability scores by feature category
+    - physics_insights: Enhanced swing mechanics analysis
+    - angle_insights: Camera angle specific analysis
+    - recommendations: Personalized improvement suggestions
     """
     
     if not file.content_type.startswith('video/'):
@@ -89,23 +101,37 @@ async def predict_swing(file: UploadFile = File(...)):
         tmp_path = tmp_file.name
     
     try:
-        # Make prediction
-        result = predict_with_physics_model(tmp_path)
+        # Make prediction with multi-angle model
+        result = predict_with_multi_angle_model(tmp_path)
         
         if result is None:
-            raise HTTPException(status_code=400, detail="Failed to process video")
+            # Fallback to traditional model if multi-angle fails
+            print("⚠️ Multi-angle prediction failed, falling back to traditional model...")
+            result = predict_with_physics_model(tmp_path)
+            if result is None:
+                raise HTTPException(status_code=400, detail="Failed to process video with both models")
         
-        # Format response
+        # Enhanced response with multi-angle information
         response = {
             "predicted_label": result['predicted_label'],
             "confidence": float(result['confidence']),
-            "confidence_gap": float(result['confidence_gap']),
+            "confidence_gap": float(result.get('confidence_gap', 0)),
             "all_probabilities": {k: float(v) for k, v in result['all_probabilities'].items()},
-            "physics_insights": {
-                "avg_plane_angle": float(result['physics_features'][0]),
-                "plane_analysis": get_plane_analysis(result['physics_features'][0])
-            },
-            "extraction_status": result['extraction_status']
+            
+            # New multi-angle features
+            "camera_angle": result.get('camera_angle', 'unknown'),
+            "angle_confidence": float(result.get('angle_confidence', 0)),
+            "feature_reliability": result.get('feature_reliability', {}),
+            
+            # Enhanced insights
+            "physics_insights": result.get('physics_insights', "Analysis completed successfully"),
+            "angle_insights": result.get('angle_insights', ""),
+            "recommendations": result.get('recommendations', []),
+            
+            # Status and compatibility
+            "extraction_status": result.get('extraction_status', 'success'),
+            "analysis_type": "multi_angle" if 'camera_angle' in result else "traditional",
+            "model_version": "2.0_multi_angle"
         }
         
         return JSONResponse(content=response)
@@ -117,6 +143,141 @@ async def predict_swing(file: UploadFile = File(...)):
         # Clean up temporary file
         if os.path.exists(tmp_path):
             os.unlink(tmp_path)
+
+@app.post("/detect-camera-angle")
+async def detect_camera_angle(file: UploadFile = File(...)):
+    """
+    Detect camera angle from video without full swing analysis (faster)
+    
+    Useful for:
+    - Real-time camera positioning feedback
+    - Pre-analysis angle validation
+    - Recording setup guidance
+    
+    Returns:
+    - camera_angle: Detected perspective (side_on, front_on, behind, etc.)
+    - confidence: Detection confidence (0-1)
+    - reliability_score: Overall detection reliability
+    - guidance: Recommendations for optimal camera positioning
+    """
+    
+    if not file.content_type.startswith('video/'):
+        raise HTTPException(status_code=400, detail="File must be a video")
+    
+    # Save uploaded file temporarily
+    with tempfile.NamedTemporaryFile(delete=False, suffix='.mp4') as tmp_file:
+        content = await file.read()
+        tmp_file.write(content)
+        tmp_path = tmp_file.name
+    
+    try:
+        # Extract keypoints for angle detection only
+        from scripts.extract_features_robust import extract_keypoints_from_video_robust
+        from camera_angle_detector import CameraAngleDetector
+        
+        keypoints, status = extract_keypoints_from_video_robust(tmp_path)
+        
+        if keypoints.size == 0:
+            raise HTTPException(status_code=400, detail=f"Failed to extract features: {status}")
+        
+        # Detect camera angle
+        detector = CameraAngleDetector()
+        angle_result = detector.detect_camera_angle(keypoints)
+        
+        # Generate guidance based on detected angle
+        guidance = generate_camera_guidance(angle_result)
+        
+        response = {
+            "camera_angle": angle_result['angle_type'].value,
+            "confidence": float(angle_result['confidence']),
+            "reliability_score": float(angle_result['reliability_score']),
+            "guidance": guidance,
+            "detection_status": "success",
+            "frames_analyzed": len(angle_result['frame_analyses'])
+        }
+        
+        return JSONResponse(content=response)
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Camera angle detection failed: {str(e)}")
+    
+    finally:
+        # Clean up temporary file
+        if os.path.exists(tmp_path):
+            os.unlink(tmp_path)
+
+def generate_camera_guidance(angle_result):
+    """Generate guidance for optimal camera positioning"""
+    
+    angle_type = angle_result['angle_type']
+    confidence = angle_result['confidence']
+    
+    if confidence < 0.4:
+        return {
+            "status": "poor",
+            "message": "Camera angle could not be determined reliably. Try recording with better lighting and clearer body visibility.",
+            "recommendations": [
+                "Ensure your full body is visible in the frame",
+                "Use good lighting to make pose detection easier",
+                "Keep the camera steady during recording",
+                "Make sure you're the only person in the frame"
+            ]
+        }
+    
+    if angle_type.value == "side_on":
+        return {
+            "status": "excellent",
+            "message": "Perfect! Side-on view provides the best swing plane analysis.",
+            "recommendations": [
+                "Maintain this camera position for optimal analysis",
+                "Ensure you're positioned sideways to the camera",
+                "Keep 6-8 feet distance from the camera"
+            ]
+        }
+    
+    elif angle_type.value == "front_on":
+        return {
+            "status": "good",
+            "message": "Front-on view is excellent for balance and alignment analysis.",
+            "recommendations": [
+                "This angle is great for checking your setup and balance",
+                "For swing plane analysis, consider recording from the side",
+                "Ensure your full swing is visible in the frame"
+            ]
+        }
+    
+    elif angle_type.value == "behind":
+        return {
+            "status": "good", 
+            "message": "Behind view is excellent for club path analysis.",
+            "recommendations": [
+                "This angle shows club path and target line well",
+                "For swing plane analysis, consider recording from the side",
+                "Make sure your hands and club are clearly visible"
+            ]
+        }
+    
+    elif "angled" in angle_type.value:
+        return {
+            "status": "fair",
+            "message": "Angled view detected. Analysis is adjusted but may be less accurate.",
+            "recommendations": [
+                "Try moving the camera for a direct side-on view",
+                "This angle can still provide useful analysis",
+                "For best results, position camera directly to your side"
+            ]
+        }
+    
+    else:
+        return {
+            "status": "unknown",
+            "message": "Camera angle unclear. Reposition for better analysis.",
+            "recommendations": [
+                "Try recording from directly to the side (side-on view)",
+                "Ensure good lighting and clear body visibility",
+                "Keep camera at waist height for best results"
+            ]
+        }
 
 def get_plane_analysis(avg_plane_angle):
     """Get human-readable plane analysis"""
