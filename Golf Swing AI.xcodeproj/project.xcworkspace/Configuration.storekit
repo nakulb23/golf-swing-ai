@@ -1,0 +1,129 @@
+{
+  "identifier" : "C69E6A2B",
+  "nonRenewingSubscriptions" : [
+
+  ],
+  "products" : [
+
+  ],
+  "settings" : {
+    "_applicationInternalID" : "6479251492",
+    "_developerTeamID" : "KNTJKTSJNH",
+    "_failTransactionsEnabled" : false,
+    "_lastSynchronizedDate" : 757926027.12683105,
+    "_locale" : "en_US",
+    "_storefront" : "USA",
+    "_storeKitErrors" : [
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Load Products"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Purchase"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Verification"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "App Store Sync"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Subscription Status"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "App Transaction"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Manage Subscriptions Sheet"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Refund Request Sheet"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Offer Code Redeem Sheet"
+      }
+    ]
+  },
+  "subscriptionGroups" : [
+    {
+      "id" : "21520033",
+      "localizations" : [
+
+      ],
+      "name" : "Premium Access",
+      "subscriptions" : [
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "1.99",
+          "familyShareable" : false,
+          "groupNumber" : 1,
+          "internalID" : "6479252029",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "Monthly premium access to all Golf Swing AI features including Physics Engine, advanced analytics, and expert insights.",
+              "displayName" : "Golf Swing AI Premium - Monthly",
+              "locale" : "en_US"
+            }
+          ],
+          "productID" : "com.golfswingai.premium_monthly",
+          "recurringSubscriptionPeriod" : "P1M",
+          "referenceName" : "Premium Monthly",
+          "subscriptionGroupID" : "21520033",
+          "type" : "RecurringSubscription"
+        },
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "21.99",
+          "familyShareable" : false,
+          "groupNumber" : 1,
+          "internalID" : "6479252154",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "Annual premium access to all Golf Swing AI features including Physics Engine, advanced analytics, and expert insights. Save 58% compared to monthly!",
+              "displayName" : "Golf Swing AI Premium - Annual",
+              "locale" : "en_US"
+            }
+          ],
+          "productID" : "com.golfswingai.premium_annual",
+          "recurringSubscriptionPeriod" : "P1Y",
+          "referenceName" : "Premium Annual",
+          "subscriptionGroupID" : "21520033",
+          "type" : "RecurringSubscription"
+        }
+      ]
+    }
+  ],
+  "version" : {
+    "major" : 3,
+    "minor" : 0
+  }
+}

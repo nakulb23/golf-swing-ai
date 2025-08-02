@@ -6,6 +6,25 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		CF5394712DFAA169008AB6C0 /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = CF5394702DFAA169008AB6C0 /* GoogleSignIn */; };
+		CF5394732DFAA169008AB6C0 /* GoogleSignInSwift in Frameworks */ = {isa = PBXBuildFile; productRef = CF5394722DFAA169008AB6C0 /* GoogleSignInSwift */; };
+		CFB40C7B2DF20A1E005A1B24 /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFB40C762DF207D1005A1B24 /* Constants.swift */; };
+		CFB40C7C2DF20A1E005A1B24 /* API Service.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFB40C782DF20876005A1B24 /* API Service.swift */; };
+		CFB40C7D2DF20A1E005A1B24 /* CaddieChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFB40C7A2DF2092A005A1B24 /* CaddieChatView.swift */; };
+		CFB40C7E2DF20A1E005A1B24 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFB40C792DF208E6005A1B24 /* HomeView.swift */; };
+		CFB40C7F2DF20A1E005A1B24 /* APIModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFB40C772DF20856005A1B24 /* APIModels.swift */; };
+		CFE428462E2DD3DA004354CC /* PhysicsEngineView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFE428452E2DD3DA004354CC /* PhysicsEngineView.swift */; };
+		CFE4284A2E2DD452004354CC /* PhysicsCalculator.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFE428492E2DD452004354CC /* PhysicsCalculator.swift */; };
+		CFF2713B2DF2122700519FA1 /* ColorTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFF2713A2DF2122700519FA1 /* ColorTheme.swift */; };
+		CFF2713C2DF2130000519FA1 /* SwingAnalysisView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFF2713D2DF2130000519FA1 /* SwingAnalysisView.swift */; };
+		CFF2713E2DF2130100519FA1 /* BallTrackingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFF2713F2DF2130100519FA1 /* BallTrackingView.swift */; };
+		CFF2714A2DF2140000519FA1 /* VideoSwingPlaneAnalysisView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFF2714B2DF2140000519FA1 /* VideoSwingPlaneAnalysisView.swift */; };
+		CFF271502E2DD500004354CC /* PremiumManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFF271512E2DD500004354CC /* PremiumManager.swift */; };
+		FD00743F2FBCC48A9D84C5E9 /* CameraManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3571F2BC2CB0D469C9DBD538 /* CameraManager.swift */; };
+		11B5441795A647CB9C0275159C3B1BC6 /* Configuration.storekit in Resources */ = {isa = PBXBuildFile; fileRef = 11B5441795A647CB9C0275159C3B1BC5 /* Configuration.storekit */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		CFB40C562DF20679005A1B24 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -27,6 +46,20 @@
 		CFB40C452DF20678005A1B24 /* Golf Swing AI.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Golf Swing AI.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		CFB40C552DF20679005A1B24 /* Golf Swing AITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Golf Swing AITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		CFB40C5F2DF20679005A1B24 /* Golf Swing AIUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Golf Swing AIUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		CFB40C762DF207D1005A1B24 /* Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
+		CFB40C772DF20856005A1B24 /* APIModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIModels.swift; sourceTree = "<group>"; };
+		CFB40C782DF20876005A1B24 /* API Service.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "API Service.swift"; sourceTree = "<group>"; };
+		CFB40C792DF208E6005A1B24 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
+		CFB40C7A2DF2092A005A1B24 /* CaddieChatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaddieChatView.swift; sourceTree = "<group>"; };
+		CFE428452E2DD3DA004354CC /* PhysicsEngineView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhysicsEngineView.swift; sourceTree = "<group>"; };
+		CFE428492E2DD452004354CC /* PhysicsCalculator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhysicsCalculator.swift; sourceTree = "<group>"; };
+		CFF2713A2DF2122700519FA1 /* ColorTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorTheme.swift; sourceTree = "<group>"; };
+		CFF2713D2DF2130000519FA1 /* SwingAnalysisView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwingAnalysisView.swift; sourceTree = "<group>"; };
+		CFF2713F2DF2130100519FA1 /* BallTrackingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BallTrackingView.swift; sourceTree = "<group>"; };
+		CFF2714B2DF2140000519FA1 /* VideoSwingPlaneAnalysisView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoSwingPlaneAnalysisView.swift; sourceTree = "<group>"; };
+		CFF271512E2DD500004354CC /* PremiumManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Services/PremiumManager.swift"; sourceTree = "<group>"; };
+		3571F2BC2CB0D469C9DBD538 /* CameraManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Services/CameraManager.swift"; sourceTree = "<group>"; };
+		11B5441795A647CB9C0275159C3B1BC5 /* Configuration.storekit */ = {isa = PBXFileReference; lastKnownFileType = text; name = "Configuration.storekit"; path = "Golf Swing AI.xcodeproj/project.xcworkspace/Configuration.storekit"; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -52,6 +85,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				CF5394712DFAA169008AB6C0 /* GoogleSignIn in Frameworks */,
+				CF5394732DFAA169008AB6C0 /* GoogleSignInSwift in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -75,6 +110,10 @@
 		CFB40C3C2DF20678005A1B24 = {
 			isa = PBXGroup;
 			children = (
+				CFB40C752DF207AC005A1B24 /* Utilities */,
+				CFB40C742DF207A5005A1B24 /* Services */,
+				CFB40C732DF207A0005A1B24 /* Views */,
+				CFB40C722DF20796005A1B24 /* Models */,
 				CFB40C472DF20678005A1B24 /* Golf Swing AI */,
 				CFB40C582DF20679005A1B24 /* Golf Swing AITests */,
 				CFB40C622DF20679005A1B24 /* Golf Swing AIUITests */,
@@ -90,6 +129,45 @@
 				CFB40C5F2DF20679005A1B24 /* Golf Swing AIUITests.xctest */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		CFB40C722DF20796005A1B24 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				CFE428492E2DD452004354CC /* PhysicsCalculator.swift */,
+				CFB40C772DF20856005A1B24 /* APIModels.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		CFB40C732DF207A0005A1B24 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				CFE428452E2DD3DA004354CC /* PhysicsEngineView.swift */,
+				CFF2713F2DF2130100519FA1 /* BallTrackingView.swift */,
+				CFB40C7A2DF2092A005A1B24 /* CaddieChatView.swift */,
+				CFB40C792DF208E6005A1B24 /* HomeView.swift */,
+				CFF2713D2DF2130000519FA1 /* SwingAnalysisView.swift */,
+				CFF2714B2DF2140000519FA1 /* VideoSwingPlaneAnalysisView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		CFB40C742DF207A5005A1B24 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				CFB40C782DF20876005A1B24 /* API Service.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		CFB40C752DF207AC005A1B24 /* Utilities */ = {
+			isa = PBXGroup;
+			children = (
+				CFF2713A2DF2122700519FA1 /* ColorTheme.swift */,
+				CFB40C762DF207D1005A1B24 /* Constants.swift */,
+			);
+			path = Utilities;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -112,6 +190,8 @@
 			);
 			name = "Golf Swing AI";
 			packageProductDependencies = (
+				CF5394702DFAA169008AB6C0 /* GoogleSignIn */,
+				CF5394722DFAA169008AB6C0 /* GoogleSignInSwift */,
 			);
 			productName = "Golf Swing AI";
 			productReference = CFB40C452DF20678005A1B24 /* Golf Swing AI.app */;
@@ -195,6 +275,10 @@
 			);
 			mainGroup = CFB40C3C2DF20678005A1B24;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				CF53946F2DFAA169008AB6C0 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */,
+				CFE428442E2C758C004354CC /* XCRemoteSwiftPackageReference "facebook-ios-sdk" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = CFB40C462DF20678005A1B24 /* Products */;
 			projectDirPath = "";
@@ -212,6 +296,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				11B5441795A647CB9C0275159C3B1BC6 /* Configuration.storekit in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -236,6 +321,19 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				CFF2713B2DF2122700519FA1 /* ColorTheme.swift in Sources */,
+				CFB40C7B2DF20A1E005A1B24 /* Constants.swift in Sources */,
+				CFB40C7C2DF20A1E005A1B24 /* API Service.swift in Sources */,
+				CFF2713E2DF2130100519FA1 /* BallTrackingView.swift in Sources */,
+				CFB40C7D2DF20A1E005A1B24 /* CaddieChatView.swift in Sources */,
+				CFB40C7E2DF20A1E005A1B24 /* HomeView.swift in Sources */,
+				CFF2713C2DF2130000519FA1 /* SwingAnalysisView.swift in Sources */,
+				CFE428462E2DD3DA004354CC /* PhysicsEngineView.swift in Sources */,
+				CFF2714A2DF2140000519FA1 /* VideoSwingPlaneAnalysisView.swift in Sources */,
+				CFB40C7F2DF20A1E005A1B24 /* APIModels.swift in Sources */,
+				CFE4284A2E2DD452004354CC /* PhysicsCalculator.swift in Sources */,
+				CFF271502E2DD500004354CC /* PremiumManager.swift in Sources */,
+				FD00743F2FBCC48A9D84C5E9 /* CameraManager.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -393,17 +491,25 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = "Golf Swing AI/Golf Swing AI.entitlements";
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"Golf Swing AI/Preview Content\"";
 				DEVELOPMENT_TEAM = 9627R7543L;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Golf-Swing-AI-Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "AI Golf";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.sports";
+				INFOPLIST_KEY_NSCameraUsageDescription = "Golf Swing AI uses your camera to record and analyze your golf swing videos, providing detailed feedback on swing plane, tempo, and technique to help improve your game.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Golf Swing AI may access your microphone to record audio with swing analysis videos for a complete analysis experience.";
+				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "Golf Swing AI saves your analyzed swing videos to your photo library so you can easily access and share your golf improvement progress.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Golf Swing AI needs access to your photo library to save analyzed swing videos and allow you to import existing swing videos for analysis.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -411,9 +517,14 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "nakulb.Golf-Swing-AI";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Debug;
 		};
@@ -422,17 +533,25 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = "Golf Swing AI/Golf Swing AI.entitlements";
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"Golf Swing AI/Preview Content\"";
 				DEVELOPMENT_TEAM = 9627R7543L;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Golf-Swing-AI-Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "AI Golf";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.sports";
+				INFOPLIST_KEY_NSCameraUsageDescription = "Golf Swing AI uses your camera to record and analyze your golf swing videos, providing detailed feedback on swing plane, tempo, and technique to help improve your game.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Golf Swing AI may access your microphone to record audio with swing analysis videos for a complete analysis experience.";
+				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "Golf Swing AI saves your analyzed swing videos to your photo library so you can easily access and share your golf improvement progress.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Golf Swing AI needs access to your photo library to save analyzed swing videos and allow you to import existing swing videos for analysis.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -440,9 +559,14 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "nakulb.Golf-Swing-AI";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Release;
 		};
@@ -558,6 +682,38 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		CF53946F2DFAA169008AB6C0 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/google/GoogleSignIn-iOS";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 8.0.0;
+			};
+		};
+		CFE428442E2C758C004354CC /* XCRemoteSwiftPackageReference "facebook-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/facebook/facebook-ios-sdk";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 14.1.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		CF5394702DFAA169008AB6C0 /* GoogleSignIn */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = CF53946F2DFAA169008AB6C0 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
+			productName = GoogleSignIn;
+		};
+		CF5394722DFAA169008AB6C0 /* GoogleSignInSwift */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = CF53946F2DFAA169008AB6C0 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
+			productName = GoogleSignInSwift;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = CFB40C3D2DF20678005A1B24 /* Project object */;
 }
