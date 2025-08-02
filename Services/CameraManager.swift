@@ -32,9 +32,10 @@ class CameraManager: NSObject, ObservableObject {
         switch status {
         case .authorized:
             print("✅ Camera permission already granted")
-            hasPermission = true
-            setupSession()
-            startSession()
+            DispatchQueue.main.async {
+                self.hasPermission = true
+                self.setupSession()
+            }
         case .notDetermined:
             print("❓ Requesting camera permission...")
             AVCaptureDevice.requestAccess(for: .video) { granted in
@@ -44,7 +45,6 @@ class CameraManager: NSObject, ObservableObject {
                     if granted {
                         print("✅ Permission granted, setting up camera...")
                         self.setupSession()
-                        self.startSession()
                     } else {
                         print("❌ Camera permission denied")
                     }
@@ -106,13 +106,32 @@ class CameraManager: NSObject, ObservableObject {
             videoOutput = movieOutput
             print("✅ Added video output to session")
             
-            // Configure video stabilization if available
+            // Configure video settings for better compatibility
             if let connection = movieOutput.connection(with: .video) {
+                // Enable video stabilization if available
                 if connection.isVideoStabilizationSupported {
                     connection.preferredVideoStabilizationMode = .auto
                     print("✅ Enabled video stabilization")
                 }
+                
+                // Set preferred video orientation
+                if #available(iOS 17.0, *) {
+                    if connection.isVideoRotationAngleSupported(0) {
+                        connection.videoRotationAngle = 0 // Portrait orientation
+                        print("✅ Set video rotation angle to 0° (portrait)")
+                    }
+                } else {
+                    if connection.isVideoOrientationSupported {
+                        connection.videoOrientation = .portrait
+                        print("✅ Set video orientation to portrait")
+                    }
+                }
             }
+            
+            // Configure output settings for better server compatibility
+            movieOutput.movieFragmentInterval = CMTime.invalid // Disable fragmentation for compatibility
+            print("✅ Configured video output settings for server compatibility")
+            
         } else {
             print("❌ Cannot add video output to session")
         }
@@ -121,10 +140,17 @@ class CameraManager: NSObject, ObservableObject {
     }
     
     func startSession() {
-        guard !captureSession.isRunning else { return }
+        guard !captureSession.isRunning else { 
+            print("📹 Session already running")
+            return 
+        }
         
+        print("▶️ Starting camera session...")
         DispatchQueue.global(qos: .background).async {
             self.captureSession.startRunning()
+            DispatchQueue.main.async {
+                print("✅ Camera session started successfully")
+            }
         }
     }
     
@@ -207,18 +233,46 @@ class CameraManager: NSObject, ObservableObject {
 extension CameraManager: AVCaptureFileOutputRecordingDelegate {
     func fileOutput(_ output: AVCaptureFileOutput, didFinishRecordingTo outputFileURL: URL, from connections: [AVCaptureConnection], error: Error?) {
         if let error = error {
-            print("Recording error: \(error)")
+            print("❌ Recording error: \(error)")
             recordingCompletion?(nil)
         } else {
+            print("✅ Recording completed successfully")
+            print("📹 Video file URL: \(outputFileURL)")
+            
+            // Get video file attributes
+            do {
+                let attributes = try FileManager.default.attributesOfItem(atPath: outputFileURL.path)
+                if let fileSize = attributes[.size] as? Int64 {
+                    print("📹 Video file size: \(fileSize) bytes")
+                }
+            } catch {
+                print("⚠️ Could not get file attributes: \(error)")
+            }
+            
             // Convert video file to Data
             do {
                 let videoData = try Data(contentsOf: outputFileURL)
+                print("📹 Video data loaded: \(videoData.count) bytes")
+                
+                // Check video file type by reading header
+                if videoData.count > 8 {
+                    let header = videoData.prefix(8)
+                    let headerString = header.map { String(format: "%02x", $0) }.joined()
+                    print("📹 Video file header: \(headerString)")
+                    
+                    // Check for common video formats
+                    if headerString.contains("6674797071742020") || headerString.contains("667479704d534e56") {
+                        print("📹 Detected QuickTime/MP4 format")
+                    }
+                }
+                
                 recordingCompletion?(videoData)
                 
                 // Clean up the temporary file
                 try? FileManager.default.removeItem(at: outputFileURL)
+                print("🗑️ Cleaned up temporary video file")
             } catch {
-                print("Error reading video file: \(error)")
+                print("❌ Error reading video file: \(error)")
                 recordingCompletion?(nil)
             }
         }
@@ -233,19 +287,31 @@ struct CameraPreview: UIViewRepresentable {
     let session: AVCaptureSession
     
     func makeUIView(context: Context) -> UIView {
+        print("🖼️ Creating camera preview view")
         let view = UIView(frame: UIScreen.main.bounds)
+        view.backgroundColor = UIColor.black
         
         let previewLayer = AVCaptureVideoPreviewLayer(session: session)
-        previewLayer.frame = view.frame
+        previewLayer.frame = view.bounds
         previewLayer.videoGravity = .resizeAspectFill
+        previewLayer.backgroundColor = UIColor.black.cgColor
+        
         view.layer.addSublayer(previewLayer)
+        
+        print("✅ Camera preview layer added to view")
+        print("📹 Session running: \(session.isRunning)")
+        print("📹 Session inputs: \(session.inputs.count)")
+        print("📹 Session outputs: \(session.outputs.count)")
         
         return view
     }
     
     func updateUIView(_ uiView: UIView, context: Context) {
-        if let previewLayer = uiView.layer.sublayers?.first as? AVCaptureVideoPreviewLayer {
-            previewLayer.frame = uiView.bounds
+        DispatchQueue.main.async {
+            if let previewLayer = uiView.layer.sublayers?.first as? AVCaptureVideoPreviewLayer {
+                previewLayer.frame = uiView.bounds
+                print("🔄 Updated preview layer frame: \(uiView.bounds)")
+            }
         }
     }
 }
