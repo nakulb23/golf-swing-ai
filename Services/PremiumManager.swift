@@ -145,8 +145,10 @@ class PremiumManager: ObservableObject {
                     print("❌ Not available in current storefront")
                 case .notEntitled:
                     print("❌ Not entitled")
-                @unknown default:
+                case .unknown:
                     print("❌ Unknown StoreKit error")
+                @unknown default:
+                    print("❌ Unhandled StoreKit error: \(storeKitError)")
                 }
             }
             if let nsError = error as NSError? {
