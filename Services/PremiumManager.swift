@@ -9,13 +9,14 @@ import SwiftUI
 class PremiumManager: ObservableObject {
     static let shared = PremiumManager()
     
-    @Published var hasPhysicsEnginePremium = false
+    @Published var hasPhysicsEnginePremium = false // Always starts as false - must be purchased
     @Published var isLoading = false
     @Published var purchaseError: String?
     @Published var availableProducts: [Product] = []
     @Published var currentSubscription: Product.SubscriptionInfo.Status?
     @Published var isSubscriptionActive = false
     @Published var isDevelopmentMode = false // Production mode - use real StoreKit
+    @Published var showPaywall = false
     
     private var transactionUpdatesTask: Task<Void, Never>?
     
@@ -29,11 +30,16 @@ class PremiumManager: ObservableObject {
     }
     
     init() {
-        loadProducts()
-        checkPurchaseStatus()
+        // Start listening for transaction updates immediately at launch
+        // This ensures we don't miss any successful purchases
         startTransactionUpdateListener()
         
-        // Set up a fallback timer to enable development mode if no products load within 5 seconds
+        Task {
+            await loadProducts()
+        }
+        checkPurchaseStatus()
+        
+        // Check product loading status after delay for debugging
         Task {
             try? await Task.sleep(nanoseconds: 5_000_000_000) // 5 seconds
             if availableProducts.isEmpty {
@@ -41,7 +47,8 @@ class PremiumManager: ObservableObject {
                 print("⚠️ 1. Configuration.storekit is not set in the Xcode scheme")
                 print("⚠️ 2. App is running without Xcode simulator")
                 print("⚠️ 3. StoreKit Testing is not enabled")
-                print("⚠️ Consider enabling development mode for testing.")
+                print("⚠️ Users will need to purchase through App Store to access premium features")
+                // DO NOT automatically enable development mode - this bypasses paywall
             }
         }
     }
@@ -53,6 +60,7 @@ class PremiumManager: ObservableObject {
     // MARK: - Transaction Updates Listener
     
     private func startTransactionUpdateListener() {
+        print("🔄 Starting Transaction.updates listener at launch")
         transactionUpdatesTask = Task(priority: .background) {
             for await result in StoreKit.Transaction.updates {
                 await handleTransactionUpdate(result)
@@ -100,6 +108,10 @@ class PremiumManager: ObservableObject {
             if availableProducts.isEmpty {
                 print("⚠️ No products found. Ensure Configuration.storekit is set up in Xcode scheme.")
                 print("⚠️ Product IDs requested: \(productIDs)")
+                print("⚠️ To use StoreKit Testing:")
+                print("⚠️ 1. Edit Scheme -> Run -> Options")
+                print("⚠️ 2. Set StoreKit Configuration to 'Configuration.storekit'")
+                print("⚠️ 3. Clean build and run again")
             } else {
                 print("✅ Loaded \(availableProducts.count) products")
                 for product in availableProducts {
@@ -108,13 +120,12 @@ class PremiumManager: ObservableObject {
             }
         } catch {
             print("❌ Failed to load products: \(error)")
+            print("❌ Error details: \(error.localizedDescription)")
+            if let nsError = error as NSError? {
+                print("❌ Error domain: \(nsError.domain)")
+                print("❌ Error code: \(nsError.code)")
+            }
             print("❌ Make sure Configuration.storekit is configured in the Xcode scheme")
-        }
-    }
-    
-    private func loadProducts() {
-        Task {
-            await loadProducts()
         }
     }
     
@@ -143,7 +154,8 @@ class PremiumManager: ObservableObject {
             print("❌ Product not found: \(productID)")
             print("❌ Available: \(availableProducts.map { $0.id })")
             if availableProducts.isEmpty {
-                purchaseError = "No products available. Make sure you're running with the StoreKit configuration enabled in Xcode."
+                print("❌ No StoreKit products available - cannot process purchase")
+                purchaseError = "Store is currently unavailable. Please try again later or restart the app."
             } else {
                 purchaseError = "Product not found: \(productID)"
             }
@@ -299,15 +311,21 @@ class PremiumManager: ObservableObject {
         return isDevelopmentMode ? "$19.99" : "Price unavailable"
     }
     
-    // MARK: - Development Mode Controls
+    // MARK: - Development Mode Controls (Use only for development/testing)
     
     func setDevelopmentMode(_ enabled: Bool) {
         isDevelopmentMode = enabled
         
         if enabled {
+            print("🔧 Development mode enabled - FOR TESTING ONLY")
+            print("⚠️ This should NEVER be enabled in production builds")
+            // Only enable for development builds with explicit developer action
+            #if DEBUG
             hasPhysicsEnginePremium = true
             isSubscriptionActive = true
-            print("🔧 Development mode enabled - Premium features unlocked")
+            #else
+            print("❌ Development mode blocked in release build")
+            #endif
         } else {
             // Reset to actual purchased state
             hasPhysicsEnginePremium = false
@@ -317,10 +335,50 @@ class PremiumManager: ObservableObject {
         }
     }
     
-    // Helper function to enable development mode when StoreKit is not available
+    // This function should ONLY be used during development/testing
+    // It will NOT work in release builds
     func enableDevelopmentModeForTesting() {
-        print("🔧 Enabling development mode for testing purposes")
+        #if DEBUG
+        print("🔧 Enabling development mode for testing purposes (DEBUG BUILD ONLY)")
         setDevelopmentMode(true)
+        #else
+        print("❌ Development mode not available in release builds")
+        purchaseError = "Please purchase premium features through the App Store"
+        showPaywall = true
+        #endif
+    }
+    
+    // MARK: - Paywall Controls
+    
+    func requirePremiumAccess() {
+        if !hasPhysicsEnginePremium && !isSubscriptionActive {
+            showPaywall = true
+        }
+    }
+    
+    func dismissPaywall() {
+        showPaywall = false
+    }
+    
+    // Force reset premium access - useful for testing paywall enforcement
+    func resetPremiumAccess() {
+        print("🔄 Resetting premium access to default state")
+        hasPhysicsEnginePremium = false
+        isSubscriptionActive = false
+        isDevelopmentMode = false
+        currentSubscription = nil
+        purchaseError = nil
+        showPaywall = false
+    }
+    
+    // Validate premium access - returns true only if user has genuine premium
+    func validatePremiumAccess() -> Bool {
+        // In release builds, development mode should not grant access
+        #if DEBUG
+        return hasPhysicsEnginePremium || isSubscriptionActive
+        #else
+        return (hasPhysicsEnginePremium || isSubscriptionActive) && !isDevelopmentMode
+        #endif
     }
 }
 

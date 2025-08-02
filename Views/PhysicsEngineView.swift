@@ -216,12 +216,21 @@ struct PhysicsEnginePremiumView: View {
                                 isLoading = true
                                 purchaseError = nil
                                 
-                                // Check if already in development mode with premium access
-                                if PremiumManager.shared.isDevelopmentMode && PremiumManager.shared.hasPhysicsEnginePremium {
-                                    print("🔧 Development mode: Already have premium access, dismissing paywall")
+                                // Check if user actually has premium access (not just development mode)
+                                if PremiumManager.shared.hasPhysicsEnginePremium && !PremiumManager.shared.isDevelopmentMode {
+                                    print("✅ User already has premium access, dismissing paywall")
                                     dismiss()
                                     return
                                 }
+                                
+                                // For DEBUG builds only, allow development mode to bypass
+                                #if DEBUG
+                                if PremiumManager.shared.isDevelopmentMode && PremiumManager.shared.hasPhysicsEnginePremium {
+                                    print("🔧 DEBUG: Development mode active with premium access")
+                                    dismiss()
+                                    return
+                                }
+                                #endif
                                 
                                 print("🔘 Selected plan: \(selectedPlan)")
                                 switch selectedPlan {
@@ -246,10 +255,16 @@ struct PhysicsEnginePremiumView: View {
                                 // Get error from PremiumManager if any
                                 purchaseError = PremiumManager.shared.purchaseError
                                 
-                                // If there's a "no products available" error, offer development mode
-                                if let error = purchaseError, error.contains("No products available") {
-                                    print("🔧 Offering development mode as fallback due to StoreKit issues")
-                                    showDevelopmentModeOption = true
+                                // Show error to user - do NOT automatically offer development mode
+                                if let error = purchaseError {
+                                    print("❌ Purchase failed: \(error)")
+                                    // Development mode should only be available in DEBUG builds and for developers
+                                    #if DEBUG
+                                    if error.contains("Store is currently unavailable") {
+                                        print("🔧 Development mode option available for DEBUG build")
+                                        showDevelopmentModeOption = true
+                                    }
+                                    #endif
                                 }
                                 
                                 isLoading = false
@@ -300,20 +315,25 @@ struct PhysicsEnginePremiumView: View {
                                 .multilineTextAlignment(.center)
                         }
                         
-                        // Development mode option when StoreKit is not available
+                        // Development mode option - ONLY available in DEBUG builds
+                        #if DEBUG
                         if showDevelopmentModeOption {
                             VStack(spacing: 12) {
+                                Text("⚠️ DEBUG MODE ONLY")
+                                    .font(.system(size: 14, weight: .bold))
+                                    .foregroundColor(.red)
+                                
                                 Text("Development Mode Available")
                                     .font(.system(size: 16, weight: .semibold))
                                     .foregroundColor(.orange)
                                 
-                                Text("Since StoreKit testing isn't available, you can enable development mode to test premium features.")
+                                Text("This option is only available in DEBUG builds for testing. In production, users must purchase through the App Store.")
                                     .font(.system(size: 14, weight: .regular))
                                     .foregroundColor(.secondary)
                                     .multilineTextAlignment(.center)
                                 
                                 Button(action: {
-                                    print("🔧 Enabling development mode for testing")
+                                    print("🔧 Enabling development mode for testing (DEBUG BUILD)")
                                     PremiumManager.shared.enableDevelopmentModeForTesting()
                                     dismiss()
                                 }) {
@@ -332,6 +352,7 @@ struct PhysicsEnginePremiumView: View {
                             }
                             .padding(.top, 16)
                         }
+                        #endif
                     }
                     .padding(.horizontal, 24)
                     
