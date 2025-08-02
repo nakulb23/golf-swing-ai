@@ -203,16 +203,31 @@ struct SettingsView: View {
                             .font(.caption2)
                             .foregroundColor(.red)
                         
-                        // Reset button for testing paywall
-                        Button(action: {
-                            premiumManager.resetPremiumAccess()
-                        }) {
-                            HStack {
-                                Image(systemName: "arrow.clockwise")
-                                Text("Reset Premium Access")
+                        // Testing buttons
+                        HStack(spacing: 16) {
+                            Button(action: {
+                                premiumManager.resetPremiumAccess()
+                            }) {
+                                HStack {
+                                    Image(systemName: "arrow.clockwise")
+                                    Text("Reset Premium")
+                                }
+                                .font(.caption)
+                                .foregroundColor(.blue)
                             }
-                            .font(.caption)
-                            .foregroundColor(.blue)
+                            
+                            Button(action: {
+                                Task {
+                                    await premiumManager.testStoreKitConfiguration()
+                                }
+                            }) {
+                                HStack {
+                                    Image(systemName: "checkmark.circle")
+                                    Text("Test StoreKit")
+                                }
+                                .font(.caption)
+                                .foregroundColor(.green)
+                            }
                         }
                         .padding(.top, 4)
                     }

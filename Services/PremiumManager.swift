@@ -20,13 +20,12 @@ class PremiumManager: ObservableObject {
     
     private var transactionUpdatesTask: Task<Void, Never>?
     
-    // Subscription Product IDs
+    // Subscription Product IDs (matching Configuration.storekit)
     private let monthlySubscriptionID = "com.golfswingai.premium_monthly"
     private let annualSubscriptionID = "com.golfswingai.premium_annual"
-    private let physicsEngineProductID = "com.golfswingai.physics_engine_premium" // Legacy one-time purchase
     
     private var productIDs: [String] {
-        [monthlySubscriptionID, annualSubscriptionID, physicsEngineProductID]
+        [monthlySubscriptionID, annualSubscriptionID]
     }
     
     init() {
@@ -98,6 +97,7 @@ class PremiumManager: ObservableObject {
     func loadProducts() async {
         print("🔄 Loading StoreKit products...")
         print("🔍 Product IDs to load: \(productIDs)")
+        print("🔍 StoreKit Configuration should be: Configuration.storekit")
         
         do {
             let products = try await Product.products(for: productIDs)
@@ -106,26 +106,54 @@ class PremiumManager: ObservableObject {
             }
             
             if availableProducts.isEmpty {
-                print("⚠️ No products found. Ensure Configuration.storekit is set up in Xcode scheme.")
+                print("⚠️ No products found!")
                 print("⚠️ Product IDs requested: \(productIDs)")
-                print("⚠️ To use StoreKit Testing:")
-                print("⚠️ 1. Edit Scheme -> Run -> Options")
-                print("⚠️ 2. Set StoreKit Configuration to 'Configuration.storekit'")
-                print("⚠️ 3. Clean build and run again")
+                print("⚠️ StoreKit Testing Setup:")
+                print("⚠️ 1. In Xcode: Product -> Scheme -> Edit Scheme...")
+                print("⚠️ 2. Select 'Run' -> 'Options' tab")
+                print("⚠️ 3. Set StoreKit Configuration to 'Configuration.storekit'")
+                print("⚠️ 4. Make sure 'Use StoreKit Configuration File' is checked")
+                print("⚠️ 5. Clean build (Cmd+Shift+K) and run again")
+                print("⚠️ 6. For device testing, configure sandbox accounts in App Store Connect")
             } else {
-                print("✅ Loaded \(availableProducts.count) products")
+                print("✅ Successfully loaded \(availableProducts.count) products:")
                 for product in availableProducts {
-                    print("📦 Product: \(product.id) - \(product.displayName) - \(product.displayPrice)")
+                    print("📦 \(product.id)")
+                    print("   Name: \(product.displayName)")
+                    print("   Price: \(product.displayPrice)")
+                    print("   Type: \(product.type)")
+                    if let subscription = product.subscription {
+                        print("   Period: \(subscription.subscriptionPeriod)")
+                    }
                 }
             }
         } catch {
+            await MainActor.run {
+                purchaseError = "StoreKit configuration error. Please check Xcode scheme settings."
+            }
             print("❌ Failed to load products: \(error)")
             print("❌ Error details: \(error.localizedDescription)")
+            if let storeKitError = error as? StoreKitError {
+                switch storeKitError {
+                case .networkError(let underlyingError):
+                    print("❌ Network error: \(underlyingError)")
+                case .systemError(let underlyingError):
+                    print("❌ System error: \(underlyingError)")
+                case .userCancelled:
+                    print("❌ User cancelled")
+                case .notAvailableInStorefront:
+                    print("❌ Not available in current storefront")
+                case .notEntitled:
+                    print("❌ Not entitled")
+                @unknown default:
+                    print("❌ Unknown StoreKit error")
+                }
+            }
             if let nsError = error as NSError? {
                 print("❌ Error domain: \(nsError.domain)")
                 print("❌ Error code: \(nsError.code)")
+                print("❌ User info: \(nsError.userInfo)")
             }
-            print("❌ Make sure Configuration.storekit is configured in the Xcode scheme")
         }
     }
     
@@ -182,8 +210,9 @@ class PremiumManager: ObservableObject {
         await purchaseSubscription(productID: annualSubscriptionID)
     }
     
+    // Legacy method - now redirects to monthly subscription
     func purchasePhysicsEngine() async {
-        await purchaseSubscription(productID: physicsEngineProductID)
+        await purchaseSubscription(productID: monthlySubscriptionID)
     }
     
     private func handlePurchaseResult(_ result: Product.PurchaseResult) async {
@@ -296,19 +325,25 @@ class PremiumManager: ObservableObject {
         availableProducts.first { $0.id == annualSubscriptionID }
     }
     
-    // Development mode helpers
+    // Product pricing helpers
     var monthlyPrice: String {
         if let product = monthlyProduct {
             return product.displayPrice
         }
-        return isDevelopmentMode ? "$1.99" : "Price unavailable"
+        // Fallback prices from Configuration.storekit
+        return "$1.99"
     }
     
     var annualPrice: String {
         if let product = annualProduct {
             return product.displayPrice
         }
-        return isDevelopmentMode ? "$19.99" : "Price unavailable"
+        // Fallback prices from Configuration.storekit
+        return "$21.99"
+    }
+    
+    var isStoreKitWorking: Bool {
+        return !availableProducts.isEmpty
     }
     
     // MARK: - Development Mode Controls (Use only for development/testing)
@@ -379,6 +414,29 @@ class PremiumManager: ObservableObject {
         #else
         return (hasPhysicsEnginePremium || isSubscriptionActive) && !isDevelopmentMode
         #endif
+    }
+    
+    // Test StoreKit configuration
+    func testStoreKitConfiguration() async {
+        print("🧪 Testing StoreKit Configuration...")
+        print("🧪 Available products count: \(availableProducts.count)")
+        
+        if availableProducts.isEmpty {
+            print("🧪 No products loaded. Attempting to load now...")
+            await loadProducts()
+        }
+        
+        print("🧪 StoreKit Test Results:")
+        print("   - Products loaded: \(availableProducts.count > 0 ? "✅" : "❌")")
+        print("   - Monthly subscription: \(monthlyProduct != nil ? "✅" : "❌")")
+        print("   - Annual subscription: \(annualProduct != nil ? "✅" : "❌")")
+        
+        if availableProducts.isEmpty {
+            print("🧪 ISSUE: No products found")
+            print("🧪 SOLUTION: Check Xcode scheme StoreKit configuration")
+        } else {
+            print("🧪 SUCCESS: StoreKit is properly configured")
+        }
     }
 }
 
