@@ -35,6 +35,10 @@ class CameraManager: NSObject, ObservableObject {
             DispatchQueue.main.async {
                 self.hasPermission = true
                 self.setupSession()
+                // Start session immediately after setup when permission is already granted
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                    self.startSession()
+                }
             }
         case .notDetermined:
             print("❓ Requesting camera permission...")
@@ -45,6 +49,10 @@ class CameraManager: NSObject, ObservableObject {
                     if granted {
                         print("✅ Permission granted, setting up camera...")
                         self.setupSession()
+                        // Start session after setup when permission is newly granted
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                            self.startSession()
+                        }
                     } else {
                         print("❌ Camera permission denied")
                     }
@@ -52,9 +60,13 @@ class CameraManager: NSObject, ObservableObject {
             }
         case .denied, .restricted:
             print("❌ Camera permission denied or restricted")
-            hasPermission = false
+            DispatchQueue.main.async {
+                self.hasPermission = false
+            }
         @unknown default:
-            hasPermission = false
+            DispatchQueue.main.async {
+                self.hasPermission = false
+            }
         }
     }
     
@@ -145,21 +157,58 @@ class CameraManager: NSObject, ObservableObject {
             return 
         }
         
+        guard hasPermission else {
+            print("⚠️ Cannot start session without camera permission")
+            return
+        }
+        
+        guard captureSession.inputs.count > 0 else {
+            print("⚠️ Cannot start session without camera inputs")
+            return
+        }
+        
         print("▶️ Starting camera session...")
-        DispatchQueue.global(qos: .background).async {
+        DispatchQueue.global(qos: .userInitiated).async {
             self.captureSession.startRunning()
             DispatchQueue.main.async {
-                print("✅ Camera session started successfully")
+                print("✅ Camera session started successfully - isRunning: \(self.captureSession.isRunning)")
             }
         }
     }
     
     func stopSession() {
-        guard captureSession.isRunning else { return }
+        guard captureSession.isRunning else { 
+            print("📹 Session already stopped")
+            return 
+        }
         
+        print("⏹️ Stopping camera session...")
         DispatchQueue.global(qos: .background).async {
             self.captureSession.stopRunning()
+            DispatchQueue.main.async {
+                print("✅ Camera session stopped - isRunning: \(self.captureSession.isRunning)")
+            }
         }
+    }
+    
+    func debugSessionStatus() {
+        print("🔍 === Camera Session Debug ===")
+        print("📹 Has permission: \(hasPermission)")
+        print("📹 Session running: \(captureSession.isRunning)")
+        print("📹 Session inputs: \(captureSession.inputs.count)")
+        print("📹 Session outputs: \(captureSession.outputs.count)")
+        print("📹 Session preset: \(captureSession.sessionPreset.rawValue)")
+        
+        for (index, input) in captureSession.inputs.enumerated() {
+            if let deviceInput = input as? AVCaptureDeviceInput {
+                print("📹 Input \(index): \(deviceInput.device.localizedName) - Position: \(deviceInput.device.position.rawValue)")
+            }
+        }
+        
+        for (index, output) in captureSession.outputs.enumerated() {
+            print("📹 Output \(index): \(type(of: output))")
+        }
+        print("🔍 === End Debug ===")
     }
     
     func startRecording() {
@@ -296,12 +345,30 @@ struct CameraPreview: UIViewRepresentable {
         previewLayer.videoGravity = .resizeAspectFill
         previewLayer.backgroundColor = UIColor.black.cgColor
         
+        // Ensure the preview layer is ready
+        if previewLayer.connection?.isEnabled == true {
+            print("✅ Preview layer connection is enabled")
+        } else {
+            print("⚠️ Preview layer connection is not enabled")
+        }
+        
         view.layer.addSublayer(previewLayer)
         
         print("✅ Camera preview layer added to view")
         print("📹 Session running: \(session.isRunning)")
         print("📹 Session inputs: \(session.inputs.count)")
         print("📹 Session outputs: \(session.outputs.count)")
+        
+        // Force session to start if it's not already running and has inputs
+        if !session.isRunning && session.inputs.count > 0 {
+            print("🔄 Session not running but has inputs - attempting to start")
+            DispatchQueue.global(qos: .background).async {
+                session.startRunning()
+                DispatchQueue.main.async {
+                    print("✅ Session started from preview")
+                }
+            }
+        }
         
         return view
     }

@@ -288,10 +288,8 @@ struct SimpleCameraView: View {
                 if cameraManager.hasPermission {
                     // Camera Preview
                     CameraPreview(session: cameraManager.captureSession)
-                        .onAppear {
-                            cameraManager.startSession()
-                        }
                         .onDisappear {
+                            print("📹 Camera preview disappeared - stopping session")
                             cameraManager.stopSession()
                         }
                 } else {
@@ -421,7 +419,13 @@ struct SimpleCameraView: View {
                 }
             }
             .onAppear {
+                print("📹 SimpleCameraView appeared - checking permission")
                 cameraManager.checkPermission()
+                
+                // Debug session status after a short delay
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                    cameraManager.debugSessionStatus()
+                }
             }
             .navigationBarHidden(true)
         }
