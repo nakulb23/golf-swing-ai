@@ -4,8 +4,9 @@ import UIKit
 class APIService: NSObject, ObservableObject {
     static let shared = APIService()
     
-    @Published var isOnline = true
+    @Published var isOnline = false
     @Published var connectionType: String?
+    @Published var lastHealthCheck: Date?
     
     // Custom URLSession that bypasses SSL validation for our server
     private var urlSession: URLSession!
@@ -26,6 +27,8 @@ class APIService: NSObject, ObservableObject {
         // Test connection on initialization
         Task {
             await testConnection()
+            // Start periodic health checks
+            await startPeriodicHealthChecks()
         }
     }
     
@@ -36,6 +39,15 @@ class APIService: NSObject, ObservableObject {
             print("✅ API Connection successful: \(health.status)")
             await MainActor.run {
                 self.isOnline = true
+                self.lastHealthCheck = Date()
+                // Determine connection type based on response
+                if health.minimal == true {
+                    self.connectionType = "Basic"
+                } else if health.model_loaded == true {
+                    self.connectionType = "Full AI"
+                } else {
+                    self.connectionType = "Connected"
+                }
             }
         } catch {
             print("❌ API Connection failed: \(error)")
@@ -68,7 +80,18 @@ class APIService: NSObject, ObservableObject {
             
             await MainActor.run {
                 self.isOnline = false
+                self.lastHealthCheck = Date()
+                self.connectionType = nil
             }
+        }
+    }
+    
+    // MARK: - Periodic Health Checks
+    func startPeriodicHealthChecks() async {
+        // Check every 30 seconds
+        while true {
+            try? await Task.sleep(nanoseconds: 30_000_000_000) // 30 seconds
+            await testConnection()
         }
     }
     

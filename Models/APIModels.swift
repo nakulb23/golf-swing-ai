@@ -13,7 +13,20 @@ import Foundation
   // MARK: - API Health
   struct HealthResponse: Codable {
       let status: String
-      let model_loaded: Bool
+      let minimal: Bool?
+      let model_loaded: Bool?
+      
+      // Support both old and new server response formats
+      init(from decoder: Decoder) throws {
+          let container = try decoder.container(keyedBy: CodingKeys.self)
+          status = try container.decode(String.self, forKey: .status)
+          minimal = try container.decodeIfPresent(Bool.self, forKey: .minimal)
+          model_loaded = try container.decodeIfPresent(Bool.self, forKey: .model_loaded)
+      }
+      
+      private enum CodingKeys: String, CodingKey {
+          case status, minimal, model_loaded
+      }
   }
 
   // MARK: - Swing Analysis Models (Enhanced Multi-Angle + Premium Features)

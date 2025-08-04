@@ -25,6 +25,30 @@ struct HomeView: View {
         }
     }
     
+    // Helper computed property for connection status text
+    private var connectionStatusText: String {
+        if apiService.isOnline {
+            return apiService.connectionType ?? "Connected"
+        } else {
+            return "Offline"
+        }
+    }
+    
+    // Helper function for time ago formatting
+    private func timeAgo(from date: Date) -> String {
+        let interval = Date().timeIntervalSince(date)
+        
+        if interval < 60 {
+            return "now"
+        } else if interval < 3600 {
+            let minutes = Int(interval / 60)
+            return "\(minutes)m ago"
+        } else {
+            let hours = Int(interval / 3600)
+            return "\(hours)h ago"
+        }
+    }
+    
     var body: some View {
         NavigationStack {
             ScrollView(showsIndicators: false) {
@@ -42,9 +66,15 @@ struct HomeView: View {
                                     .fill(apiService.isOnline ? Color.green : Color.red)
                                     .frame(width: 6, height: 6)
                                 
-                                Text(apiService.isOnline ? "Connected" : "Offline")
+                                Text(connectionStatusText)
                                     .font(.system(size: 10, weight: .medium))
                                     .foregroundColor(.secondary)
+                                
+                                if let lastCheck = apiService.lastHealthCheck {
+                                    Text("• \(timeAgo(from: lastCheck))")
+                                        .font(.system(size: 9, weight: .regular))
+                                        .foregroundColor(.secondary.opacity(0.7))
+                                }
                             }
                             .onTapGesture {
                                 Task {
