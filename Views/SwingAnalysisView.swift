@@ -1252,11 +1252,16 @@ struct VideoPlayerView: UIViewRepresentable {
             currentTime = CMTimeGetSeconds(time)
         }
         
-        // Get duration
-        player.currentItem?.asset.loadValuesAsynchronously(forKeys: ["duration"]) {
-            DispatchQueue.main.async {
-                if let item = player.currentItem {
-                    duration = CMTimeGetSeconds(item.duration)
+        // Get duration using modern iOS 16+ API
+        Task {
+            if let item = player.currentItem {
+                do {
+                    let loadedDuration = try await item.asset.load(.duration)
+                    await MainActor.run {
+                        duration = CMTimeGetSeconds(loadedDuration)
+                    }
+                } catch {
+                    print("Failed to load asset duration: \(error)")
                 }
             }
         }
