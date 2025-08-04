@@ -1323,7 +1323,6 @@ struct IssueHighlightOverlay: View {
     
     private func shouldShowFlaw(_ flaw: PriorityFlaw, at time: Double) -> Bool {
         // Show flaw during its relevant frame range
-        let progress = time / videoDuration
         let totalFrames = flaw.frame_indices.count > 0 ? max(flaw.frame_indices.max() ?? 100, 100) : 100
         
         return flaw.frame_indices.contains { frameIndex in
