@@ -32,6 +32,14 @@ import Foundation
       let feature_dimension_ok: Bool?
       let quality_score: Double?
       
+      // Detailed biomechanics analysis (optional)
+      let detailed_biomechanics: [BiomechanicMeasurement]?
+      let priority_flaws: [PriorityFlaw]?
+      let pose_sequence: [PoseFrame]?
+      let optimal_reference: [PoseFrame]?
+      let comparison_data: ComparisonData?
+      let has_detailed_analysis: Bool?
+      
       // Premium Features - Club Face & Speed Analysis
       let club_face_analysis: ClubFaceAnalysis?
       let club_speed_analysis: ClubSpeedAnalysis?
@@ -76,6 +84,17 @@ import Foundation
           self.camera_angle = camera_angle
           self.angle_confidence = angle_confidence
           self.feature_reliability = feature_reliability
+          
+          // Initialize optional detailed analysis fields
+          self.feature_dimension_ok = nil
+          self.quality_score = nil
+          self.detailed_biomechanics = nil
+          self.priority_flaws = nil
+          self.pose_sequence = nil
+          self.optimal_reference = nil
+          self.comparison_data = nil
+          self.has_detailed_analysis = false
+          
           self.club_face_analysis = club_face_analysis
           self.club_speed_analysis = club_speed_analysis
           self.premium_features_available = premium_features_available
@@ -98,6 +117,17 @@ import Foundation
           self.camera_angle = nil
           self.angle_confidence = nil
           self.feature_reliability = nil
+          
+          // Initialize optional detailed analysis fields
+          self.feature_dimension_ok = nil
+          self.quality_score = nil
+          self.detailed_biomechanics = nil
+          self.priority_flaws = nil
+          self.pose_sequence = nil
+          self.optimal_reference = nil
+          self.comparison_data = nil
+          self.has_detailed_analysis = false
+          
           self.club_face_analysis = nil
           self.club_speed_analysis = nil
           self.premium_features_available = false
@@ -146,6 +176,7 @@ import Foundation
           case predicted_label, confidence, confidence_gap, all_probabilities
           case camera_angle, angle_confidence, feature_reliability
           case feature_dimension_ok, quality_score
+          case detailed_biomechanics, priority_flaws, pose_sequence, optimal_reference, comparison_data, has_detailed_analysis
           case club_face_analysis, club_speed_analysis, premium_features_available
           case _physics_insights = "physics_insights"
           case angle_insights, recommendations, extraction_status
@@ -170,6 +201,14 @@ import Foundation
           // Quality validation fields
           feature_dimension_ok = try container.decodeIfPresent(Bool.self, forKey: .feature_dimension_ok)
           quality_score = try container.decodeIfPresent(Double.self, forKey: .quality_score)
+          
+          // Detailed biomechanics fields
+          detailed_biomechanics = try container.decodeIfPresent([BiomechanicMeasurement].self, forKey: .detailed_biomechanics)
+          priority_flaws = try container.decodeIfPresent([PriorityFlaw].self, forKey: .priority_flaws)
+          pose_sequence = try container.decodeIfPresent([PoseFrame].self, forKey: .pose_sequence)
+          optimal_reference = try container.decodeIfPresent([PoseFrame].self, forKey: .optimal_reference)
+          comparison_data = try container.decodeIfPresent(ComparisonData.self, forKey: .comparison_data)
+          has_detailed_analysis = try container.decodeIfPresent(Bool.self, forKey: .has_detailed_analysis)
           
           // Premium features
           club_face_analysis = try container.decodeIfPresent(ClubFaceAnalysis.self, forKey: .club_face_analysis)
@@ -207,6 +246,12 @@ import Foundation
           try container.encodeIfPresent(feature_reliability, forKey: .feature_reliability)
           try container.encodeIfPresent(feature_dimension_ok, forKey: .feature_dimension_ok)
           try container.encodeIfPresent(quality_score, forKey: .quality_score)
+          try container.encodeIfPresent(detailed_biomechanics, forKey: .detailed_biomechanics)
+          try container.encodeIfPresent(priority_flaws, forKey: .priority_flaws)
+          try container.encodeIfPresent(pose_sequence, forKey: .pose_sequence)
+          try container.encodeIfPresent(optimal_reference, forKey: .optimal_reference)
+          try container.encodeIfPresent(comparison_data, forKey: .comparison_data)
+          try container.encodeIfPresent(has_detailed_analysis, forKey: .has_detailed_analysis)
           
           // Premium features
           try container.encodeIfPresent(club_face_analysis, forKey: .club_face_analysis)
@@ -309,7 +354,61 @@ import Foundation
       let comparison_text: String // "Your club head speed is 15% above amateur average"
   }
 
-  // MARK: - Camera Angle Detection Models
+  // MARK: - Detailed Biomechanics Models
+
+struct BiomechanicMeasurement: Codable {
+    let name: String
+    let current_value: Double
+    let optimal_range: [Double] // [min, max]
+    let unit: String
+    let severity: String // "pass", "minor", "major", "critical"
+    let description: String
+    let frame_indices: [Int] // Frames where this issue occurs
+}
+
+struct PriorityFlaw: Codable {
+    let priority: Int
+    let flaw: String
+    let result: String
+    let severity: String
+    let description: String
+    let current_value: Double
+    let optimal_range: [Double]
+    let frame_indices: [Int]
+}
+
+struct PoseFrame: Codable {
+    let frame: Int
+    let landmarks: [String: PoseLandmark]
+    let issues: [String]?
+    let phase: String?
+}
+
+struct PoseLandmark: Codable {
+    let x: Double
+    let y: Double
+    let confidence: Double
+}
+
+struct ComparisonData: Codable {
+    let frame_comparisons: [FrameComparison]
+    let deviation_summary: [String: Double]
+    let improvement_areas: [String]
+}
+
+struct FrameComparison: Codable {
+    let frame: Int
+    let deviations: [String: LandmarkDeviation]
+    let issues: [String]
+}
+
+struct LandmarkDeviation: Codable {
+    let distance: Double
+    let x_diff: Double
+    let y_diff: Double
+}
+
+// MARK: - Camera Angle Detection Models
   struct CameraAngleResponse: Codable {
       let camera_angle: String
       let confidence: Double

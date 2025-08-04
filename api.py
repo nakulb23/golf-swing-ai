@@ -17,6 +17,7 @@ sys.path.append(str(Path(__file__).parent))
 
 from predict_multi_angle import predict_with_multi_angle_model
 from predict_physics_based import predict_with_physics_model  # Keep for fallback
+from detailed_swing_analysis import analyze_swing_with_details
 from golf_chatbot import CaddieChat
 from ball_tracking import GolfBallTracker
 
@@ -155,6 +156,15 @@ async def predict_swing(file: UploadFile = File(...)):
             if result is None:
                 raise HTTPException(status_code=400, detail="Failed to process video with both models")
         
+        # Try to get detailed biomechanics analysis
+        detailed_result = None
+        try:
+            print("🎯 Attempting detailed biomechanics analysis...")
+            detailed_result = analyze_swing_with_details(tmp_path)
+            print("✅ Detailed analysis completed successfully")
+        except Exception as e:
+            print(f"⚠️ Detailed analysis failed, using standard result: {str(e)}")
+        
         # Enhanced response with multi-angle information
         response = {
             "predicted_label": result['predicted_label'],
@@ -176,10 +186,18 @@ async def predict_swing(file: UploadFile = File(...)):
             "angle_insights": result.get('angle_insights', ""),
             "recommendations": result.get('recommendations', []),
             
+            # Detailed biomechanics data (if available)
+            "detailed_biomechanics": detailed_result.get('detailed_biomechanics', []) if detailed_result else [],
+            "priority_flaws": detailed_result.get('priority_flaws', []) if detailed_result else [],
+            "pose_sequence": detailed_result.get('pose_sequence', []) if detailed_result else [],
+            "optimal_reference": detailed_result.get('optimal_reference', []) if detailed_result else [],
+            "comparison_data": detailed_result.get('comparison_data', {}) if detailed_result else {},
+            
             # Status and compatibility
             "extraction_status": result.get('extraction_status', 'success'),
-            "analysis_type": "multi_angle" if 'camera_angle' in result else "traditional",
-            "model_version": "2.0_multi_angle"
+            "analysis_type": "detailed_multi_angle" if detailed_result else ("multi_angle" if 'camera_angle' in result else "traditional"),
+            "model_version": "3.0_detailed" if detailed_result else "2.0_multi_angle",
+            "has_detailed_analysis": detailed_result is not None
         }
         
         return JSONResponse(content=response)

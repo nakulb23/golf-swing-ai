@@ -1,6 +1,7 @@
 import SwiftUI
 import PhotosUI
 import AVFoundation
+import AVKit
 import UIKit
 
 struct SwingAnalysisView: View {
@@ -180,7 +181,7 @@ struct SwingAnalysisView: View {
                     
                     // Analysis Results
                     if let result = analysisResult {
-                        EnhancedSwingAnalysisResultView(result: result)
+                        EnhancedSwingAnalysisResultView(result: result, videoData: videoData)
                     }
                     
                     // Error Message
@@ -639,6 +640,7 @@ struct AnalysisDetailRow: View {
 
 struct EnhancedSwingAnalysisResultView: View {
     let result: SwingAnalysisResponse
+    let videoData: Data?
     @State private var selectedTab: AnalysisTab = .setup
     @State private var selectedPriority: Int = 1
     @State private var showComparison = false
@@ -665,6 +667,11 @@ struct EnhancedSwingAnalysisResultView: View {
                 
                 // Main Analysis Card
                 mainAnalysisCard
+                
+                // Video Preview with Highlights
+                if videoData != nil {
+                    videoPreviewSection
+                }
                 
                 // Analysis Details Section
                 analysisDetailsSection
@@ -732,114 +739,150 @@ struct EnhancedSwingAnalysisResultView: View {
     private var mainAnalysisCard: some View {
         VStack(spacing: 16) {
             // Top Priority Header
-            VStack(spacing: 8) {
-                Text("Your top priority is to work on")
-                    .font(.body)
-                    .foregroundColor(.primary)
-                    .multilineTextAlignment(.center)
-                
-                Text("EXCESSIVE LEAD ARM BEND AT...")
-                    .font(.title3)
-                    .fontWeight(.bold)
-                    .foregroundColor(.primary)
-                    .multilineTextAlignment(.center)
-            }
+            topPriorityHeader
             
-            // Comparison Section
-            HStack(spacing: 0) {
-                // You side
-                VStack {
-                    Text("You")
-                        .font(.subheadline)
-                        .fontWeight(.semibold)
-                        .foregroundColor(.white)
-                        .padding(.horizontal, 20)
-                        .padding(.vertical, 8)
-                        .background(Color.blue)
-                        .clipShape(RoundedRectangle(cornerRadius: 20))
-                    
-                    ZStack {
-                        Rectangle()
-                            .fill(Color.black)
-                            .aspectRatio(3/4, contentMode: .fit)
-                        
-                        // Simulated swing position with red line indicating issue
-                        VStack {
-                            Spacer()
-                            HStack {
-                                Spacer()
-                                // Red line showing excessive bend
-                                Rectangle()
-                                    .fill(Color.red)
-                                    .frame(width: 3, height: 40)
-                                    .rotationEffect(.degrees(30))
-                                Spacer()
-                            }
-                            Spacer()
-                        }
-                        
-                        // Overlay text
-                        VStack {
-                            Spacer()
-                            Text("Why this matters?")
-                                .font(.subheadline)
-                                .fontWeight(.semibold)
-                                .foregroundColor(.white)
-                            
-                            Text("Your lead arm bends excessively in your backswing making it harder to hit solid shots")
-                                .font(.caption)
-                                .foregroundColor(.white)
-                                .multilineTextAlignment(.center)
-                                .padding(.horizontal, 8)
-                            Spacer()
-                        }
-                    }
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
-                }
-                
-                // Arrow
-                Image(systemName: "chevron.right")
-                    .font(.title2)
-                    .foregroundColor(.gray)
-                    .padding(.horizontal, 8)
-                
-                // Coach side
-                VStack {
-                    Text("Coach")
-                        .font(.subheadline)
-                        .fontWeight(.semibold)
-                        .foregroundColor(.white)
-                        .padding(.horizontal, 20)
-                        .padding(.vertical, 8)
-                        .background(Color.blue)
-                        .clipShape(RoundedRectangle(cornerRadius: 20))
-                    
-                    Rectangle()
-                        .fill(Color.gray.opacity(0.3))
-                        .aspectRatio(3/4, contentMode: .fit)
-                        .overlay(
-                            VStack {
-                                Spacer()
-                                HStack {
-                                    Spacer()
-                                    // Green line showing proper form
-                                    Rectangle()
-                                        .fill(Color.green)
-                                        .frame(width: 3, height: 50)
-                                        .rotationEffect(.degrees(10))
-                                    Spacer()
-                                }
-                                Spacer()
-                            }
-                        )
-                        .clipShape(RoundedRectangle(cornerRadius: 12))
-                }
-            }
+            // Analysis Summary Section
+            analysisInfoSection
         }
         .padding(20)
         .background(Color(.systemBackground))
         .clipShape(RoundedRectangle(cornerRadius: 16))
         .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 4)
+    }
+    
+    private var topPriorityHeader: some View {
+        VStack(spacing: 8) {
+            Text("Your top priority is to work on")
+                .font(.body)
+                .foregroundColor(.primary)
+                .multilineTextAlignment(.center)
+            
+            Text(topPriorityTitle)
+                .font(.title3)
+                .fontWeight(.bold)
+                .foregroundColor(.primary)
+                .multilineTextAlignment(.center)
+        }
+    }
+    
+    
+    
+    
+    
+    
+    
+    
+    private var analysisInfoSection: some View {
+        VStack(spacing: 12) {
+            if let topFlaw = result.priority_flaws?.first {
+                Text(topFlaw.description)
+                    .font(.body)
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal)
+            }
+            
+            // Analysis confidence indicator
+            HStack(spacing: 12) {
+                Image(systemName: "brain.head.profile")
+                    .foregroundColor(.blue)
+                    .font(.title2)
+                
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("AI Analysis Confidence")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                    
+                    Text("\(Int(result.confidence * 100))% confident in \(result.predicted_label.replacingOccurrences(of: "_", with: " "))")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                
+                Spacer()
+            }
+            .padding()
+            .background(Color.blue.opacity(0.1))
+            .cornerRadius(12)
+        }
+    }
+    
+    private var videoPreviewSection: some View {
+        VStack(spacing: 16) {
+            // Header
+            HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Your Swing Analysis")
+                        .font(.headline)
+                        .fontWeight(.semibold)
+                    
+                    Text("Problem areas highlighted in red")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                
+                Spacer()
+                
+                Button(action: {
+                    // Toggle full screen video
+                }) {
+                    Image(systemName: "arrow.up.left.and.arrow.down.right")
+                        .font(.caption)
+                        .foregroundColor(.blue)
+                }
+            }
+            
+            // Video Preview Container
+            SwingVideoPreview(
+                videoData: videoData,
+                analysisResult: result
+            )
+            .aspectRatio(16/9, contentMode: ContentMode.fit)
+            .clipShape(RoundedRectangle(cornerRadius: 12))
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(Color.gray.opacity(0.3), lineWidth: 1)
+            )
+            
+            // Issue Legend
+            issueHighlightLegend
+        }
+        .padding(20)
+        .background(Color(.systemBackground))
+        .clipShape(RoundedRectangle(cornerRadius: 16))
+        .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 4)
+    }
+    
+    private var issueHighlightLegend: some View {
+        HStack(spacing: 20) {
+            HStack(spacing: 6) {
+                Circle()
+                    .fill(Color.red)
+                    .frame(width: 8, height: 8)
+                Text("Major Issues")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+            
+            HStack(spacing: 6) {
+                Circle()
+                    .fill(Color.orange)
+                    .frame(width: 8, height: 8)
+                Text("Minor Issues")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+            
+            HStack(spacing: 6) {
+                Circle()
+                    .fill(Color.green)
+                    .frame(width: 8, height: 8)
+                Text("Good Form")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+            
+            Spacer()
+        }
     }
     
     private var analysisDetailsSection: some View {
@@ -988,12 +1031,25 @@ struct EnhancedSwingAnalysisResultView: View {
     
     // MARK: - Computed Properties
     
+    private var topPriorityTitle: String {
+        if let topFlaw = result.priority_flaws?.first {
+            return topFlaw.description.uppercased()
+        }
+        return "EXCESSIVE LEAD ARM BEND AT..."
+    }
+    
     private var analyzedAreasCount: Int {
-        8 // Based on the number of areas being analyzed
+        // Use actual count from analysis or fallback
+        return result.priority_flaws?.count ?? 8
     }
     
     private var passedCount: Int {
-        2 // Based on analysis results
+        // Calculate from detailed biomechanics
+        if let biomechanics = result.detailed_biomechanics {
+            return biomechanics.filter { $0.severity == "pass" }.count
+        }
+        // Or estimate from confidence
+        return Int((1.0 - result.confidence) * 10)
     }
     
     private var totalIssues: Int {
@@ -1013,8 +1069,20 @@ struct EnhancedSwingAnalysisResultView: View {
     }
     
     private var priorityIssues: [PriorityIssue] {
-        [
-            PriorityIssue(priority: 1, flaw: "Lead Arm", result: "Improve"), 
+        // Use dynamic data from analysis if available
+        if let flaws = result.priority_flaws, !flaws.isEmpty {
+            return flaws.map { flaw in
+                PriorityIssue(
+                    priority: flaw.priority,
+                    flaw: flaw.flaw,
+                    result: flaw.result
+                )
+            }
+        }
+        
+        // Fallback to static data if no detailed analysis
+        return [
+            PriorityIssue(priority: 1, flaw: "Lead Arm", result: "Improve"),
             PriorityIssue(priority: 2, flaw: "Spine Angle", result: "Improve"),
             PriorityIssue(priority: 3, flaw: "Head Movement", result: "Improve"),
             PriorityIssue(priority: 4, flaw: "Butt Position", result: "Improve"),
@@ -1029,11 +1097,339 @@ struct PriorityIssue {
     let priority: Int
     let flaw: String
     let result: String
-    let isTopPriority: Bool = false
 }
 
 // MARK: - Data Models
 // Using SwingAnalysisResponse from APIModels.swift
+
+
+// MARK: - Video Preview with Highlights
+
+struct SwingVideoPreview: View {
+    let videoData: Data?
+    let analysisResult: SwingAnalysisResponse
+    
+    @State private var videoURL: URL?
+    @State private var currentTime: Double = 0
+    @State private var isPlaying = false
+    @State private var videoDuration: Double = 1.0
+    
+    var body: some View {
+        ZStack {
+            // Video Background
+            if let url = videoURL {
+                VideoPlayerView(
+                    url: url,
+                    currentTime: $currentTime,
+                    isPlaying: $isPlaying,
+                    duration: $videoDuration
+                )
+            } else {
+                // Loading state
+                Rectangle()
+                    .fill(Color.black)
+                    .overlay(
+                        VStack {
+                            ProgressView()
+                                .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                            Text("Loading video...")
+                                .font(.caption)
+                                .foregroundColor(.white)
+                                .padding(.top, 8)
+                        }
+                    )
+            }
+            
+            // Issue Highlight Overlays
+            if let priorityFlaws = analysisResult.priority_flaws {
+                IssueHighlightOverlay(
+                    flaws: priorityFlaws,
+                    currentTime: currentTime,
+                    videoDuration: videoDuration
+                )
+            }
+            
+            // Play/Pause Control
+            Button(action: {
+                isPlaying.toggle()
+            }) {
+                Image(systemName: isPlaying ? "pause.circle.fill" : "play.circle.fill")
+                    .font(.system(size: 50))
+                    .foregroundColor(.white)
+                    .background(
+                        Circle()
+                            .fill(Color.black.opacity(0.3))
+                            .frame(width: 60, height: 60)
+                    )
+            }
+            .opacity(isPlaying ? 0.3 : 1.0)
+            .animation(.easeInOut(duration: 0.3), value: isPlaying)
+            
+            // Time scrubber
+            VStack {
+                Spacer()
+                
+                HStack(spacing: 12) {
+                    Text(formatTime(currentTime))
+                        .font(.caption)
+                        .foregroundColor(.white)
+                        .monospacedDigit()
+                    
+                    Slider(
+                        value: $currentTime,
+                        in: 0...videoDuration,
+                        onEditingChanged: { editing in
+                            if !editing {
+                                // Seek to new position
+                            }
+                        }
+                    )
+                    .accentColor(.white)
+                    
+                    Text(formatTime(videoDuration))
+                        .font(.caption)
+                        .foregroundColor(.white)
+                        .monospacedDigit()
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 12)
+                .background(
+                    Rectangle()
+                        .fill(Color.black.opacity(0.6))
+                )
+            }
+        }
+        .onAppear {
+            setupVideo()
+        }
+    }
+    
+    private func setupVideo() {
+        guard let data = videoData else { return }
+        
+        let tempURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent("swing_analysis_\(UUID().uuidString).mp4")
+        
+        do {
+            try data.write(to: tempURL)
+            videoURL = tempURL
+        } catch {
+            print("Failed to write video data: \(error)")
+        }
+    }
+    
+    private func formatTime(_ time: Double) -> String {
+        let minutes = Int(time) / 60
+        let seconds = Int(time) % 60
+        return String(format: "%d:%02d", minutes, seconds)
+    }
+}
+
+struct VideoPlayerView: UIViewRepresentable {
+    let url: URL
+    @Binding var currentTime: Double
+    @Binding var isPlaying: Bool
+    @Binding var duration: Double
+    
+    func makeUIView(context: Context) -> UIView {
+        let view = UIView()
+        view.backgroundColor = .black
+        
+        // Create AVPlayer and AVPlayerLayer
+        let player = AVPlayer(url: url)
+        let playerLayer = AVPlayerLayer(player: player)
+        playerLayer.videoGravity = .resizeAspect
+        
+        view.layer.addSublayer(playerLayer)
+        
+        // Store player reference
+        context.coordinator.player = player
+        context.coordinator.playerLayer = playerLayer
+        
+        // Setup time observer
+        let interval = CMTime(seconds: 0.1, preferredTimescale: CMTimeScale(NSEC_PER_SEC))
+        player.addPeriodicTimeObserver(forInterval: interval, queue: .main) { time in
+            currentTime = CMTimeGetSeconds(time)
+        }
+        
+        // Get duration
+        player.currentItem?.asset.loadValuesAsynchronously(forKeys: ["duration"]) {
+            DispatchQueue.main.async {
+                if let item = player.currentItem {
+                    duration = CMTimeGetSeconds(item.duration)
+                }
+            }
+        }
+        
+        return view
+    }
+    
+    func updateUIView(_ uiView: UIView, context: Context) {
+        // Update player layer frame
+        if let playerLayer = context.coordinator.playerLayer {
+            playerLayer.frame = uiView.bounds
+        }
+        
+        // Control playback
+        if isPlaying {
+            context.coordinator.player?.play()
+        } else {
+            context.coordinator.player?.pause()
+        }
+    }
+    
+    func makeCoordinator() -> Coordinator {
+        Coordinator()
+    }
+    
+    class Coordinator: NSObject {
+        var player: AVPlayer?
+        var playerLayer: AVPlayerLayer?
+    }
+}
+
+struct IssueHighlightOverlay: View {
+    let flaws: [PriorityFlaw]
+    let currentTime: Double
+    let videoDuration: Double
+    
+    var body: some View {
+        GeometryReader { geometry in
+            ZStack {
+                // Issue indicators positioned around the video
+                ForEach(Array(flaws.enumerated()), id: \.offset) { index, flaw in
+                    if shouldShowFlaw(flaw, at: currentTime) {
+                        IssueIndicator(
+                            flaw: flaw,
+                            position: getIndicatorPosition(for: index, in: geometry.size)
+                        )
+                    }
+                }
+                
+                // Timeline indicators at bottom
+                VStack {
+                    Spacer()
+                    IssueTimeline(flaws: flaws, currentTime: currentTime, duration: videoDuration)
+                        .padding(.bottom, 60) // Above the scrubber
+                }
+            }
+        }
+    }
+    
+    private func shouldShowFlaw(_ flaw: PriorityFlaw, at time: Double) -> Bool {
+        // Show flaw during its relevant frame range
+        let progress = time / videoDuration
+        let totalFrames = flaw.frame_indices.count > 0 ? max(flaw.frame_indices.max() ?? 100, 100) : 100
+        
+        return flaw.frame_indices.contains { frameIndex in
+            let frameTime = Double(frameIndex) / Double(totalFrames) * videoDuration
+            return abs(frameTime - time) < 0.5 // Show within 0.5 seconds of frame time
+        }
+    }
+    
+    private func getIndicatorPosition(for index: Int, in size: CGSize) -> CGPoint {
+        // Position indicators around the video frame
+        let positions: [CGPoint] = [
+            CGPoint(x: size.width * 0.2, y: size.height * 0.2), // Top left area
+            CGPoint(x: size.width * 0.8, y: size.height * 0.2), // Top right area
+            CGPoint(x: size.width * 0.2, y: size.height * 0.5), // Mid left
+            CGPoint(x: size.width * 0.8, y: size.height * 0.5), // Mid right
+            CGPoint(x: size.width * 0.5, y: size.height * 0.8), // Bottom center
+        ]
+        
+        return positions[index % positions.count]
+    }
+}
+
+struct IssueIndicator: View {
+    let flaw: PriorityFlaw
+    let position: CGPoint
+    
+    var body: some View {
+        VStack(spacing: 4) {
+            // Pulsing indicator
+            Circle()
+                .fill(issueColor)
+                .frame(width: 12, height: 12)
+                .overlay(
+                    Circle()
+                        .stroke(issueColor, lineWidth: 2)
+                        .scaleEffect(1.5)
+                        .opacity(0.6)
+                )
+                .scaleEffect(1.2)
+                .animation(.easeInOut(duration: 1.0).repeatForever(autoreverses: true), value: UUID())
+            
+            // Issue label
+            Text(flaw.flaw)
+                .font(.caption2)
+                .fontWeight(.medium)
+                .foregroundColor(.white)
+                .padding(.horizontal, 6)
+                .padding(.vertical, 2)
+                .background(
+                    RoundedRectangle(cornerRadius: 4)
+                        .fill(issueColor.opacity(0.8))
+                )
+        }
+        .position(position)
+    }
+    
+    private var issueColor: Color {
+        switch flaw.severity.lowercased() {
+        case "critical", "major":
+            return .red
+        case "minor":
+            return .orange
+        default:
+            return .yellow
+        }
+    }
+}
+
+struct IssueTimeline: View {
+    let flaws: [PriorityFlaw]
+    let currentTime: Double
+    let duration: Double
+    
+    var body: some View {
+        HStack(spacing: 2) {
+            ForEach(0..<100, id: \.self) { segment in
+                Rectangle()
+                    .fill(getSegmentColor(for: segment))
+                    .frame(height: 4)
+            }
+        }
+        .clipShape(RoundedRectangle(cornerRadius: 2))
+        .padding(.horizontal, 16)
+    }
+    
+    private func getSegmentColor(for segment: Int) -> Color {
+        let segmentTime = Double(segment) / 100.0 * duration
+        
+        // Check if any major issues occur in this time segment
+        for flaw in flaws {
+            let totalFrames = max(flaw.frame_indices.max() ?? 100, 100)
+            
+            for frameIndex in flaw.frame_indices {
+                let frameTime = Double(frameIndex) / Double(totalFrames) * duration
+                
+                if abs(frameTime - segmentTime) < duration / 100.0 {
+                    switch flaw.severity.lowercased() {
+                    case "critical", "major":
+                        return .red
+                    case "minor":
+                        return .orange
+                    default:
+                        return .yellow
+                    }
+                }
+            }
+        }
+        
+        return .green.opacity(0.3)
+    }
+}
 
 struct SwingAnalysisView_Previews: PreviewProvider {
     static var previews: some View {
