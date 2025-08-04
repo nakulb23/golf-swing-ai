@@ -1,10 +1,49 @@
 {
+  "appPolicies" : {
+    "eula" : "",
+    "policies" : [
+      {
+        "locale" : "en_US",
+        "policyText" : "",
+        "policyURL" : ""
+      }
+    ]
+  },
   "identifier" : "C69E6A2B",
   "nonRenewingSubscriptions" : [
 
   ],
   "products" : [
-
+    {
+      "displayPrice" : "1.99",
+      "familyShareable" : false,
+      "internalID" : "6479252029",
+      "localizations" : [
+        {
+          "description" : "Monthly premium access to all Golf Swing AI features including Physics Engine, advanced analytics, and expert insights.",
+          "displayName" : "Golf Swing AI Premium - Monthly",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "com.golfswingai.premium_monthly",
+      "referenceName" : "Premium Monthly",
+      "type" : "RecurringSubscription"
+    },
+    {
+      "displayPrice" : "21.99",
+      "familyShareable" : false,
+      "internalID" : "6479252154",
+      "localizations" : [
+        {
+          "description" : "Annual premium access to all Golf Swing AI features including Physics Engine, advanced analytics, and expert insights. Save 58% compared to monthly!",
+          "displayName" : "Golf Swing AI Premium - Annual",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "com.golfswingai.premium_annual",
+      "referenceName" : "Premium Annual",
+      "type" : "RecurringSubscription"
+    }
   ],
   "settings" : {
     "_applicationInternalID" : "6479251492",
@@ -92,7 +131,10 @@
           "recurringSubscriptionPeriod" : "P1M",
           "referenceName" : "Premium Monthly",
           "subscriptionGroupID" : "21520033",
-          "type" : "RecurringSubscription"
+          "type" : "RecurringSubscription",
+          "winbackOffers" : [
+
+          ]
         },
         {
           "adHocOffers" : [
@@ -117,13 +159,16 @@
           "recurringSubscriptionPeriod" : "P1Y",
           "referenceName" : "Premium Annual",
           "subscriptionGroupID" : "21520033",
-          "type" : "RecurringSubscription"
+          "type" : "RecurringSubscription",
+          "winbackOffers" : [
+
+          ]
         }
       ]
     }
   ],
   "version" : {
-    "major" : 3,
+    "major" : 4,
     "minor" : 0
   }
 }

@@ -66,11 +66,23 @@ def predict_with_multi_angle_model(video_path, model_path="models/physics_based_
         for category, weight in feature_weights.items():
             print(f"   {category.replace('_', ' ').title()}: {weight:.3f}")
         
-    except Exception as e:
-        print(f"❌ Error in camera angle detection: {str(e)}")
+    except FileNotFoundError as e:
+        print(f"❌ Camera angle model file not found: {str(e)}")
         print("📷 Falling back to traditional analysis...")
         camera_angle = CameraAngle.SIDE_ON
-        angle_confidence = 0.5
+        angle_confidence = 0.0  # Low confidence for fallback
+        view_result = None
+    except ValueError as e:
+        print(f"❌ Invalid video format for camera angle detection: {str(e)}")
+        print("📷 Falling back to traditional analysis...")
+        camera_angle = CameraAngle.SIDE_ON
+        angle_confidence = 0.0
+        view_result = None
+    except Exception as e:
+        print(f"❌ Unexpected error in camera angle detection: {str(e)}")
+        print("📷 Falling back to traditional analysis...")
+        camera_angle = CameraAngle.SIDE_ON
+        angle_confidence = 0.0
         view_result = None
     
     # STEP 2: Extract physics features (view-invariant if possible)
@@ -94,14 +106,26 @@ def predict_with_multi_angle_model(video_path, model_path="models/physics_based_
         print(f"❌ Error extracting physics features: {str(e)}")
         return None
     
-    # Ensure we have the expected 35 features
-    if len(feature_vector) != 35:
-        print(f"⚠️  Warning: Expected 35 features, got {len(feature_vector)}")
-        # Pad or truncate to 35 features
-        if len(feature_vector) < 35:
-            feature_vector = np.pad(feature_vector, (0, 35 - len(feature_vector)), 'constant')
+    # Validate feature vector dimensions
+    expected_features = 35
+    if len(feature_vector) != expected_features:
+        print(f"⚠️  Feature dimension mismatch: Expected {expected_features}, got {len(feature_vector)}")
+        
+        if len(feature_vector) < expected_features:
+            # Pad with zeros and log warning
+            padding_size = expected_features - len(feature_vector)
+            feature_vector = np.pad(feature_vector, (0, padding_size), 'constant', constant_values=0)
+            print(f"⚠️  Padded {padding_size} features with zeros - prediction accuracy may be reduced")
         else:
-            feature_vector = feature_vector[:35]
+            # Truncate and log warning
+            truncated_features = len(feature_vector) - expected_features
+            feature_vector = feature_vector[:expected_features]
+            print(f"⚠️  Truncated {truncated_features} features - some information may be lost")
+        
+        # Add dimension mismatch flag to result
+        dimension_mismatch = True
+    else:
+        dimension_mismatch = False
     
     # STEP 3: Load model and preprocessors
     try:
@@ -178,19 +202,41 @@ def predict_with_multi_angle_model(video_path, model_path="models/physics_based_
             print(f"\n📷 CAMERA ANGLE INSIGHTS:")
             print(f"📷 {analysis_result['angle_insights']}")
         
+        # Add quality flags to the result
+        analysis_result['feature_dimension_ok'] = not dimension_mismatch
+        analysis_result['quality_score'] = calculate_prediction_quality(
+            confidence, angle_confidence, dimension_mismatch
+        )
+        
         return analysis_result
         
     except Exception as e:
         print(f"❌ Error generating analysis: {str(e)}")
         # Return basic result even if enhanced analysis fails
-        return {
+        basic_result = {
             "predicted_label": predicted_label,
             "confidence": float(confidence),
             "all_probabilities": {class_names[i]: float(probabilities[i]) for i in range(len(class_names))},
             "camera_angle": camera_angle.value,
             "angle_confidence": float(angle_confidence),
-            "extraction_status": "success"
+            "extraction_status": "success",
+            "feature_dimension_ok": not dimension_mismatch,
+            "quality_score": calculate_prediction_quality(
+                confidence, angle_confidence, dimension_mismatch
+            )
         }
+        return basic_result
+
+def calculate_prediction_quality(confidence, angle_confidence, dimension_mismatch):
+    """Calculate overall prediction quality score"""
+    base_score = (confidence + angle_confidence) / 2
+    
+    # Penalize dimension mismatches
+    if dimension_mismatch:
+        base_score *= 0.8
+    
+    # Ensure reasonable bounds
+    return max(0.0, min(1.0, base_score))
 
 def generate_enhanced_analysis(predicted_label, confidence, probabilities, class_names,
                              camera_angle, angle_confidence, feature_weights, view_result):

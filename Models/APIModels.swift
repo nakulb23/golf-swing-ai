@@ -16,7 +16,7 @@ import Foundation
       let model_loaded: Bool
   }
 
-  // MARK: - Swing Analysis Models (Enhanced Multi-Angle)
+  // MARK: - Swing Analysis Models (Enhanced Multi-Angle + Premium Features)
   struct SwingAnalysisResponse: Codable {
       let predicted_label: String
       let confidence: Double
@@ -27,6 +27,15 @@ import Foundation
       let camera_angle: String?
       let angle_confidence: Double?
       let feature_reliability: [String: Double]?
+      
+      // Quality validation fields (optional)
+      let feature_dimension_ok: Bool?
+      let quality_score: Double?
+      
+      // Premium Features - Club Face & Speed Analysis
+      let club_face_analysis: ClubFaceAnalysis?
+      let club_speed_analysis: ClubSpeedAnalysis?
+      let premium_features_available: Bool?
       
       // Physics insights - support both old and new formats
       private let _physics_insights: PhysicsInsightsWrapper
@@ -52,11 +61,12 @@ import Foundation
           }
       }
       
-      // Custom initializer for new format
+      // Custom initializer for new format with premium features
       init(predicted_label: String, confidence: Double, confidence_gap: Double, 
            all_probabilities: [String: Double], camera_angle: String?, 
            angle_confidence: Double?, feature_reliability: [String: Double]?,
-           physics_insights: String, angle_insights: String?, 
+           club_face_analysis: ClubFaceAnalysis?, club_speed_analysis: ClubSpeedAnalysis?,
+           premium_features_available: Bool?, physics_insights: String, angle_insights: String?, 
            recommendations: [String]?, extraction_status: String,
            analysis_type: String?, model_version: String?) {
           self.predicted_label = predicted_label
@@ -66,6 +76,9 @@ import Foundation
           self.camera_angle = camera_angle
           self.angle_confidence = angle_confidence
           self.feature_reliability = feature_reliability
+          self.club_face_analysis = club_face_analysis
+          self.club_speed_analysis = club_speed_analysis
+          self.premium_features_available = premium_features_available
           self._physics_insights = .string(physics_insights)
           self.angle_insights = angle_insights
           self.recommendations = recommendations
@@ -85,6 +98,9 @@ import Foundation
           self.camera_angle = nil
           self.angle_confidence = nil
           self.feature_reliability = nil
+          self.club_face_analysis = nil
+          self.club_speed_analysis = nil
+          self.premium_features_available = false
           self._physics_insights = .object(physics_insights)
           self.angle_insights = nil
           self.recommendations = nil
@@ -129,6 +145,8 @@ import Foundation
       enum CodingKeys: String, CodingKey {
           case predicted_label, confidence, confidence_gap, all_probabilities
           case camera_angle, angle_confidence, feature_reliability
+          case feature_dimension_ok, quality_score
+          case club_face_analysis, club_speed_analysis, premium_features_available
           case _physics_insights = "physics_insights"
           case angle_insights, recommendations, extraction_status
           case analysis_type, model_version
@@ -148,6 +166,16 @@ import Foundation
           camera_angle = try container.decodeIfPresent(String.self, forKey: .camera_angle)
           angle_confidence = try container.decodeIfPresent(Double.self, forKey: .angle_confidence)
           feature_reliability = try container.decodeIfPresent([String: Double].self, forKey: .feature_reliability)
+          
+          // Quality validation fields
+          feature_dimension_ok = try container.decodeIfPresent(Bool.self, forKey: .feature_dimension_ok)
+          quality_score = try container.decodeIfPresent(Double.self, forKey: .quality_score)
+          
+          // Premium features
+          club_face_analysis = try container.decodeIfPresent(ClubFaceAnalysis.self, forKey: .club_face_analysis)
+          club_speed_analysis = try container.decodeIfPresent(ClubSpeedAnalysis.self, forKey: .club_speed_analysis)
+          premium_features_available = try container.decodeIfPresent(Bool.self, forKey: .premium_features_available)
+          
           angle_insights = try container.decodeIfPresent(String.self, forKey: .angle_insights)
           recommendations = try container.decodeIfPresent([String].self, forKey: .recommendations)
           analysis_type = try container.decodeIfPresent(String.self, forKey: .analysis_type)
@@ -177,6 +205,14 @@ import Foundation
           try container.encodeIfPresent(camera_angle, forKey: .camera_angle)
           try container.encodeIfPresent(angle_confidence, forKey: .angle_confidence)
           try container.encodeIfPresent(feature_reliability, forKey: .feature_reliability)
+          try container.encodeIfPresent(feature_dimension_ok, forKey: .feature_dimension_ok)
+          try container.encodeIfPresent(quality_score, forKey: .quality_score)
+          
+          // Premium features
+          try container.encodeIfPresent(club_face_analysis, forKey: .club_face_analysis)
+          try container.encodeIfPresent(club_speed_analysis, forKey: .club_speed_analysis)
+          try container.encodeIfPresent(premium_features_available, forKey: .premium_features_available)
+          
           try container.encodeIfPresent(angle_insights, forKey: .angle_insights)
           try container.encodeIfPresent(recommendations, forKey: .recommendations)
           try container.encodeIfPresent(analysis_type, forKey: .analysis_type)
@@ -202,6 +238,75 @@ import Foundation
   struct PhysicsInsights: Codable {
       let avg_plane_angle: Double
       let plane_analysis: String
+  }
+
+  // MARK: - Premium Analysis Models
+  struct ClubFaceAnalysis: Codable {
+      let face_angle_at_impact: Double // degrees (-10 to +10, 0 = square)
+      let face_angle_rating: String // "Square", "Slightly Open/Closed", "Very Open/Closed"
+      let consistency_score: Double // 0-100, how consistent the face angle is
+      let impact_position: ImpactPosition
+      let recommendations: [String]
+      let elite_benchmark: SwingEliteBenchmark
+  }
+
+  struct ClubSpeedAnalysis: Codable {
+      let club_head_speed_mph: Double
+      let speed_rating: String // "Below Average", "Average", "Above Average", "Tour Level"
+      let acceleration_profile: AccelerationProfile
+      let tempo_analysis: TempoAnalysis
+      let efficiency_metrics: EfficiencyMetrics
+      let distance_potential: DistancePotential
+      let elite_benchmark: SwingEliteBenchmark
+  }
+
+  struct ImpactPosition: Codable {
+      let toe_heel_impact: String // "Center", "Toe", "Heel"
+      let high_low_impact: String // "Center", "High", "Low"
+      let impact_quality_score: Double // 0-100
+  }
+
+  struct AccelerationProfile: Codable {
+      let backswing_speed: Double // mph
+      let transition_speed: Double // mph
+      let impact_speed: Double // mph
+      let deceleration_after_impact: Double // mph
+      let acceleration_efficiency: Double // 0-100
+  }
+
+  struct TempoAnalysis: Codable {
+      let backswing_time: Double // seconds
+      let downswing_time: Double // seconds
+      let tempo_ratio: Double // backswing:downswing (ideal 3:1)
+      let tempo_rating: String // "Too Fast", "Good", "Too Slow"
+      let pause_at_top: Double // seconds
+  }
+
+  struct EfficiencyMetrics: Codable {
+      let swing_efficiency: Double // 0-100 (power transfer)
+      let energy_loss_points: [String] // Areas where energy is lost
+      let smash_factor: Double // ball speed / club speed (optimal 1.48-1.50)
+      let centeredness_of_contact: Double // 0-100
+  }
+
+  struct DistancePotential: Codable {
+      let current_estimated_distance: Double // yards
+      let optimal_distance_potential: Double // yards with improvements
+      let distance_gain_opportunities: [DistanceGainOpportunity]
+  }
+
+  struct DistanceGainOpportunity: Codable {
+      let improvement_area: String
+      let potential_yards_gained: Double
+      let difficulty_level: String // "Easy", "Moderate", "Advanced"
+      let practice_recommendation: String
+  }
+
+  struct SwingEliteBenchmark: Codable {
+      let elite_average: Double
+      let amateur_average: Double
+      let your_percentile: Double // 0-100 (what percentile you're in)
+      let comparison_text: String // "Your club head speed is 15% above amateur average"
   }
 
   // MARK: - Camera Angle Detection Models
@@ -246,4 +351,56 @@ import Foundation
   struct TrajectoryData: Codable {
       let flight_time: Double
       let has_valid_trajectory: Bool
+  }
+
+  // MARK: - Data Collection & Model Improvement Models
+  struct DataCollectionConsent: Codable {
+      let user_id: String // Anonymous UUID
+      let consent_given: Bool
+      let consent_date: String
+      let data_types_consented: [String] // ["swing_videos", "analysis_results", "feedback"]
+      let privacy_version: String // Track privacy policy version
+  }
+
+  struct AnonymousSwingData: Codable {
+      let session_id: String // Anonymous session identifier
+      let swing_features: [String: Double] // Physics features extracted
+      let predicted_classification: String
+      let confidence_score: Double
+      let camera_angle: String?
+      let user_feedback: UserFeedback?
+      let timestamp: String
+      let app_version: String
+      let model_version: String
+  }
+
+  struct UserFeedback: Codable {
+      let feedback_type: FeedbackType
+      let user_rating: Int? // 1-5 stars for prediction accuracy
+      let correction: String? // If user disagrees with classification
+      let helpful: Bool? // Was the analysis helpful?
+      let comments: String? // Optional user comments
+  }
+
+  enum FeedbackType: String, Codable, CaseIterable {
+      case rating = "rating"
+      case correction = "correction"
+      case helpful = "helpful"
+      case detailed = "detailed"
+  }
+
+  struct ModelImprovementResponse: Codable {
+      let data_received: Bool
+      let anonymous_id: String
+      let contribution_count: Int
+      let thank_you_message: String
+      let privacy_confirmed: Bool
+  }
+
+  struct DataContributionStats: Codable {
+      let total_contributions: Int
+      let your_contributions: Int
+      let model_accuracy_improvement: Double?
+      let last_model_update: String?
+      let community_impact: String
   }

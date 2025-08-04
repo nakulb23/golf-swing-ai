@@ -180,8 +180,7 @@ struct SwingAnalysisView: View {
                     
                     // Analysis Results
                     if let result = analysisResult {
-                        AIAnalysisResultView(result: result)
-                            .padding(.horizontal)
+                        EnhancedSwingAnalysisResultView(result: result)
                     }
                     
                     // Error Message
@@ -634,6 +633,403 @@ struct AnalysisDetailRow: View {
                 .fill(Color.gray.opacity(0.1))
         )
     }
+}
+
+// MARK: - Enhanced Results View
+
+struct EnhancedSwingAnalysisResultView: View {
+    let result: SwingAnalysisResponse
+    @State private var selectedTab: AnalysisTab = .setup
+    @State private var selectedPriority: Int = 1
+    @State private var showComparison = false
+    
+    enum AnalysisTab: String, CaseIterable {
+        case setup = "Set Up"
+        case backswing = "Backswing"
+        case impact = "Impact"
+        
+        var color: Color {
+            switch self {
+            case .setup: return .green
+            case .backswing: return .red
+            case .impact: return .red
+            }
+        }
+    }
+    
+    var body: some View {
+        ScrollView {
+            VStack(spacing: 20) {
+                // Header with Title and Score
+                headerSection
+                
+                // Main Analysis Card
+                mainAnalysisCard
+                
+                // Analysis Details Section
+                analysisDetailsSection
+                
+                // Priority Issues List
+                priorityIssuesSection
+                
+                // Fix Your Top Priority Button
+                fixTopPriorityButton
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 20)
+        }
+        .background(Color(.systemBackground))
+    }
+    
+    private var headerSection: some View {
+        VStack(spacing: 8) {
+            Text("Swing Analysis")
+                .font(.title2)
+                .fontWeight(.bold)
+                .foregroundColor(.primary)
+            
+            Text("Down The Line")
+                .font(.subheadline)
+                .foregroundColor(.orange)
+                .fontWeight(.medium)
+            
+            HStack {
+                Text("\(analyzedAreasCount) areas to improve")
+                    .font(.subheadline)
+                    .foregroundColor(.blue)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background(Color.blue.opacity(0.1))
+                    .clipShape(Capsule())
+                
+                Spacer()
+                
+                // Score Circle
+                ZStack {
+                    Circle()
+                        .stroke(Color.gray.opacity(0.3), lineWidth: 8)
+                        .frame(width: 60, height: 60)
+                    
+                    Circle()
+                        .trim(from: 0, to: CGFloat(scorePercentage))
+                        .stroke(scoreColor, lineWidth: 8)
+                        .frame(width: 60, height: 60)
+                        .rotationEffect(.degrees(-90))
+                    
+                    VStack(spacing: 2) {
+                        Text("\(passedCount)/\(totalIssues)")
+                            .font(.system(size: 14, weight: .bold))
+                            .foregroundColor(.primary)
+                        Text("PASSED")
+                            .font(.system(size: 8, weight: .medium))
+                            .foregroundColor(.secondary)
+                    }
+                }
+            }
+        }
+    }
+    
+    private var mainAnalysisCard: some View {
+        VStack(spacing: 16) {
+            // Top Priority Header
+            VStack(spacing: 8) {
+                Text("Your top priority is to work on")
+                    .font(.body)
+                    .foregroundColor(.primary)
+                    .multilineTextAlignment(.center)
+                
+                Text("EXCESSIVE LEAD ARM BEND AT...")
+                    .font(.title3)
+                    .fontWeight(.bold)
+                    .foregroundColor(.primary)
+                    .multilineTextAlignment(.center)
+            }
+            
+            // Comparison Section
+            HStack(spacing: 0) {
+                // You side
+                VStack {
+                    Text("You")
+                        .font(.subheadline)
+                        .fontWeight(.semibold)
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 20)
+                        .padding(.vertical, 8)
+                        .background(Color.blue)
+                        .clipShape(RoundedRectangle(cornerRadius: 20))
+                    
+                    ZStack {
+                        Rectangle()
+                            .fill(Color.black)
+                            .aspectRatio(3/4, contentMode: .fit)
+                        
+                        // Simulated swing position with red line indicating issue
+                        VStack {
+                            Spacer()
+                            HStack {
+                                Spacer()
+                                // Red line showing excessive bend
+                                Rectangle()
+                                    .fill(Color.red)
+                                    .frame(width: 3, height: 40)
+                                    .rotationEffect(.degrees(30))
+                                Spacer()
+                            }
+                            Spacer()
+                        }
+                        
+                        // Overlay text
+                        VStack {
+                            Spacer()
+                            Text("Why this matters?")
+                                .font(.subheadline)
+                                .fontWeight(.semibold)
+                                .foregroundColor(.white)
+                            
+                            Text("Your lead arm bends excessively in your backswing making it harder to hit solid shots")
+                                .font(.caption)
+                                .foregroundColor(.white)
+                                .multilineTextAlignment(.center)
+                                .padding(.horizontal, 8)
+                            Spacer()
+                        }
+                    }
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                }
+                
+                // Arrow
+                Image(systemName: "chevron.right")
+                    .font(.title2)
+                    .foregroundColor(.gray)
+                    .padding(.horizontal, 8)
+                
+                // Coach side
+                VStack {
+                    Text("Coach")
+                        .font(.subheadline)
+                        .fontWeight(.semibold)
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 20)
+                        .padding(.vertical, 8)
+                        .background(Color.blue)
+                        .clipShape(RoundedRectangle(cornerRadius: 20))
+                    
+                    Rectangle()
+                        .fill(Color.gray.opacity(0.3))
+                        .aspectRatio(3/4, contentMode: .fit)
+                        .overlay(
+                            VStack {
+                                Spacer()
+                                HStack {
+                                    Spacer()
+                                    // Green line showing proper form
+                                    Rectangle()
+                                        .fill(Color.green)
+                                        .frame(width: 3, height: 50)
+                                        .rotationEffect(.degrees(10))
+                                    Spacer()
+                                }
+                                Spacer()
+                            }
+                        )
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                }
+            }
+        }
+        .padding(20)
+        .background(Color(.systemBackground))
+        .clipShape(RoundedRectangle(cornerRadius: 16))
+        .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 4)
+    }
+    
+    private var analysisDetailsSection: some View {
+        VStack(spacing: 16) {
+            // Tab Selection
+            HStack(spacing: 0) {
+                ForEach(AnalysisTab.allCases, id: \.self) { tab in
+                    Button(action: { selectedTab = tab }) {
+                        VStack(spacing: 8) {
+                            Circle()
+                                .fill(tab.color)
+                                .frame(width: 12, height: 12)
+                            
+                            Text(tab.rawValue)
+                                .font(.subheadline)
+                                .fontWeight(selectedTab == tab ? .semibold : .regular)
+                                .foregroundColor(selectedTab == tab ? .primary : .secondary)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 12)
+                        .background(
+                            selectedTab == tab ? 
+                            Color(.systemBackground) : 
+                            Color.clear
+                        )
+                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                    }
+                }
+            }
+            .padding(4)
+            .background(Color.blue)
+            .clipShape(RoundedRectangle(cornerRadius: 12))
+            
+            // Pass/Improve indicators
+            HStack(spacing: 24) {
+                HStack(spacing: 8) {
+                    Circle()
+                        .fill(Color.green)
+                        .frame(width: 12, height: 12)
+                    Text("Pass")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                }
+                
+                HStack(spacing: 8) {
+                    Circle()
+                        .fill(Color.red)
+                        .frame(width: 12, height: 12)
+                    Text("Improve")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                }
+                
+                Spacer()
+            }
+        }
+        .padding(20)
+        .background(Color(.systemBackground))
+        .clipShape(RoundedRectangle(cornerRadius: 16))
+        .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 4)
+    }
+    
+    private var priorityIssuesSection: some View {
+        VStack(spacing: 12) {
+            HStack {
+                Text("Priority")
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+                    .foregroundColor(.secondary)
+                
+                Spacer()
+                
+                Text("Flaw")
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+                    .foregroundColor(.secondary)
+                
+                Spacer()
+                
+                Text("Results")
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+                    .foregroundColor(.secondary)
+            }
+            .padding(.horizontal, 20)
+            
+            // Issue rows
+            ForEach(priorityIssues, id: \.priority) { issue in
+                priorityIssueRow(issue: issue)
+            }
+        }
+    }
+    
+    private func priorityIssueRow(issue: PriorityIssue) -> some View {
+        HStack(spacing: 16) {
+            // Priority number
+            Text("\(issue.priority)")
+                .font(.body)
+                .fontWeight(.medium)
+                .foregroundColor(issue.priority == 1 ? .red : .primary)
+            
+            Spacer()
+            
+            // Flaw description
+            Text(issue.flaw)
+                .font(.body)
+                .foregroundColor(.primary)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            
+            Spacer()
+            
+            // Result
+            HStack(spacing: 8) {
+                Text(issue.result)
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+                    .foregroundColor(issue.result == "Pass" ? .green : .red)
+                
+                Image(systemName: "chevron.right")
+                    .font(.caption)
+                    .foregroundColor(.gray)
+            }
+        }
+        .padding(.horizontal, 20)
+        .padding(.vertical, 16)
+        .background(Color(.systemBackground))
+        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .shadow(color: .black.opacity(0.05), radius: 4, x: 0, y: 2)
+    }
+    
+    private var fixTopPriorityButton: some View {
+        Button(action: {
+            // Handle fix top priority action
+        }) {
+            Text("Fix Your Top Priority")
+                .font(.headline)
+                .fontWeight(.semibold)
+                .foregroundColor(.white)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 16)
+                .background(Color.blue)
+                .clipShape(RoundedRectangle(cornerRadius: 12))
+        }
+        .padding(.top, 20)
+    }
+    
+    // MARK: - Computed Properties
+    
+    private var analyzedAreasCount: Int {
+        8 // Based on the number of areas being analyzed
+    }
+    
+    private var passedCount: Int {
+        2 // Based on analysis results
+    }
+    
+    private var totalIssues: Int {
+        10 // Total possible issues
+    }
+    
+    private var scorePercentage: Double {
+        Double(passedCount) / Double(totalIssues)
+    }
+    
+    private var scoreColor: Color {
+        switch scorePercentage {
+        case 0.7...: return .green
+        case 0.4..<0.7: return .orange
+        default: return .red
+        }
+    }
+    
+    private var priorityIssues: [PriorityIssue] {
+        [
+            PriorityIssue(priority: 1, flaw: "Lead Arm", result: "Improve"), 
+            PriorityIssue(priority: 2, flaw: "Spine Angle", result: "Improve"),
+            PriorityIssue(priority: 3, flaw: "Head Movement", result: "Improve"),
+            PriorityIssue(priority: 4, flaw: "Butt Position", result: "Improve"),
+            PriorityIssue(priority: 5, flaw: "Hip Rotation", result: "Improve")
+        ]
+    }
+}
+
+// MARK: - Supporting Models
+
+struct PriorityIssue {
+    let priority: Int
+    let flaw: String
+    let result: String
+    let isTopPriority: Bool = false
 }
 
 // MARK: - Data Models

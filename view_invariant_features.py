@@ -137,6 +137,15 @@ class ViewInvariantFeatureExtractor:
                 # Apply rotation transformation
                 transformed_coords = rotation_matrix @ coords_3d
                 
+                # Validate transformed coordinates are within reasonable bounds
+                if np.any(np.isnan(transformed_coords)) or np.any(np.abs(transformed_coords) > 10.0):
+                    # Use original coordinates if transformation produces invalid values
+                    print(f"⚠️ Invalid transformed coordinates for landmark {landmark_idx}, using original")
+                    transformed_coords = coords_3d
+                
+                # Clamp coordinates to reasonable range (-2.0 to 2.0)
+                transformed_coords = np.clip(transformed_coords, -2.0, 2.0)
+                
                 # Update the transformed sequence
                 start_idx = landmark_idx * 4
                 transformed_sequence[frame_idx][start_idx:start_idx+3] = transformed_coords
@@ -412,8 +421,13 @@ class ViewInvariantFeatureExtractor:
             elif 'path' in feature_name or 'club' in feature_name:
                 category_weight = reliability_weights['club_path']
             
-            # Apply confidence-adjusted weight
-            final_weight = category_weight * confidence
+            # Apply confidence-adjusted weight (avoid double multiplication issue)
+            # Use linear combination instead of multiplication to prevent over-penalization
+            confidence_factor = 0.7 + (0.3 * confidence)  # Scale confidence from 0.7-1.0
+            final_weight = category_weight * confidence_factor
+            
+            # Validate final weight is reasonable
+            final_weight = max(0.1, min(1.0, final_weight))
             weighted_features[feature_name] = value * final_weight
         
         return weighted_features

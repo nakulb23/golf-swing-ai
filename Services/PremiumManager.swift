@@ -29,27 +29,42 @@ class PremiumManager: ObservableObject {
     }
     
     init() {
+        print("🚀 PremiumManager initializing...")
+        
         // Start listening for transaction updates immediately at launch
         // This ensures we don't miss any successful purchases
         startTransactionUpdateListener()
         
+        // Load products immediately and retry if needed
         Task {
+            print("🔄 Initial product load attempt...")
             await loadProducts()
-        }
-        checkPurchaseStatus()
-        
-        // Check product loading status after delay for debugging
-        Task {
-            try? await Task.sleep(nanoseconds: 5_000_000_000) // 5 seconds
+            
+            // If no products loaded, try again after a short delay
             if availableProducts.isEmpty {
-                print("⚠️ No StoreKit products loaded after 5 seconds. This might be because:")
-                print("⚠️ 1. Configuration.storekit is not set in the Xcode scheme")
-                print("⚠️ 2. App is running without Xcode simulator")
-                print("⚠️ 3. StoreKit Testing is not enabled")
-                print("⚠️ Users will need to purchase through App Store to access premium features")
-                // DO NOT automatically enable development mode - this bypasses paywall
+                print("⚠️ No products on first attempt, retrying in 2 seconds...")
+                try? await Task.sleep(nanoseconds: 2_000_000_000) // 2 seconds
+                await loadProducts()
+            }
+            
+            // Final check and provide detailed status
+            if availableProducts.isEmpty {
+                print("❌ STOREKIT CONFIGURATION ISSUE:")
+                print("❌ No products loaded after multiple attempts")
+                print("❌ This means:")
+                print("❌ 1. Xcode scheme doesn't have StoreKit configuration set")
+                print("❌ 2. Configuration.storekit file has issues")
+                print("❌ 3. Running on device without proper App Store Connect setup")
+                print("❌ IMMEDIATE FIX:")
+                print("❌ 1. Xcode → Product → Scheme → Edit Scheme")
+                print("❌ 2. Run → Options → StoreKit Configuration = 'Configuration.storekit'")
+                print("❌ 3. Clean build (Cmd+Shift+K) and restart")
+            } else {
+                print("✅ StoreKit successfully configured with \(availableProducts.count) products")
             }
         }
+        
+        checkPurchaseStatus()
     }
     
     deinit {
@@ -418,27 +433,144 @@ class PremiumManager: ObservableObject {
         #endif
     }
     
+    // Force reload products with detailed diagnostics
+    func forceReloadProducts() async {
+        print("🔄 Force reloading StoreKit products...")
+        await MainActor.run {
+            availableProducts = []
+            purchaseError = nil
+        }
+        
+        // Multiple retry attempts
+        for attempt in 1...3 {
+            print("🔄 Attempt \(attempt)/3...")
+            await loadProducts()
+            
+            if !availableProducts.isEmpty {
+                print("✅ Products loaded on attempt \(attempt)")
+                break
+            }
+            
+            if attempt < 3 {
+                try? await Task.sleep(nanoseconds: 1_000_000_000) // 1 second between attempts
+            }
+        }
+        
+        await testStoreKitConfiguration()
+    }
+    
     // Test StoreKit configuration
     func testStoreKitConfiguration() async {
-        print("🧪 Testing StoreKit Configuration...")
+        print("🧪 === STOREKIT DIAGNOSTIC REPORT ===")
         print("🧪 Available products count: \(availableProducts.count)")
+        print("🧪 Product IDs we're looking for: \(productIDs)")
+        
+        // Environment detection
+        #if DEBUG
+        print("🧪 Build configuration: DEBUG")
+        #else
+        print("🧪 Build configuration: RELEASE")
+        #endif
+        
+        #if targetEnvironment(simulator)
+        print("🧪 Environment: iOS Simulator")
+        print("🧪 Should use: StoreKit Testing (Configuration.storekit)")
+        #else
+        print("🧪 Environment: Physical Device")
+        print("🧪 Should use: App Store Sandbox/Production")
+        #endif
         
         if availableProducts.isEmpty {
-            print("🧪 No products loaded. Attempting to load now...")
+            print("🧪 No products loaded. Attempting fresh load...")
             await loadProducts()
         }
         
-        print("🧪 StoreKit Test Results:")
-        print("   - Products loaded: \(availableProducts.count > 0 ? "✅" : "❌")")
+        print("🧪 FINAL RESULTS:")
+        print("   - Products loaded: \(availableProducts.count > 0 ? "✅" : "❌") (\(availableProducts.count))")
         print("   - Monthly subscription: \(monthlyProduct != nil ? "✅" : "❌")")
         print("   - Annual subscription: \(annualProduct != nil ? "✅" : "❌")")
         
         if availableProducts.isEmpty {
-            print("🧪 ISSUE: No products found")
-            print("🧪 SOLUTION: Check Xcode scheme StoreKit configuration")
+            print("🧪 ❌ CRITICAL ISSUE: No products found")
+            print("🧪 📋 TROUBLESHOOTING CHECKLIST:")
+            print("🧪    1. Xcode → Product → Scheme → Edit Scheme")
+            print("🧪    2. Run → Options → StoreKit Configuration")
+            print("🧪    3. Set to 'Configuration.storekit' and check the box")
+            print("🧪    4. Clean build (Cmd+Shift+K)")
+            print("🧪    5. Restart Xcode and simulator")
+            print("🧪    6. For device: Sign out of App Store, use sandbox account")
         } else {
-            print("🧪 SUCCESS: StoreKit is properly configured")
+            print("🧪 ✅ SUCCESS: StoreKit is working")
+            for product in availableProducts {
+                print("🧪    📦 \(product.id) - \(product.displayName) - \(product.displayPrice)")
+            }
         }
+        print("🧪 === END DIAGNOSTIC REPORT ===")
+    }
+    
+    // Simple direct StoreKit test - bypasses all caching and retries
+    func simpleStoreKitTest() async {
+        print("🔬 === SIMPLE STOREKIT TEST ===")
+        print("🔬 Testing direct Product.products() call...")
+        print("🔬 Product IDs: \(productIDs)")
+        
+        do {
+            let directProducts = try await Product.products(for: productIDs)
+            print("🔬 Direct call result: \(directProducts.count) products")
+            
+            if directProducts.isEmpty {
+                print("🔬 ❌ ZERO products returned")
+                print("🔬 This confirms StoreKit configuration issue")
+                print("🔬 Configuration.storekit is not being loaded")
+            } else {
+                print("🔬 ✅ Products found:")
+                for product in directProducts {
+                    print("🔬    \(product.id) - \(product.displayName) - \(product.displayPrice)")
+                }
+            }
+        } catch {
+            print("🔬 ❌ Direct Product.products() failed:")
+            print("🔬 Error: \(error)")
+            print("🔬 This means fundamental StoreKit setup issue")
+        }
+        
+        print("🔬 === END SIMPLE TEST ===")
+    }
+    
+    // Check if StoreKit configuration file exists and is accessible
+    func validateStoreKitFiles() {
+        print("📁 === STOREKIT FILE VALIDATION ===")
+        
+        // Check if Configuration.storekit exists in the expected location
+        let configPath = Bundle.main.path(forResource: "Configuration", ofType: "storekit")
+        if let path = configPath {
+            print("📁 ✅ Configuration.storekit found at: \(path)")
+            
+            // Try to read the file
+            do {
+                let content = try String(contentsOfFile: path, encoding: .utf8)
+                let hasMonthly = content.contains("com.golfswingai.premium_monthly")
+                let hasAnnual = content.contains("com.golfswingai.premium_annual")
+                
+                print("📁 Configuration file contents check:")
+                print("📁   - Monthly product ID: \(hasMonthly ? "✅" : "❌")")
+                print("📁   - Annual product ID: \(hasAnnual ? "✅" : "❌")")
+                
+                if hasMonthly && hasAnnual {
+                    print("📁 ✅ Configuration file has correct product IDs")
+                } else {
+                    print("📁 ❌ Configuration file missing expected product IDs")
+                }
+            } catch {
+                print("📁 ❌ Could not read Configuration.storekit: \(error)")
+            }
+        } else {
+            print("📁 ❌ Configuration.storekit NOT FOUND in app bundle")
+            print("📁 This means the file is not being included in the build")
+            print("📁 Check Xcode project settings to ensure file is added to target")
+        }
+        
+        print("📁 === END FILE VALIDATION ===")
     }
 }
 
