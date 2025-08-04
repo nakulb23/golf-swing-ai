@@ -204,29 +204,61 @@ struct SettingsView: View {
                             .foregroundColor(.red)
                         
                         // Testing buttons
-                        HStack(spacing: 16) {
-                            Button(action: {
-                                premiumManager.resetPremiumAccess()
-                            }) {
-                                HStack {
-                                    Image(systemName: "arrow.clockwise")
-                                    Text("Reset Premium")
+                        VStack(spacing: 8) {
+                            HStack(spacing: 16) {
+                                Button(action: {
+                                    premiumManager.resetPremiumAccess()
+                                }) {
+                                    HStack {
+                                        Image(systemName: "arrow.clockwise")
+                                        Text("Reset Premium")
+                                    }
+                                    .font(.caption)
+                                    .foregroundColor(.blue)
                                 }
-                                .font(.caption)
-                                .foregroundColor(.blue)
+                                
+                                Button(action: {
+                                    Task {
+                                        await premiumManager.testStoreKitConfiguration()
+                                    }
+                                }) {
+                                    HStack {
+                                        Image(systemName: "checkmark.circle")
+                                        Text("Test StoreKit")
+                                    }
+                                    .font(.caption)
+                                    .foregroundColor(.green)
+                                }
                             }
                             
-                            Button(action: {
-                                Task {
-                                    await premiumManager.testStoreKitConfiguration()
+                            HStack(spacing: 16) {
+                                // Force reload button for stubborn StoreKit issues
+                                Button(action: {
+                                    Task {
+                                        await premiumManager.forceReloadProducts()
+                                    }
+                                }) {
+                                    HStack {
+                                        Image(systemName: "arrow.triangle.2.circlepath")
+                                        Text("Force Reload")
+                                    }
+                                    .font(.caption)
+                                    .foregroundColor(.orange)
                                 }
-                            }) {
-                                HStack {
-                                    Image(systemName: "checkmark.circle")
-                                    Text("Test StoreKit")
+                                
+                                // Simple direct test
+                                Button(action: {
+                                    Task {
+                                        await premiumManager.simpleStoreKitTest()
+                                    }
+                                }) {
+                                    HStack {
+                                        Image(systemName: "magnifyingglass")
+                                        Text("Simple Test")
+                                    }
+                                    .font(.caption)
+                                    .foregroundColor(.purple)
                                 }
-                                .font(.caption)
-                                .foregroundColor(.green)
                             }
                         }
                         .padding(.top, 4)

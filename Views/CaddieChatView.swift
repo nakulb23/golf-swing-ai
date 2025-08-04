@@ -19,12 +19,12 @@ import Foundation
                               .font(.system(size: 48, weight: .light))
                               .foregroundColor(.green)
                           
-                          Text("CaddieChat")
+                          Text("CaddieChat Pro")
                               .font(.largeTitle)
                               .fontWeight(.bold)
                               .foregroundColor(.green)
                           
-                          Text("Your AI golf expert with tournament insights")
+                          Text("Premium AI golf expert with comprehensive analysis")
                               .font(.subheadline)
                               .foregroundColor(.secondary)
                               .multilineTextAlignment(.center)
@@ -35,6 +35,14 @@ import Foundation
                       // Messages ScrollView
                       ScrollView {
                           LazyVStack(spacing: 16) {
+                              // Show premium suggestions when empty
+                              if messages.count <= 1 {
+                                  PremiumSuggestions { suggestion in
+                                      messageText = suggestion
+                                      sendMessage()
+                                  }
+                              }
+                              
                               ForEach(messages) { message in
                                   ChatBubble(message: message)
                               }
@@ -82,7 +90,7 @@ import Foundation
                       }
                   }
               }
-              .navigationTitle("CaddieChat")
+              .navigationTitle("CaddieChat Pro")
               .navigationBarTitleDisplayMode(.inline)
               .toolbarBackground(Color(UIColor.systemBackground), for: .navigationBar)
               .toolbar {
@@ -106,7 +114,7 @@ import Foundation
       private func addWelcomeMessage() {
           if messages.isEmpty {
               let welcome = ChatMessage(
-                  text: "Hi! I'm CaddieChat, your AI golf expert. Ask me anything about golf - from swing tips to course strategy!",
+                  text: "🏌️ Welcome to CaddieChat Pro! I'm your premium AI golf expert with comprehensive knowledge.\n\n✨ **I can help with:**\n• Swing analysis & technique fixes\n• Launch monitor data interpretation\n• Practice routines & drills\n• Course strategy & mental game\n• Equipment fitting & club selection\n• Statistics & improvement tracking\n\nTry asking: \"What's wrong with my swing if I keep slicing?\" or \"What's a good practice routine for an 18 handicapper?\"",
                   isUser: false,
                   timestamp: Date()
               )
@@ -195,7 +203,7 @@ import Foundation
                   }
               } else {
                   VStack(alignment: .leading, spacing: 4) {
-                      Text(message.text)
+                      Text(parseMarkdown(message.text))
                           .font(.body)
                           .foregroundColor(.primary)
                           .padding(.horizontal, 16)
@@ -218,6 +226,15 @@ import Foundation
               }
           }
       }
+      
+      // MARK: - Helper Functions
+      private func parseMarkdown(_ text: String) -> AttributedString {
+          do {
+              return try AttributedString(markdown: text)
+          } catch {
+              return AttributedString(text)
+          }
+      }
   }
 
   extension DateFormatter {
@@ -226,6 +243,74 @@ import Foundation
           formatter.timeStyle = .short
           return formatter
       }()
+  }
+
+  // MARK: - Premium Suggestions Component
+  struct PremiumSuggestions: View {
+      let onSuggestionTap: (String) -> Void
+      
+      private let premiumQuestions = [
+          ("🏌️ Swing Analysis", "What's wrong with my swing if I keep slicing the ball?"),
+          ("📊 Launch Monitor", "What do my launch monitor numbers mean?"),
+          ("📅 Practice Plan", "What's a good weekly practice routine for an 18 handicapper?"),
+          ("🏋️ Fitness", "What stretches help improve my shoulder turn?"),
+          ("🧠 Mental Game", "How can I stay mentally focused after a bad hole?"),
+          ("🛠️ Equipment", "Should I get fitted for clubs or buy off the rack?"),
+          ("🎯 Club Selection", "What club should I use for a 150-yard shot into the wind?"),
+          ("📈 Stats", "How can I lower my handicap using my stats?")
+      ]
+      
+      var body: some View {
+          VStack(alignment: .leading, spacing: 16) {
+              Text("✨ Try These Premium Questions")
+                  .font(.headline)
+                  .fontWeight(.semibold)
+                  .foregroundColor(.primary)
+                  .padding(.horizontal, 4)
+              
+              LazyVGrid(columns: [
+                  GridItem(.flexible()),
+                  GridItem(.flexible())
+              ], spacing: 12) {
+                  ForEach(Array(premiumQuestions.enumerated()), id: \.offset) { index, question in
+                      Button(action: {
+                          onSuggestionTap(question.1)
+                      }) {
+                          VStack(alignment: .leading, spacing: 8) {
+                              Text(question.0)
+                                  .font(.caption)
+                                  .fontWeight(.semibold)
+                                  .foregroundColor(.green)
+                              
+                              Text(question.1)
+                                  .font(.caption2)
+                                  .foregroundColor(.secondary)
+                                  .multilineTextAlignment(.leading)
+                                  .lineLimit(2)
+                          }
+                          .frame(maxWidth: .infinity, alignment: .leading)
+                          .padding(12)
+                          .background(
+                              RoundedRectangle(cornerRadius: 12)
+                                  .fill(Color(UIColor.secondarySystemBackground))
+                                  .overlay(
+                                      RoundedRectangle(cornerRadius: 12)
+                                          .stroke(Color.green.opacity(0.3), lineWidth: 1)
+                                  )
+                          )
+                      }
+                      .buttonStyle(PlainButtonStyle())
+                  }
+              }
+              
+              Text("💡 Ask me anything about golf - I have expert knowledge on all aspects of the game!")
+                  .font(.caption)
+                  .foregroundColor(.secondary)
+                  .padding(.horizontal, 4)
+                  .padding(.top, 8)
+          }
+          .padding(.vertical, 16)
+      }
   }
 
   #Preview {

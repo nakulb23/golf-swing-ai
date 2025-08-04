@@ -185,7 +185,7 @@ struct PhysicsEnginePremiumView: View {
                                     title: "Annual",
                                     price: "$21.99",
                                     period: "per year",
-                                    savings: "Save 45%",
+                                    savings: "Save 10%",
                                     isSelected: selectedPlan == .annual,
                                     isPopular: true
                                 )

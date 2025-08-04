@@ -1,0 +1,313 @@
+import Foundation
+import UIKit
+
+// MARK: - Anonymous Analytics Service
+class AnalyticsService: ObservableObject {
+    static let shared = AnalyticsService()
+    
+    private let userDefaults = UserDefaults.standard
+    private let analyticsKey = "anonymous_analytics_data"
+    private let sessionIdKey = "current_session_id"
+    
+    @Published private(set) var isEnabled = true
+    
+    private init() {
+        // Generate or retrieve anonymous session ID
+        ensureSessionId()
+    }
+    
+    // MARK: - Session Management
+    private func ensureSessionId() {
+        if userDefaults.string(forKey: sessionIdKey) == nil {
+            let sessionId = UUID().uuidString
+            userDefaults.set(sessionId, forKey: sessionIdKey)
+        }
+    }
+    
+    private var sessionId: String {
+        return userDefaults.string(forKey: sessionIdKey) ?? UUID().uuidString
+    }
+    
+    // MARK: - Data Collection Methods
+    func trackUserProfileData(_ user: User) {
+        guard isEnabled else { return }
+        
+        let profileData = AnonymousProfileData(
+            sessionId: sessionId,
+            experienceLevel: user.experienceLevel.rawValue,
+            preferredHand: user.preferredHand.rawValue,
+            hasHandicap: user.handicap != nil,
+            handicapRange: getHandicapRange(user.handicap),
+            hasHomeCourse: user.homeCourse != nil,
+            yearsPlayedRange: getYearsPlayedRange(user.yearsPlayed),
+            accountAge: getAccountAge(user.dateCreated),
+            timestamp: Date()
+        )
+        
+        saveAnalyticsData(profileData)
+        print("📊 Analytics: Profile data tracked (anonymous)")
+    }
+    
+    func trackSwingAnalysis(_ result: SwingAnalysisResult, userExperience: ExperienceLevel) {
+        guard isEnabled else { return }
+        
+        let swingData = AnonymousSwingData(
+            sessionId: sessionId,
+            swingSpeed: result.swingSpeed,
+            swingSpeedRange: getSwingSpeedRange(result.swingSpeed),
+            userExperience: userExperience.rawValue,
+            club: result.club,
+            balanceScore: result.balanceScore,
+            consistency: result.consistency,
+            hasVideo: result.videoURL != nil,
+            timestamp: Date()
+        )
+        
+        saveAnalyticsData(swingData)
+        print("📊 Analytics: Swing analysis tracked (anonymous)")
+    }
+    
+    func trackAppUsage(_ event: AppUsageEvent) {
+        guard isEnabled else { return }
+        
+        let usageData = AnonymousUsageData(
+            sessionId: sessionId,
+            event: event.rawValue,
+            deviceType: UIDevice.current.userInterfaceIdiom == .phone ? "phone" : "tablet",
+            osVersion: UIDevice.current.systemVersion,
+            appVersion: Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "unknown",
+            timestamp: Date()
+        )
+        
+        saveAnalyticsData(usageData)
+        print("📊 Analytics: App usage tracked - \(event.rawValue)")
+    }
+    
+    func trackAuthenticationMethod(_ method: AuthMethod) {
+        guard isEnabled else { return }
+        
+        let authData = AnonymousAuthData(
+            sessionId: sessionId,
+            method: method.rawValue,
+            timestamp: Date()
+        )
+        
+        saveAnalyticsData(authData)
+        print("📊 Analytics: Auth method tracked - \(method.rawValue)")
+    }
+    
+    // MARK: - Data Aggregation Helpers
+    private func getHandicapRange(_ handicap: Double?) -> String {
+        guard let handicap = handicap else { return "none" }
+        
+        switch handicap {
+        case ..<0: return "plus"
+        case 0..<5: return "0-5"
+        case 5..<10: return "5-10"
+        case 10..<15: return "10-15"
+        case 15..<20: return "15-20"
+        case 20..<25: return "20-25"
+        case 25..<30: return "25-30"
+        default: return "30+"
+        }
+    }
+    
+    private func getYearsPlayedRange(_ years: Int?) -> String {
+        guard let years = years else { return "unknown" }
+        
+        switch years {
+        case 0: return "new"
+        case 1: return "1"
+        case 2...3: return "2-3"
+        case 4...5: return "4-5"
+        case 6...10: return "6-10"
+        case 11...20: return "11-20"
+        default: return "20+"
+        }
+    }
+    
+    private func getSwingSpeedRange(_ speed: Double) -> String {
+        switch speed {
+        case ..<60: return "under-60"
+        case 60..<70: return "60-70"
+        case 70..<80: return "70-80"
+        case 80..<90: return "80-90"
+        case 90..<100: return "90-100"
+        case 100..<110: return "100-110"
+        default: return "110+"
+        }
+    }
+    
+    private func getAccountAge(_ dateCreated: Date) -> String {
+        let days = Calendar.current.dateComponents([.day], from: dateCreated, to: Date()).day ?? 0
+        
+        switch days {
+        case 0: return "new"
+        case 1...7: return "week1"
+        case 8...30: return "month1"
+        case 31...90: return "month1-3"
+        case 91...365: return "month3-12"
+        default: return "year+"
+        }
+    }
+    
+    // MARK: - Data Storage
+    private func saveAnalyticsData<T: Codable>(_ data: T) {
+        var existingData = loadAnalyticsData()
+        
+        let analyticsEntry = AnalyticsEntry(
+            id: UUID().uuidString,
+            type: String(describing: type(of: data)),
+            data: AnyCodable(data),
+            timestamp: Date()
+        )
+        
+        existingData.append(analyticsEntry)
+        
+        // Keep only last 1000 entries to prevent storage bloat
+        if existingData.count > 1000 {
+            existingData = Array(existingData.suffix(1000))
+        }
+        
+        if let encoded = try? JSONEncoder().encode(existingData) {
+            userDefaults.set(encoded, forKey: analyticsKey)
+        }
+    }
+    
+    private func loadAnalyticsData() -> [AnalyticsEntry] {
+        guard let data = userDefaults.data(forKey: analyticsKey),
+              let entries = try? JSONDecoder().decode([AnalyticsEntry].self, from: data) else {
+            return []
+        }
+        return entries
+    }
+    
+    // MARK: - Export & Privacy
+    func exportAnonymousData() -> [AnalyticsEntry] {
+        return loadAnalyticsData()
+    }
+    
+    func clearAllData() {
+        userDefaults.removeObject(forKey: analyticsKey)
+        userDefaults.removeObject(forKey: sessionIdKey)
+        ensureSessionId() // Generate new session ID
+        print("📊 Analytics: All data cleared")
+    }
+    
+    func setEnabled(_ enabled: Bool) {
+        isEnabled = enabled
+        print("📊 Analytics: \(enabled ? "Enabled" : "Disabled")")
+    }
+    
+    func getDataSummary() -> AnalyticsSummary {
+        let data = loadAnalyticsData()
+        
+        return AnalyticsSummary(
+            totalEvents: data.count,
+            profileUpdates: data.filter { $0.type.contains("ProfileData") }.count,
+            swingAnalyses: data.filter { $0.type.contains("SwingData") }.count,
+            appUsageEvents: data.filter { $0.type.contains("UsageData") }.count,
+            authEvents: data.filter { $0.type.contains("AuthData") }.count,
+            oldestEvent: data.first?.timestamp,
+            newestEvent: data.last?.timestamp
+        )
+    }
+}
+
+// MARK: - Analytics Data Models
+struct AnalyticsEntry: Codable {
+    let id: String
+    let type: String
+    let data: AnyCodable
+    let timestamp: Date
+}
+
+struct AnyCodable: Codable {
+    private let data: Data
+    
+    init<T: Codable>(_ value: T) {
+        self.data = (try? JSONEncoder().encode(value)) ?? Data()
+    }
+    
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        self.data = try container.decode(Data.self)
+    }
+    
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        try container.encode(data)
+    }
+    
+    func decode<T: Codable>(as type: T.Type) -> T? {
+        return try? JSONDecoder().decode(type, from: data)
+    }
+}
+
+struct AnonymousProfileData: Codable {
+    let sessionId: String
+    let experienceLevel: String
+    let preferredHand: String
+    let hasHandicap: Bool
+    let handicapRange: String
+    let hasHomeCourse: Bool
+    let yearsPlayedRange: String
+    let accountAge: String
+    let timestamp: Date
+}
+
+struct AnonymousSwingData: Codable {
+    let sessionId: String
+    let swingSpeed: Double
+    let swingSpeedRange: String
+    let userExperience: String
+    let club: String?
+    let balanceScore: Double
+    let consistency: Double
+    let hasVideo: Bool
+    let timestamp: Date
+}
+
+struct AnonymousUsageData: Codable {
+    let sessionId: String
+    let event: String
+    let deviceType: String
+    let osVersion: String
+    let appVersion: String
+    let timestamp: Date
+}
+
+struct AnonymousAuthData: Codable {
+    let sessionId: String
+    let method: String
+    let timestamp: Date
+}
+
+struct AnalyticsSummary {
+    let totalEvents: Int
+    let profileUpdates: Int
+    let swingAnalyses: Int
+    let appUsageEvents: Int
+    let authEvents: Int
+    let oldestEvent: Date?
+    let newestEvent: Date?
+}
+
+// MARK: - Event Enums
+enum AppUsageEvent: String, CaseIterable {
+    case appLaunch = "app_launch"
+    case profileView = "profile_view"
+    case editProfile = "edit_profile"
+    case swingAnalysis = "swing_analysis"
+    case videoRecord = "video_record"
+    case settingsView = "settings_view"
+    case helpView = "help_view"
+    case progressView = "progress_view"
+}
+
+enum AuthMethod: String, CaseIterable {
+    case email = "email"
+    case google = "google"
+    case apple = "apple"
+    case facebook = "facebook"
+}

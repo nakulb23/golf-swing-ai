@@ -1,0 +1,379 @@
+import SwiftUI
+
+struct PrivacySettingsView: View {
+    @ObservedObject private var analytics = AnalyticsService.shared
+    @State private var showingExportSheet = false
+    @State private var showingClearDataAlert = false
+    @State private var analyticsSummary: AnalyticsSummary?
+    
+    var body: some View {
+        NavigationView {
+            List {
+                // MARK: - Analytics Toggle Section
+                Section {
+                    VStack(alignment: .leading, spacing: 12) {
+                        HStack {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("Anonymous Analytics")
+                                    .font(.headline)
+                                    .foregroundColor(.primaryTextDynamic)
+                                
+                                Text("Help improve the app by sharing anonymous usage data")
+                                    .font(.caption)
+                                    .foregroundColor(.secondaryTextDynamic)
+                            }
+                            
+                            Spacer()
+                            
+                            Toggle("", isOn: Binding(
+                                get: { analytics.isEnabled },
+                                set: { analytics.setEnabled($0) }
+                            ))
+                        }
+                        
+                        if analytics.isEnabled {
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text("What we collect:")
+                                    .font(.subheadline)
+                                    .fontWeight(.medium)
+                                    .foregroundColor(.primaryTextDynamic)
+                                
+                                PrivacyDataPointView(
+                                    icon: "person.crop.circle",
+                                    title: "Golf Profile Data",
+                                    description: "Experience level, handicap range, preferred hand (no personal info)"
+                                )
+                                
+                                PrivacyDataPointView(
+                                    icon: "waveform.path",
+                                    title: "Swing Analytics",
+                                    description: "Swing speed ranges, performance metrics (no video data)"
+                                )
+                                
+                                PrivacyDataPointView(
+                                    icon: "chart.bar",
+                                    title: "App Usage",
+                                    description: "Feature usage, session duration, device type"
+                                )
+                                
+                                PrivacyDataPointView(
+                                    icon: "lock.shield",
+                                    title: "Authentication Methods",
+                                    description: "Sign-in method used (Google, Apple, etc.)"
+                                )
+                            }
+                            .padding(.top, 8)
+                        }
+                    }
+                    .padding(.vertical, 8)
+                } header: {
+                    Text("Data Collection")
+                } footer: {
+                    if analytics.isEnabled {
+                        Text("All data is completely anonymous and cannot be linked back to you. We use this data to improve the app experience for all users.")
+                    } else {
+                        Text("Analytics are disabled. No usage data will be collected.")
+                    }
+                }
+                
+                // MARK: - Data Summary Section
+                if analytics.isEnabled {
+                    Section("Your Data") {
+                        if let summary = analyticsSummary {
+                            DataSummaryRow(title: "Total Events", value: "\(summary.totalEvents)")
+                            DataSummaryRow(title: "Profile Updates", value: "\(summary.profileUpdates)")
+                            DataSummaryRow(title: "Swing Analyses", value: "\(summary.swingAnalyses)")
+                            DataSummaryRow(title: "App Usage Events", value: "\(summary.appUsageEvents)")
+                            
+                            if let oldestEvent = summary.oldestEvent {
+                                DataSummaryRow(
+                                    title: "Data Since",
+                                    value: DateFormatter.shortDate.string(from: oldestEvent)
+                                )
+                            }
+                        } else {
+                            Text("Loading data summary...")
+                                .foregroundColor(.secondaryTextDynamic)
+                        }
+                    }
+                }
+                
+                // MARK: - Data Management Section
+                if analytics.isEnabled {
+                    Section("Data Management") {
+                        Button(action: {
+                            showingExportSheet = true
+                        }) {
+                            HStack {
+                                Image(systemName: "square.and.arrow.up")
+                                    .foregroundColor(.blue)
+                                Text("Export My Data")
+                                    .foregroundColor(.primaryTextDynamic)
+                                Spacer()
+                            }
+                        }
+                        
+                        Button(action: {
+                            showingClearDataAlert = true
+                        }) {
+                            HStack {
+                                Image(systemName: "trash")
+                                    .foregroundColor(.red)
+                                Text("Clear All Data")
+                                    .foregroundColor(.red)
+                                Spacer()
+                            }
+                        }
+                    }
+                }
+                
+                // MARK: - Privacy Information Section
+                Section("Privacy Information") {
+                    VStack(alignment: .leading, spacing: 12) {
+                        PrivacyInfoItem(
+                            title: "No Personal Information",
+                            description: "We never collect names, emails, or other identifying information."
+                        )
+                        
+                        PrivacyInfoItem(
+                            title: "Anonymous Session IDs",
+                            description: "Data is grouped by random session IDs that cannot be traced back to you."
+                        )
+                        
+                        PrivacyInfoItem(
+                            title: "Local Storage Only",
+                            description: "All analytics data is stored locally on your device until you choose to share it."
+                        )
+                        
+                        PrivacyInfoItem(
+                            title: "Aggregated Insights",
+                            description: "We only use data to understand general usage patterns and improve the app."
+                        )
+                    }
+                    .padding(.vertical, 8)
+                }
+            }
+            .navigationTitle("Privacy & Analytics")
+            .navigationBarTitleDisplayMode(.large)
+            .onAppear {
+                loadAnalyticsSummary()
+            }
+            .sheet(isPresented: $showingExportSheet) {
+                DataExportView()
+            }
+            .alert("Clear All Analytics Data?", isPresented: $showingClearDataAlert) {
+                Button("Cancel", role: .cancel) { }
+                Button("Clear Data", role: .destructive) {
+                    analytics.clearAllData()
+                    loadAnalyticsSummary()
+                }
+            } message: {
+                Text("This will permanently delete all locally stored analytics data. This action cannot be undone.")
+            }
+        }
+    }
+    
+    private func loadAnalyticsSummary() {
+        analyticsSummary = analytics.getDataSummary()
+    }
+}
+
+// MARK: - Supporting Views
+struct PrivacyDataPointView: View {
+    let icon: String
+    let title: String
+    let description: String
+    
+    var body: some View {
+        HStack(alignment: .top, spacing: 12) {
+            Image(systemName: icon)
+                .foregroundColor(.blue)
+                .frame(width: 20)
+            
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+                    .foregroundColor(.primaryTextDynamic)
+                
+                Text(description)
+                    .font(.caption)
+                    .foregroundColor(.secondaryTextDynamic)
+            }
+        }
+    }
+}
+
+struct DataSummaryRow: View {
+    let title: String
+    let value: String
+    
+    var body: some View {
+        HStack {
+            Text(title)
+                .foregroundColor(.primaryTextDynamic)
+            Spacer()
+            Text(value)
+                .foregroundColor(.secondaryTextDynamic)
+                .fontWeight(.medium)
+        }
+    }
+}
+
+struct PrivacyInfoItem: View {
+    let title: String
+    let description: String
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(title)
+                .font(.subheadline)
+                .fontWeight(.medium)
+                .foregroundColor(.primaryTextDynamic)
+            
+            Text(description)
+                .font(.caption)
+                .foregroundColor(.secondaryTextDynamic)
+        }
+    }
+}
+
+struct DataExportView: View {
+    @Environment(\.dismiss) private var dismiss
+    @State private var exportData: [AnalyticsEntry] = []
+    @State private var isLoading = true
+    
+    var body: some View {
+        NavigationView {
+            VStack(spacing: 20) {
+                if isLoading {
+                    ProgressView("Preparing export...")
+                        .padding()
+                } else {
+                    ScrollView {
+                        VStack(alignment: .leading, spacing: 16) {
+                            Text("Analytics Data Export")
+                                .font(.headline)
+                                .padding(.horizontal)
+                            
+                            Text("This is all the anonymous analytics data stored on your device. You can copy this data or share it as needed.")
+                                .font(.subheadline)
+                                .foregroundColor(.secondaryTextDynamic)
+                                .padding(.horizontal)
+                            
+                            if exportData.isEmpty {
+                                Text("No analytics data found.")
+                                    .foregroundColor(.secondaryTextDynamic)
+                                    .padding()
+                            } else {
+                                LazyVStack(alignment: .leading, spacing: 8) {
+                                    ForEach(exportData.indices, id: \.self) { index in
+                                        let entry = exportData[index]
+                                        VStack(alignment: .leading, spacing: 4) {
+                                            HStack {
+                                                Text(entry.type)
+                                                    .font(.caption)
+                                                    .fontWeight(.medium)
+                                                    .foregroundColor(.blue)
+                                                
+                                                Spacer()
+                                                
+                                                Text(DateFormatter.shortDateTime.string(from: entry.timestamp))
+                                                    .font(.caption2)
+                                                    .foregroundColor(.secondaryTextDynamic)
+                                            }
+                                            
+                                            Text("ID: \(entry.id)")
+                                                .font(.caption2)
+                                                .foregroundColor(.secondaryTextDynamic)
+                                        }
+                                        .padding(.horizontal)
+                                        .padding(.vertical, 8)
+                                        .background(Color.secondaryBackgroundDynamic)
+                                        .cornerRadius(8)
+                                    }
+                                }
+                                .padding(.horizontal)
+                            }
+                        }
+                    }
+                }
+            }
+            .navigationTitle("Data Export")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("Close") {
+                        dismiss()
+                    }
+                }
+                
+                if !exportData.isEmpty {
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        ShareLink(
+                            item: generateExportString(),
+                            subject: Text("Golf Swing AI Analytics Data"),
+                            message: Text("Anonymous analytics data from Golf Swing AI app")
+                        ) {
+                            Image(systemName: "square.and.arrow.up")
+                        }
+                    }
+                }
+            }
+            .onAppear {
+                loadExportData()
+            }
+        }
+    }
+    
+    private func loadExportData() {
+        exportData = AnalyticsService.shared.exportAnonymousData()
+        isLoading = false
+    }
+    
+    private func generateExportString() -> String {
+        let summary = AnalyticsService.shared.getDataSummary()
+        var result = "Golf Swing AI - Anonymous Analytics Data Export\n"
+        result += "Generated: \(DateFormatter.fullDateTime.string(from: Date()))\n\n"
+        result += "Summary:\n"
+        result += "- Total Events: \(summary.totalEvents)\n"
+        result += "- Profile Updates: \(summary.profileUpdates)\n"
+        result += "- Swing Analyses: \(summary.swingAnalyses)\n"
+        result += "- App Usage Events: \(summary.appUsageEvents)\n"
+        result += "- Auth Events: \(summary.authEvents)\n\n"
+        
+        result += "Detailed Data:\n"
+        for entry in exportData {
+            result += "[\(DateFormatter.shortDateTime.string(from: entry.timestamp))] \(entry.type) - ID: \(entry.id)\n"
+        }
+        
+        return result
+    }
+}
+
+// MARK: - Date Formatter Extensions
+extension DateFormatter {
+    static let shortDate: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .short
+        return formatter
+    }()
+    
+    static let shortDateTime: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .short
+        formatter.timeStyle = .short
+        return formatter
+    }()
+    
+    static let fullDateTime: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .full
+        formatter.timeStyle = .medium
+        return formatter
+    }()
+}
+
+#Preview {
+    PrivacySettingsView()
+}

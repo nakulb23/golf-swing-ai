@@ -1470,6 +1470,9 @@ enum VideoExportError: LocalizedError {
                 "tempo": 1.0,
                 "club_path": 0.7
             ],
+            club_face_analysis: nil,
+            club_speed_analysis: nil,
+            premium_features_available: false,
             physics_insights: "Your swing plane is too steep (confidence: 85%). This can lead to fat shots, loss of distance, and inconsistent ball striking.",
             angle_insights: "Side-on view provides optimal swing plane analysis.",
             recommendations: [
