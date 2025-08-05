@@ -346,37 +346,54 @@ def generate_angle_specific_recommendations(predicted_label, camera_angle, featu
     
     recommendations = []
     
-    # Basic swing recommendations
+    # Enhanced swing-specific recommendations based on classification
     if predicted_label == "too_steep":
-        recommendations.append("Work on a more shallow backswing takeaway")
-        recommendations.append("Practice the 'one-piece' takeaway drill")
-        recommendations.append("Focus on turning your shoulders rather than lifting your arms")
+        # Primary fixes for steep swings
+        recommendations.append("🎯 Setup: Widen your stance slightly and bend more from the hips to create room for a shallower path")
+        recommendations.append("🏌️ Takeaway: Start the club more inside by focusing on rotating your chest while keeping arms relaxed")
+        recommendations.append("💪 Drill: Place a headcover just outside your ball - practice missing it on the backswing")
         
+        # Check specific feature weights for additional tips
+        if feature_weights.get('shaft_lean', 0) > 0.7:
+            recommendations.append("⚠️ Excessive forward shaft lean detected - try to maintain more neutral shaft position at setup")
+        if feature_weights.get('shoulder_rotation', 0) < 0.5:
+            recommendations.append("🔄 Limited shoulder turn - work on getting your lead shoulder under your chin in backswing")
+            
     elif predicted_label == "too_flat":
-        recommendations.append("Work on getting more vertical extension in your backswing")
-        recommendations.append("Practice the 'right elbow up' position at the top")
-        recommendations.append("Focus on lifting the club more with your trail arm")
+        # Primary fixes for flat swings
+        recommendations.append("🎯 Setup: Stand slightly closer to the ball and maintain spine angle throughout swing")
+        recommendations.append("🏌️ Backswing: Feel like you're lifting the club more vertically in the first part of takeaway")
+        recommendations.append("💪 Drill: Practice swings with club shaft against a wall behind you - maintain that angle")
         
-    else:
-        recommendations.append("Maintain your current swing plane consistency")
-        recommendations.append("Work on tempo and timing while keeping this good plane")
-        recommendations.append("Practice maintaining this plane under pressure")
-    
-    # Angle-specific recommendations
-    if camera_angle != CameraAngle.SIDE_ON:
-        recommendations.append(f"For more accurate swing plane analysis, record from side-on view")
+        # Check specific features
+        if feature_weights.get('hip_sway', 0) > 0.6:
+            recommendations.append("⚠️ Excessive hip sway detected - focus on rotating around your spine, not sliding")
+        if feature_weights.get('arm_extension', 0) < 0.5:
+            recommendations.append("📐 Keep your lead arm straighter in backswing for better plane control")
+            
+    else:  # Good plane
+        # Refinement tips for good swings
+        recommendations.append("✅ Excellent swing plane! Focus on consistency with these refinements:")
         
-    if camera_angle == CameraAngle.FRONT_ON and 'balance' in feature_weights:
-        if feature_weights['balance'] > 0.8:
-            recommendations.append("Your front-on angle is great for balance analysis - "
-                                 "consider checking your weight distribution")
+        # Look for minor improvements even in good swings
+        if feature_weights.get('tempo', 0) < 0.7:
+            recommendations.append("⏱️ Work on smoother tempo - count '1-2' on backswing, '3' on downswing")
+        if feature_weights.get('weight_transfer', 0) < 0.8:
+            recommendations.append("⚖️ Enhance weight transfer - feel 70% weight on trail foot at top of backswing")
+        else:
+            recommendations.append("🎯 Practice this swing under pressure - hit 10 balls with same pre-shot routine")
+            recommendations.append("📹 Record yourself weekly to ensure you maintain this excellent plane")
     
-    if camera_angle == CameraAngle.BEHIND and 'club_path' in feature_weights:
-        if feature_weights['club_path'] > 0.8:
-            recommendations.append("Your behind angle is excellent for club path analysis - "
-                                 "focus on inside-out swing path")
+    # Camera angle-specific tips
+    if camera_angle == CameraAngle.FRONT_ON:
+        recommendations.append("📸 Front view tip: Check that your head stays centered over the ball through impact")
+    elif camera_angle == CameraAngle.BEHIND:
+        recommendations.append("📸 Behind view tip: Ensure club exits left of target line after impact (right-handed)")
+    elif camera_angle == CameraAngle.DIAGONAL:
+        recommendations.append("📸 For best analysis, try recording from directly side-on (90° to target line)")
     
-    return recommendations
+    # Limit to top 5 most relevant recommendations
+    return recommendations[:5]
 
 # Backwards compatibility function
 def predict_with_physics_model(video_path, model_path="models/physics_based_model.pt", 
