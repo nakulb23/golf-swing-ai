@@ -548,12 +548,13 @@ struct BallTrackingVideoOverlayView: View {
                                 .frame(height: 4)
                         }
                         
-                        // Ball Trajectory Overlay
+                        // Enhanced Ball Path Overlay
                         if showTrajectoryPath {
-                            BallTrajectoryOverlay(
+                            EnhancedBallPathOverlay(
                                 result: result,
                                 showDetectionPoints: showDetectionPoints,
-                                playbackProgress: playbackProgress
+                                playbackProgress: playbackProgress,
+                                videoData: videoData
                             )
                         }
                         
@@ -676,28 +677,28 @@ struct BallTrackingVideoOverlayView: View {
                                 icon: "target",
                                 value: "\(Int(result.detection_summary.detection_rate * 100))%",
                                 label: "Detection",
-                                color: .ballTracking
+                                color: Color.ballTracking
                             )
                             
                             QuickStat(
                                 icon: "speedometer",
                                 value: String(format: "%.1f", result.flight_analysis?.launch_speed_ms ?? 0),
                                 label: "Launch m/s",
-                                color: .success
+                                color: Color.success
                             )
                             
                             QuickStat(
                                 icon: "arrow.up.right",
                                 value: String(format: "%.1f°", result.flight_analysis?.launch_angle_degrees ?? 0),
                                 label: "Angle",
-                                color: .warning
+                                color: Color.warning
                             )
                             
                             QuickStat(
                                 icon: "clock",
                                 value: String(format: "%.1fs", result.trajectory_data.flight_time),
                                 label: "Flight",
-                                color: .error
+                                color: Color.error
                             )
                         }
                         .padding(.horizontal)
@@ -714,7 +715,7 @@ struct BallTrackingVideoOverlayView: View {
                     Button("Done") {
                         dismiss()
                     }
-                    .foregroundColor(.ballTracking)
+                    .foregroundColor(Color.ballTracking)
                 }
             }
         }
@@ -774,7 +775,7 @@ struct BallTrajectoryOverlay: View {
                 }
                 .stroke(
                     LinearGradient(
-                        colors: [.ballTracking, .ballTracking.opacity(0.3)],
+                        colors: [Color.ballTracking, Color.ballTracking.opacity(0.3)],
                         startPoint: .leading,
                         endPoint: .trailing
                     ),
@@ -803,7 +804,7 @@ struct BallTrajectoryOverlay: View {
                         .fill(Color.white)
                         .frame(width: 12, height: 12)
                         .position(currentPoint)
-                        .shadow(color: .ballTracking, radius: 4)
+                        .shadow(color: Color.ballTracking, radius: 4)
                         .animation(.easeInOut(duration: 0.1), value: playbackProgress)
                 }
             }
@@ -846,7 +847,7 @@ struct FlightMetricsOverlay: View {
                         MetricBadge(
                             icon: "speedometer",
                             value: String(format: "%.1f m/s", launchSpeed),
-                            color: .success
+                            color: Color.success
                         )
                     }
                     
@@ -854,7 +855,7 @@ struct FlightMetricsOverlay: View {
                         MetricBadge(
                             icon: "arrow.up.right",
                             value: String(format: "%.1f°", launchAngle),
-                            color: .warning
+                            color: Color.warning
                         )
                     }
                     
@@ -862,7 +863,7 @@ struct FlightMetricsOverlay: View {
                         MetricBadge(
                             icon: "arrow.up",
                             value: String(format: "%.1f m", maxHeight),
-                            color: .error
+                            color: Color.error
                         )
                     }
                 }
@@ -960,6 +961,525 @@ struct QuickStat: View {
         .frame(maxWidth: .infinity)
     }
 }
+
+// MARK: - Enhanced Ball Path Overlay
+
+struct EnhancedBallPathOverlay: View {
+    let result: BallTrackingResponse
+    let showDetectionPoints: Bool
+    let playbackProgress: Double
+    let videoData: Data?
+    
+    var body: some View {
+        GeometryReader { geometry in
+            ZStack {
+                // 3D Ball Trajectory Path
+                BallTrajectoryPath3D(
+                    result: result,
+                    playbackProgress: playbackProgress,
+                    size: geometry.size
+                )
+                
+                // Ball Position with Trail
+                BallPositionWithTrail(
+                    result: result,
+                    playbackProgress: playbackProgress,
+                    size: geometry.size
+                )
+                
+                // Key Trajectory Callouts
+                TrajectoryCallouts(
+                    result: result,
+                    playbackProgress: playbackProgress,
+                    size: geometry.size
+                )
+                
+                // Detection Confidence Indicators
+                if showDetectionPoints {
+                    DetectionConfidenceIndicators(
+                        result: result,
+                        playbackProgress: playbackProgress,
+                        size: geometry.size
+                    )
+                }
+                
+                // Flight Phase Indicators
+                FlightPhaseIndicators(
+                    result: result,
+                    playbackProgress: playbackProgress,
+                    size: geometry.size
+                )
+            }
+        }
+    }
+}
+
+struct BallTrajectoryPath3D: View {
+    let result: BallTrackingResponse
+    let playbackProgress: Double
+    let size: CGSize
+    
+    var body: some View {
+        ZStack {
+            // Main trajectory path with 3D effect
+            Path { path in
+                let points = generateTrajectoryPoints()
+                if let firstPoint = points.first {
+                    path.move(to: firstPoint)
+                    for point in points.dropFirst() {
+                        path.addLine(to: point)
+                    }
+                }
+            }
+            .stroke(
+                LinearGradient(
+                    colors: getTrajectoryGradient(),
+                    startPoint: .leading,
+                    endPoint: .trailing
+                ),
+                style: StrokeStyle(lineWidth: 4, lineCap: .round)
+            )
+            .shadow(color: Color.ballTracking.opacity(0.5), radius: 2, x: 1, y: 1)
+            
+            // Trajectory shadow on ground
+            Path { path in
+                let shadowPoints = generateTrajectoryPoints().map { point in
+                    CGPoint(x: point.x, y: size.height - 20) // Ground level
+                }
+                if let firstPoint = shadowPoints.first {
+                    path.move(to: firstPoint)
+                    for point in shadowPoints.dropFirst() {
+                        path.addLine(to: point)
+                    }
+                }
+            }
+            .stroke(Color.black.opacity(0.3), style: StrokeStyle(lineWidth: 2, dash: [4, 2]))
+            
+            // Trajectory progress indicator
+            Path { path in
+                let points = generateTrajectoryPoints()
+                let visibleCount = Int(Double(points.count) * playbackProgress)
+                let visiblePoints = Array(points.prefix(visibleCount))
+                
+                if let firstPoint = visiblePoints.first {
+                    path.move(to: firstPoint)
+                    for point in visiblePoints.dropFirst() {
+                        path.addLine(to: point)
+                    }
+                }
+            }
+            .stroke(
+                LinearGradient(
+                    colors: [.yellow, Color.ballTracking],
+                    startPoint: .leading,
+                    endPoint: .trailing
+                ),
+                style: StrokeStyle(lineWidth: 6, lineCap: .round)
+            )
+        }
+    }
+    
+    private func generateTrajectoryPoints() -> [CGPoint] {
+        var points: [CGPoint] = []
+        let pointCount = result.detection_summary.trajectory_points
+        
+        for i in 0..<pointCount {
+            let progress = Double(i) / Double(pointCount - 1)
+            let point = calculateTrajectoryPoint(progress: progress)
+            points.append(point)
+        }
+        
+        return points
+    }
+    
+    private func calculateTrajectoryPoint(progress: Double) -> CGPoint {
+        // Enhanced trajectory calculation based on actual flight data
+        let maxHeight = result.flight_analysis?.estimated_max_height ?? 10.0
+        
+        let x = 50 + (size.width - 100) * progress
+        let normalizedHeight = sin(progress * .pi) * maxHeight
+        let y = size.height - 40 - (normalizedHeight * size.height * 0.3 / maxHeight)
+        
+        return CGPoint(x: x, y: y)
+    }
+    
+    private func getTrajectoryGradient() -> [Color] {
+        guard let flightAnalysis = result.flight_analysis else {
+            return [Color.ballTracking, Color.ballTracking.opacity(0.3)]
+        }
+        
+        // Color based on trajectory quality
+        if let launchAngle = flightAnalysis.launch_angle_degrees {
+            switch launchAngle {
+            case 10...25: // Optimal range
+                return [.green, .mint]
+            case 25...35: // Good range
+                return [Color.ballTracking, .blue]
+            default: // Suboptimal
+                return [.orange, .red.opacity(0.7)]
+            }
+        }
+        
+        return [Color.ballTracking, Color.ballTracking.opacity(0.3)]
+    }
+}
+
+struct BallPositionWithTrail: View {
+    let result: BallTrackingResponse
+    let playbackProgress: Double
+    let size: CGSize
+    
+    var body: some View {
+        ZStack {
+            // Ball trail effect
+            ForEach(0..<10, id: \.self) { index in
+                let trailProgress = max(0, playbackProgress - Double(index) * 0.05)
+                if trailProgress > 0 {
+                    let position = calculateTrajectoryPoint(progress: trailProgress)
+                    let opacity = 1.0 - (Double(index) * 0.15)
+                    let scale = 1.0 - (Double(index) * 0.1)
+                    
+                    Circle()
+                        .fill(Color.white.opacity(opacity))
+                        .frame(width: 8 * scale, height: 8 * scale)
+                        .position(position)
+                }
+            }
+            
+            // Current ball position
+            if playbackProgress > 0 {
+                let currentPosition = calculateTrajectoryPoint(progress: playbackProgress)
+                
+                ZStack {
+                    // Ball glow effect
+                    Circle()
+                        .fill(RadialGradient(
+                            colors: [.white, Color.ballTracking.opacity(0.3)],
+                            center: .center,
+                            startRadius: 0,
+                            endRadius: 12
+                        ))
+                        .frame(width: 24, height: 24)
+                        .blur(radius: 4)
+                    
+                    // Main ball
+                    Circle()
+                        .fill(Color.white)
+                        .frame(width: 12, height: 12)
+                        .overlay(
+                            Circle()
+                                .stroke(Color.ballTracking, lineWidth: 1)
+                        )
+                        .shadow(color: .black.opacity(0.3), radius: 2, x: 1, y: 1)
+                    
+                    // Speed indicator
+                    if let launchSpeed = result.flight_analysis?.launch_speed_ms {
+                        let speedAlpha = min(1.0, launchSpeed / 50.0) // Normalize to 0-1
+                        Circle()
+                            .stroke(Color.yellow.opacity(speedAlpha), lineWidth: 2)
+                            .frame(width: 16, height: 16)
+                            .animation(.easeInOut(duration: 0.5).repeatForever(autoreverses: true), value: playbackProgress)
+                    }
+                }
+                .position(currentPosition)
+                .animation(.easeInOut(duration: 0.1), value: playbackProgress)
+            }
+        }
+    }
+    
+    private func calculateTrajectoryPoint(progress: Double) -> CGPoint {
+        let maxHeight = result.flight_analysis?.estimated_max_height ?? 10.0
+        
+        let x = 50 + (size.width - 100) * progress
+        let normalizedHeight = sin(progress * .pi) * maxHeight
+        let y = size.height - 40 - (normalizedHeight * size.height * 0.3 / maxHeight)
+        
+        return CGPoint(x: x, y: y)
+    }
+}
+
+struct TrajectoryCallouts: View {
+    let result: BallTrackingResponse
+    let playbackProgress: Double
+    let size: CGSize
+    
+    var body: some View {
+        ZStack {
+            // Launch point callout
+            if playbackProgress >= 0.0 {
+                TrajectoryCallout(
+                    title: "LAUNCH",
+                    metrics: getLaunchMetrics(),
+                    position: CGPoint(x: 50, y: size.height - 40),
+                    color: .green,
+                    isActive: playbackProgress <= 0.1
+                )
+            }
+            
+            // Apex point callout
+            if playbackProgress >= 0.4 {
+                let apexPosition = calculateTrajectoryPoint(progress: 0.5)
+                TrajectoryCallout(
+                    title: "APEX",
+                    metrics: getApexMetrics(),
+                    position: apexPosition,
+                    color: Color.ballTracking,
+                    isActive: playbackProgress >= 0.4 && playbackProgress <= 0.6
+                )
+            }
+            
+            // Landing point callout
+            if playbackProgress >= 0.8 {
+                TrajectoryCallout(
+                    title: "LANDING",
+                    metrics: getLandingMetrics(),
+                    position: CGPoint(x: size.width - 50, y: size.height - 40),
+                    color: .red,
+                    isActive: playbackProgress >= 0.8
+                )
+            }
+        }
+    }
+    
+    private func calculateTrajectoryPoint(progress: Double) -> CGPoint {
+        let maxHeight = result.flight_analysis?.estimated_max_height ?? 10.0
+        let x = 50 + (size.width - 100) * progress
+        let normalizedHeight = sin(progress * .pi) * maxHeight
+        let y = size.height - 40 - (normalizedHeight * size.height * 0.3 / maxHeight)
+        return CGPoint(x: x, y: y)
+    }
+    
+    private func getLaunchMetrics() -> [String] {
+        var metrics: [String] = []
+        
+        if let speed = result.flight_analysis?.launch_speed_ms {
+            metrics.append("\(String(format: "%.1f", speed)) m/s")
+        }
+        
+        if let angle = result.flight_analysis?.launch_angle_degrees {
+            metrics.append("\(String(format: "%.1f", angle))°")
+        }
+        
+        return metrics
+    }
+    
+    private func getApexMetrics() -> [String] {
+        var metrics: [String] = []
+        
+        if let maxHeight = result.flight_analysis?.estimated_max_height {
+            metrics.append("\(String(format: "%.1f", maxHeight))m")
+        }
+        
+        let apexTime = result.trajectory_data.flight_time / 2
+        metrics.append("\(String(format: "%.1f", apexTime))s")
+        
+        return metrics
+    }
+    
+    private func getLandingMetrics() -> [String] {
+        var metrics: [String] = []
+        
+        if let range = result.flight_analysis?.estimated_range {
+            metrics.append("\(String(format: "%.0f", range))m")
+        }
+        
+        metrics.append("\(String(format: "%.1f", result.trajectory_data.flight_time))s")
+        
+        return metrics
+    }
+}
+
+struct TrajectoryCallout: View {
+    let title: String
+    let metrics: [String]
+    let position: CGPoint
+    let color: Color
+    let isActive: Bool
+    
+    var body: some View {
+        VStack(spacing: 4) {
+            // Callout pointer
+            Triangle()
+                .fill(color)
+                .frame(width: 8, height: 6)
+            
+            // Callout content
+            VStack(spacing: 2) {
+                Text(title)
+                    .font(.caption2)
+                    .fontWeight(.bold)
+                    .foregroundColor(color)
+                
+                ForEach(metrics, id: \.self) { metric in
+                    Text(metric)
+                        .font(.caption2)
+                        .fontWeight(.medium)
+                        .foregroundColor(.white)
+                }
+            }
+            .padding(.horizontal, 8)
+            .padding(.vertical, 4)
+            .background(
+                RoundedRectangle(cornerRadius: 6)
+                    .fill(Color.black.opacity(0.8))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 6)
+                            .stroke(color.opacity(0.8), lineWidth: 1)
+                    )
+            )
+        }
+        .position(CGPoint(x: position.x, y: position.y - 30))
+        .scaleEffect(isActive ? 1.1 : 0.9)
+        .opacity(isActive ? 1.0 : 0.7)
+        .animation(.easeInOut(duration: 0.3), value: isActive)
+    }
+}
+
+struct Triangle: Shape {
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+        path.move(to: CGPoint(x: rect.midX, y: rect.maxY))
+        path.addLine(to: CGPoint(x: rect.minX, y: rect.minY))
+        path.addLine(to: CGPoint(x: rect.maxX, y: rect.minY))
+        path.closeSubpath()
+        return path
+    }
+}
+
+struct DetectionConfidenceIndicators: View {
+    let result: BallTrackingResponse
+    let playbackProgress: Double
+    let size: CGSize
+    
+    var body: some View {
+        ForEach(0..<result.detection_summary.trajectory_points, id: \.self) { index in
+            let progress = Double(index) / Double(result.detection_summary.trajectory_points - 1)
+            
+            if progress <= playbackProgress {
+                let position = calculateTrajectoryPoint(progress: progress)
+                let confidence = getDetectionConfidence(for: index)
+                
+                Circle()
+                    .fill(getConfidenceColor(confidence))
+                    .frame(width: 4, height: 4)
+                    .position(position)
+                    .opacity(0.8)
+            }
+        }
+    }
+    
+    private func calculateTrajectoryPoint(progress: Double) -> CGPoint {
+        let maxHeight = result.flight_analysis?.estimated_max_height ?? 10.0
+        let x = 50 + (size.width - 100) * progress
+        let normalizedHeight = sin(progress * .pi) * maxHeight
+        let y = size.height - 40 - (normalizedHeight * size.height * 0.3 / maxHeight)
+        return CGPoint(x: x, y: y)
+    }
+    
+    private func getDetectionConfidence(for index: Int) -> Double {
+        // Simulate varying confidence levels - in real implementation would come from tracking data
+        let baseConfidence = result.detection_summary.detection_rate
+        let variation = sin(Double(index) * 0.2) * 0.1 // Small variation
+        return min(1.0, max(0.0, baseConfidence + variation))
+    }
+    
+    private func getConfidenceColor(_ confidence: Double) -> Color {
+        switch confidence {
+        case 0.8...: return .green
+        case 0.6..<0.8: return .yellow
+        case 0.4..<0.6: return .orange
+        default: return .red
+        }
+    }
+}
+
+struct FlightPhaseIndicators: View {
+    let result: BallTrackingResponse
+    let playbackProgress: Double
+    let size: CGSize
+    
+    var body: some View {
+        VStack {
+            HStack {
+                Spacer()
+                
+                VStack(alignment: .trailing, spacing: 8) {
+                    // Current flight phase
+                    FlightPhaseBadge(
+                        phase: getCurrentFlightPhase(),
+                        isActive: true
+                    )
+                    
+                    // Flight characteristics
+                    if let trajectoryType = result.flight_analysis?.trajectory_type {
+                        FlightCharacteristicBadge(
+                            characteristic: trajectoryType,
+                            color: Color.ballTracking
+                        )
+                    }
+                }
+                .padding(.trailing, 16)
+                .padding(.top, 16)
+            }
+            
+            Spacer()
+        }
+    }
+    
+    private func getCurrentFlightPhase() -> String {
+        switch playbackProgress {
+        case 0..<0.2: return "Launch"
+        case 0.2..<0.6: return "Ascent"
+        case 0.6..<0.8: return "Descent"
+        default: return "Landing"
+        }
+    }
+}
+
+struct FlightPhaseBadge: View {
+    let phase: String
+    let isActive: Bool
+    
+    var body: some View {
+        HStack(spacing: 6) {
+            Circle()
+                .fill(isActive ? Color.ballTracking : .gray)
+                .frame(width: 8, height: 8)
+            
+            Text(phase.uppercased())
+                .font(.caption2)
+                .fontWeight(.medium)
+                .foregroundColor(.white)
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 6)
+        .background(
+            RoundedRectangle(cornerRadius: 8)
+                .fill(Color.black.opacity(0.7))
+        )
+    }
+}
+
+struct FlightCharacteristicBadge: View {
+    let characteristic: String
+    let color: Color
+    
+    var body: some View {
+        Text(characteristic)
+            .font(.caption2)
+            .fontWeight(.medium)
+            .foregroundColor(.white)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 6)
+            .background(
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(color.opacity(0.8))
+            )
+            .lineLimit(2)
+            .multilineTextAlignment(.center)
+    }
+}
+
 
 #Preview {
     BallTrackingView()

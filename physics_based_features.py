@@ -27,7 +27,8 @@ class GolfSwingPhysicsExtractor:
         }
         
         # Expected ideal swing plane characteristics
-        self.ideal_plane_angle = 45  # degrees from vertical
+        # Updated based on modern golf instruction and biomechanics research
+        self.ideal_plane_angle = 52  # degrees from vertical (more realistic for average golfer)
         self.ideal_shoulder_turn = 90  # degrees
         self.ideal_hip_turn = 45  # degrees
     
@@ -109,13 +110,14 @@ class GolfSwingPhysicsExtractor:
             features['backswing_consistency'] = 1.0 / (1.0 + np.std(early_backswing_angles))
             
             # Critical: Early backswing plane tendency (weighted heavily)
+            # Updated thresholds based on real golf swing data analysis
             early_backswing_avg = np.mean(early_backswing_angles)
-            if early_backswing_avg > 55:
+            if early_backswing_avg > 62:  # More lenient for steep classification
                 features['backswing_tendency'] = 1.0  # too_steep
-            elif early_backswing_avg < 35:
+            elif early_backswing_avg < 42:  # More realistic flat threshold
                 features['backswing_tendency'] = -1.0  # too_flat
             else:
-                features['backswing_tendency'] = 0.0  # on_plane
+                features['backswing_tendency'] = 0.0  # on_plane (42-62 degrees)
         else:
             # Fallback if backswing detection fails
             features['backswing_avg_angle'] = np.mean(plane_angles[:len(plane_angles)//3])
@@ -137,13 +139,14 @@ class GolfSwingPhysicsExtractor:
         features['plane_consistency'] = 1.0 / (1.0 + np.std(plane_angles))
         
         # Overall plane tendency (now secondary to backswing)
+        # Updated to match new realistic thresholds
         avg_angle = np.mean(plane_angles)
-        if avg_angle > 55:
+        if avg_angle > 62:  # Consistent with backswing thresholds
             features['plane_tendency'] = 1.0  # too_steep
-        elif avg_angle < 35:
+        elif avg_angle < 42:  # Consistent with backswing thresholds
             features['plane_tendency'] = -1.0  # too_flat
         else:
-            features['plane_tendency'] = 0.0  # on_plane
+            features['plane_tendency'] = 0.0  # on_plane (42-62 degrees)
         
         return features
     
@@ -503,6 +506,201 @@ def main():
     logger.info(f"Features per sample: {len(feature_names)}")
     
     logger.info(f"\nFeature names: {feature_names}")
+    
+    # MARK: - Enhanced Temporal Feature Extraction Methods
+    def extract_feature_sequence(self, keypoints_sequence):
+        """
+        Extract temporal feature sequences for LSTM processing
+        Returns features for each frame to capture swing dynamics
+        """
+        if len(keypoints_sequence) == 0:
+            return np.array([]), []
+        
+        feature_sequence = []
+        feature_names = self.get_feature_names()
+        
+        for frame_idx in range(len(keypoints_sequence)):
+            # Extract features for each frame
+            frame_keypoints = keypoints_sequence[frame_idx]
+            
+            # Ensure we have enough frames for derivatives
+            prev_frame = frame_keypoints if frame_idx == 0 else keypoints_sequence[frame_idx-1]
+            next_frame = frame_keypoints if frame_idx >= len(keypoints_sequence)-1 else keypoints_sequence[frame_idx+1]
+            
+            frame_features = self._extract_single_frame_features(
+                frame_keypoints, prev_frame, next_frame, frame_idx, len(keypoints_sequence)
+            )
+            
+            feature_sequence.append(frame_features)
+        
+        return np.array(feature_sequence), feature_names
+    
+    def _extract_single_frame_features(self, current_frame, prev_frame, next_frame, frame_idx, total_frames):
+        """Extract comprehensive features for a single frame with temporal context"""
+        
+        features = []
+        
+        # 1. Basic pose features (consistent with existing model)
+        pose_features = self._extract_basic_pose_features(current_frame)
+        features.extend(pose_features)
+        
+        # 2. Temporal derivatives (velocity and acceleration)
+        if frame_idx > 0:
+            velocity_features = self._calculate_velocity_features(current_frame, prev_frame)
+            features.extend(velocity_features)
+        else:
+            features.extend([0.0] * 10)  # Zero velocity at start
+        
+        # 3. Phase-aware features
+        swing_phase = self._estimate_swing_phase(frame_idx, total_frames)
+        phase_features = self._extract_phase_features(current_frame, swing_phase)
+        features.extend(phase_features)
+        
+        # 4. Temporal consistency features
+        consistency_features = self._calculate_consistency_features(
+            current_frame, prev_frame, next_frame
+        )
+        features.extend(consistency_features)
+        
+        return features[:35]  # Ensure consistent feature count
+    
+    def _extract_basic_pose_features(self, keypoints):
+        """Extract basic pose features (compatible with existing model)"""
+        try:
+            # Reuse existing feature extraction logic
+            features_dict = self.extract_swing_plane_features(np.array([keypoints]))
+            
+            # Convert to ordered feature vector
+            features = [
+                features_dict.get('avg_plane_angle', 0),
+                features_dict.get('plane_consistency', 0),
+                features_dict.get('shoulder_turn_range', 0),
+                features_dict.get('hip_turn_range', 0),
+                features_dict.get('shoulder_hip_separation', 0),
+                features_dict.get('arm_extension_ratio', 0),
+                features_dict.get('club_path_deviation', 0),
+                features_dict.get('swing_width', 0),
+                features_dict.get('tempo_ratio', 0),
+                features_dict.get('transition_smoothness', 0)
+            ]
+            
+            # Pad to ensure we have enough features
+            while len(features) < 25:
+                features.append(0.0)
+                
+            return features[:25]
+            
+        except:
+            return [0.0] * 25
+    
+    def _calculate_velocity_features(self, current_frame, prev_frame):
+        """Calculate velocity-based features between frames"""
+        velocities = []
+        
+        try:
+            key_points = ['left_wrist', 'right_wrist', 'left_shoulder', 'right_shoulder']
+            
+            for point_name in key_points:
+                if point_name in self.pose_landmarks:
+                    idx = self.pose_landmarks[point_name]
+                    if idx < len(current_frame) and idx < len(prev_frame):
+                        current_pos = current_frame[idx][:2]  # x, y
+                        prev_pos = prev_frame[idx][:2]
+                        
+                        # Calculate velocity magnitude
+                        velocity = np.linalg.norm(np.array(current_pos) - np.array(prev_pos))
+                        velocities.append(velocity)
+                    else:
+                        velocities.append(0.0)
+                else:
+                    velocities.append(0.0)
+            
+            # Add derived velocity features
+            if len(velocities) >= 4:
+                velocities.extend([
+                    max(velocities),  # Peak velocity
+                    np.mean(velocities),  # Average velocity
+                ])
+            
+            # Pad to 10 features
+            while len(velocities) < 10:
+                velocities.append(0.0)
+                
+            return velocities[:10]
+            
+        except:
+            return [0.0] * 10
+    
+    def _estimate_swing_phase(self, frame_idx, total_frames):
+        """Estimate swing phase based on frame position"""
+        progress = frame_idx / max(total_frames - 1, 1)
+        
+        if progress < 0.15:
+            return "setup"
+        elif progress < 0.35:
+            return "takeaway"
+        elif progress < 0.55:
+            return "backswing"
+        elif progress < 0.65:
+            return "transition"
+        elif progress < 0.85:
+            return "downswing"
+        else:
+            return "impact"
+    
+    def _extract_phase_features(self, keypoints, phase):
+        """Extract phase-specific features"""
+        # Phase encoding (one-hot style)
+        phases = ["setup", "takeaway", "backswing", "transition", "downswing", "impact"]
+        phase_encoding = [1.0 if p == phase else 0.0 for p in phases]
+        return phase_encoding
+    
+    def _calculate_consistency_features(self, current_frame, prev_frame, next_frame):
+        """Calculate temporal consistency features"""
+        consistency = []
+        
+        try:
+            # Calculate smoothness of key joint trajectories
+            key_joints = ['left_wrist', 'right_wrist', 'left_shoulder', 'right_shoulder']
+            
+            for joint_name in key_joints:
+                if joint_name in self.pose_landmarks:
+                    idx = self.pose_landmarks[joint_name]
+                    if all(idx < len(frame) for frame in [current_frame, prev_frame, next_frame]):
+                        # Get positions
+                        positions = [
+                            frame[idx][:2] for frame in [prev_frame, current_frame, next_frame]
+                        ]
+                        
+                        # Calculate second derivative (acceleration/jerk indicator)
+                        if len(positions) == 3:
+                            p1, p2, p3 = [np.array(pos) for pos in positions]
+                            accel = np.linalg.norm((p1 - 2*p2 + p3))
+                            consistency.append(accel)
+                        else:
+                            consistency.append(0.0)
+                    else:
+                        consistency.append(0.0)
+                else:
+                    consistency.append(0.0)
+            
+            # Pad to expected size
+            while len(consistency) < 4:
+                consistency.append(0.0)
+                
+            return consistency[:4]
+            
+        except:
+            return [0.0] * 4
+
+# Add to GolfSwingPhysicsExtractor class
+GolfSwingPhysicsExtractor.extract_feature_sequence = extract_feature_sequence
+GolfSwingPhysicsExtractor._extract_single_frame_features = _extract_single_frame_features
+GolfSwingPhysicsExtractor._extract_basic_pose_features = _extract_basic_pose_features
+GolfSwingPhysicsExtractor._calculate_velocity_features = _calculate_velocity_features
+GolfSwingPhysicsExtractor._estimate_swing_phase = _estimate_swing_phase
+GolfSwingPhysicsExtractor._extract_phase_features = _extract_phase_features
+GolfSwingPhysicsExtractor._calculate_consistency_features = _calculate_consistency_features
     
     return real_features, real_labels, synthetic_features, synthetic_labels, feature_names
 

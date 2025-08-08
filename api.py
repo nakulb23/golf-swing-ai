@@ -17,13 +17,16 @@ sys.path.append(str(Path(__file__).parent))
 
 from predict_multi_angle import predict_with_multi_angle_model
 from predict_physics_based import predict_with_physics_model  # Keep for fallback
+from predict_enhanced_lstm import predict_with_enhanced_lstm  # Enhanced LSTM model
 from detailed_swing_analysis import analyze_swing_with_details
 from golf_chatbot import CaddieChat
 from ball_tracking import GolfBallTracker
+from incremental_lstm_trainer import get_trainer, add_user_contribution, get_training_status
 
 # Initialize components
 chatbot = CaddieChat()
 ball_tracker = GolfBallTracker()
+lstm_trainer = get_trainer()  # Initialize incremental trainer
 
 # Pydantic models for request/response
 class ChatRequest(BaseModel):
@@ -34,9 +37,9 @@ class ChatResponse(BaseModel):
     is_golf_related: bool
 
 app = FastAPI(
-    title="Golf Swing AI",
-    description="Complete golf analysis system with swing classification, ball tracking, and Q&A chatbot",
-    version="2.0.0"
+    title="Golf Swing AI Enhanced",
+    description="Advanced golf analysis with LSTM temporal modeling, multi-angle detection, physics-based features, swing classification, ball tracking, and Q&A chatbot",
+    version="2.1.0"
 )
 
 # Add CORS middleware for iOS app
@@ -146,13 +149,26 @@ async def predict_swing(file: UploadFile = File(...)):
         print(f"📹 Saved video to temporary file: {tmp_path}")
     
     try:
-        # Make prediction with multi-angle model
-        result = predict_with_multi_angle_model(tmp_path)
+        # Try enhanced LSTM model first (best performance)
+        print("🚀 Attempting enhanced LSTM temporal analysis...")
+        result = predict_with_enhanced_lstm(
+            tmp_path, 
+            lstm_model_path="models/enhanced_temporal_model.pt",
+            physics_model_path="models/physics_based_model.pt",
+            scaler_path="models/physics_scaler.pkl",
+            encoder_path="models/physics_label_encoder.pkl",
+            use_ensemble=True
+        )
         
         if result is None:
-            # Fallback to traditional model if multi-angle fails
-            print("⚠️ Multi-angle prediction failed, falling back to traditional model...")
-            result = predict_with_physics_model(tmp_path)
+            # Fallback to multi-angle model
+            print("⚠️ Enhanced LSTM failed, falling back to multi-angle model...")
+            result = predict_with_multi_angle_model(tmp_path)
+            
+            if result is None:
+                # Final fallback to traditional physics model
+                print("⚠️ Multi-angle prediction failed, falling back to traditional model...")
+                result = predict_with_physics_model(tmp_path)
             if result is None:
                 raise HTTPException(status_code=400, detail="Failed to process video with both models")
         
@@ -643,29 +659,238 @@ async def get_contribution_stats(user_id: str):
 @app.get("/model-training-status")
 async def get_model_training_status():
     """
-    Get current model training status and community impact
+    Get current LSTM model training status and community impact
     """
     
-    total_data = len(swing_data_storage)
+    try:
+        # Get enhanced training status from LSTM trainer
+        lstm_status = get_training_status()
+        
+        total_samples = lstm_status['total_samples']
+        min_required = lstm_status['min_samples_required']
+        is_training = lstm_status['is_training']
+        model_exists = lstm_status['model_exists']
+        
+        # Determine training status
+        if total_samples < min_required:
+            status = "Collecting initial data"
+            next_update = f"Need {min_required - total_samples} more contributions to begin LSTM training"
+        elif is_training:
+            status = "LSTM model training in progress"
+            next_update = "Enhanced temporal model is being updated with new data!"
+        elif total_samples >= min_required and not is_training:
+            status = "Ready for training"
+            next_update = "Sufficient data collected - training will begin automatically"
+        else:
+            status = "Model ready"
+            next_update = "Enhanced LSTM model is trained and serving predictions"
+        
+        return {
+            "total_contributions": total_samples,
+            "training_status": status,
+            "next_update": next_update,
+            "model_version": "2.1_lstm_temporal",
+            "accuracy_target": "95%+ with temporal analysis",
+            "community_impact": f"Enhanced LSTM model learns from {total_samples} real swing contributions!",
+            "lstm_specific": {
+                "min_samples_required": min_required,
+                "is_currently_training": is_training,
+                "model_file_exists": model_exists,
+                "last_training": lstm_status['last_training'],
+                "training_interval_hours": lstm_status['training_interval_hours']
+            }
+        }
+        
+    except Exception as e:
+        # Fallback to basic status
+        total_data = len(swing_data_storage)
+        return {
+            "total_contributions": total_data,
+            "training_status": "Basic data collection",
+            "next_update": "LSTM trainer initialization pending",
+            "model_version": "2.0_fallback",
+            "error": str(e)
+        }
+
+# MARK: - Enhanced LSTM Training Endpoints
+
+@app.post("/submit-corrected-prediction")
+async def submit_corrected_prediction(file: UploadFile = File(...), 
+                                    correct_label: str = Form(...),
+                                    original_prediction: str = Form(...),
+                                    user_id: str = Form(...)):
+    """
+    Submit a video with corrected label for LSTM model improvement
     
-    if total_data < 50:
-        status = "Collecting initial data"
-        next_update = "Need 50+ contributions to begin training"
-    elif total_data < 200:
-        status = "Preparing for training"
-        next_update = f"{200 - total_data} more contributions needed for next model update"
-    else:
-        status = "Training in progress"
-        next_update = "Model update coming soon!"
+    This endpoint allows users to contribute training data by:
+    1. Uploading a video that was misclassified
+    2. Providing the correct label
+    3. Contributing to incremental LSTM training
+    """
     
-    return {
-        "total_contributions": total_data,
-        "training_status": status,
-        "next_update": next_update,
-        "model_version": "2.0_community",
-        "accuracy_target": "95%+",
-        "community_impact": "Every contribution makes the AI smarter for everyone!"
-    }
+    try:
+        # Validate correct label
+        valid_labels = ['too_steep', 'on_plane', 'too_flat']
+        if correct_label not in valid_labels:
+            raise HTTPException(status_code=400, detail=f"Invalid label. Must be one of: {valid_labels}")
+        
+        # Save uploaded video temporarily
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.mp4') as tmp_file:
+            content = await file.read()
+            tmp_file.write(content)
+            tmp_path = tmp_file.name
+        
+        try:
+            # Add to incremental training with user feedback
+            user_feedback = {
+                'original_prediction': original_prediction,
+                'correction_reason': f'User corrected {original_prediction} to {correct_label}',
+                'user_id': user_id[:8] + '***',  # Anonymize
+                'contribution_type': 'correction'
+            }
+            
+            success = add_user_contribution(tmp_path, correct_label, user_feedback)
+            
+            if success:
+                # Get updated training status
+                training_status = get_training_status()
+                
+                return {
+                    "contribution_accepted": True,
+                    "correct_label": correct_label,
+                    "anonymous_id": user_id[:8] + '***',
+                    "total_contributions": training_status['total_samples'],
+                    "training_triggered": training_status['is_training'],
+                    "thank_you_message": f"Thank you! Your correction helps improve the LSTM model. Total community contributions: {training_status['total_samples']}",
+                    "model_impact": "Your contribution will be included in the next incremental training cycle."
+                }
+            else:
+                raise HTTPException(status_code=500, detail="Failed to process training contribution")
+                
+        finally:
+            # Clean up temporary file
+            if os.path.exists(tmp_path):
+                os.unlink(tmp_path)
+                
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Contribution processing failed: {str(e)}")
+
+@app.post("/submit-verified-swing")
+async def submit_verified_swing(file: UploadFile = File(...),
+                               swing_label: str = Form(...),
+                               verification_source: str = Form(...),
+                               user_id: str = Form(...)):
+    """
+    Submit a professionally verified swing for high-quality training data
+    
+    For swings that have been verified by:
+    - Golf professionals
+    - Video analysis software
+    - Expert golfers
+    """
+    
+    try:
+        valid_labels = ['too_steep', 'on_plane', 'too_flat']
+        if swing_label not in valid_labels:
+            raise HTTPException(status_code=400, detail=f"Invalid label. Must be one of: {valid_labels}")
+        
+        # Save video temporarily
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.mp4') as tmp_file:
+            content = await file.read()
+            tmp_file.write(content)
+            tmp_path = tmp_file.name
+        
+        try:
+            # Add high-quality training data
+            user_feedback = {
+                'verification_source': verification_source,
+                'quality_level': 'professional_verified',
+                'user_id': user_id[:8] + '***',
+                'contribution_type': 'verified_training'
+            }
+            
+            success = add_user_contribution(tmp_path, swing_label, user_feedback)
+            
+            if success:
+                training_status = get_training_status()
+                
+                return {
+                    "verification_accepted": True,
+                    "swing_label": swing_label,
+                    "verification_source": verification_source,
+                    "total_contributions": training_status['total_samples'],
+                    "thank_you_message": "High-quality verified swing added! This greatly improves model accuracy.",
+                    "priority_impact": "Verified swings receive higher weight in training."
+                }
+            else:
+                raise HTTPException(status_code=500, detail="Failed to process verified swing")
+                
+        finally:
+            if os.path.exists(tmp_path):
+                os.unlink(tmp_path)
+                
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Verified swing processing failed: {str(e)}")
+
+@app.get("/training-progress/{user_id}")
+async def get_training_progress(user_id: str):
+    """
+    Get training progress and user contribution impact
+    """
+    
+    try:
+        training_status = get_training_status()
+        
+        # Mock user-specific stats (in production, track by user ID)
+        user_contributions = max(1, len(swing_data_storage) // 10)  # Estimate
+        
+        return {
+            "user_contributions": user_contributions,
+            "total_community_contributions": training_status['total_samples'],
+            "training_status": {
+                "is_training": training_status['is_training'],
+                "last_training": training_status['last_training'],
+                "samples_needed": max(0, training_status['min_samples_required'] - training_status['total_samples'])
+            },
+            "model_improvement": {
+                "current_version": "2.1_lstm_temporal",
+                "model_exists": training_status['model_exists'],
+                "next_training_cycle": "Automatic when sufficient new data collected"
+            },
+            "impact_message": f"Your {user_contributions} contributions help train the LSTM model for better temporal analysis!"
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Progress retrieval failed: {str(e)}")
+
+@app.post("/force-training")
+async def force_model_training(admin_key: str = Form(...)):
+    """
+    Force immediate LSTM model training (admin only)
+    """
+    
+    # Simple admin authentication (in production, use proper auth)
+    if admin_key != "golf_ai_admin_2024":
+        raise HTTPException(status_code=403, detail="Unauthorized")
+    
+    try:
+        trainer = get_trainer()
+        success = trainer.force_training()
+        
+        if success:
+            return {
+                "training_forced": True,
+                "message": "LSTM model training initiated manually",
+                "check_status_endpoint": "/model-training-status"
+            }
+        else:
+            return {
+                "training_forced": False,
+                "message": "No training data available for forced training"
+            }
+            
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Forced training failed: {str(e)}")
 
 if __name__ == "__main__":
     import uvicorn

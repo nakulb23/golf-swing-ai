@@ -146,7 +146,7 @@ def predict_with_multi_angle_model(video_path, model_path="models/physics_based_
     # STEP 4: Load and prepare neural network
     try:
         device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-        model = PhysicsBasedSwingClassifier(input_size=35, num_classes=num_classes)
+        model = PhysicsBasedSwingClassifier(num_features=35, num_classes=num_classes)
         model.load_state_dict(torch.load(model_path, map_location=device))
         model.eval()
         model.to(device)

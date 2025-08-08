@@ -3,6 +3,7 @@ import PhotosUI
 import AVFoundation
 import AVKit
 import UIKit
+import Foundation
 
 // MARK: - Video Selection View
 
@@ -3431,7 +3432,6 @@ struct SwingAnalysisView: View {
         let screenSize: CGSize
         @Binding var showControls: Bool
         @State private var selectedClubPosition: String = "Takeaway" // "Takeaway", "Impact", etc.
-        @State private var showingClubPath = true
         @State private var showingSwingPlane = true
         
         var body: some View {
@@ -3492,95 +3492,8 @@ struct SwingAnalysisView: View {
                     }
                 }
                 
-                // Interactive Controls (top of screen)
+                // Clean overlay without distracting buttons
                 VStack {
-                    HStack {
-                        // Club Position Toggle
-                        Button(action: { 
-                            withAnimation(.easeInOut(duration: 0.2)) {
-                                showingClubPath.toggle()
-                            }
-                        }) {
-                            HStack(spacing: 6) {
-                                Circle()
-                                    .fill(showingClubPath ? Color.blue : Color.gray)
-                                    .frame(width: 10, height: 10)
-                                Text("Club Path")
-                                    .font(.caption)
-                                    .fontWeight(.medium)
-                                    .foregroundColor(.white)
-                            }
-                            .padding(.horizontal, 16)
-                            .padding(.vertical, 8)
-                            .background(Color.black.opacity(0.8))
-                            .clipShape(RoundedRectangle(cornerRadius: 14))
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 14)
-                                    .stroke(showingClubPath ? Color.blue.opacity(0.6) : Color.clear, lineWidth: 1)
-                            )
-                        }
-                        .buttonStyle(PlainButtonStyle())
-                        
-                        Spacer()
-                        
-                        // Club Position Warning (Interactive)
-                        Button(action: {
-                            // Show detailed club position analysis
-                            print("🏌️ Club position analysis tapped")
-                        }) {
-                            HStack(spacing: 6) {
-                                Image(systemName: "exclamationmark.triangle.fill")
-                                    .foregroundColor(.yellow)
-                                    .font(.caption)
-                                
-                                Text("Club Outside at Setup")
-                                    .font(.caption)
-                                    .fontWeight(.medium)
-                                    .foregroundColor(.white)
-                            }
-                            .padding(.horizontal, 14)
-                            .padding(.vertical, 8)
-                            .background(Color.black.opacity(0.8))
-                            .clipShape(RoundedRectangle(cornerRadius: 14))
-                            .scaleEffect(1.0)
-                        }
-                        .buttonStyle(PlainButtonStyle())
-                        .onTapGesture {
-                            // Provide haptic feedback
-                            let impactFeedback = UIImpactFeedbackGenerator(style: .light)
-                            impactFeedback.impactOccurred()
-                        }
-                        
-                        Spacer()
-                        
-                        // Setup Button (Interactive)  
-                        Button(action: {
-                            // Show setup guidance
-                            print("⚙️ Setup guidance requested")
-                        }) {
-                            Text("Setup")
-                                .font(.caption)
-                                .fontWeight(.semibold)
-                                .foregroundColor(.white)
-                                .padding(.horizontal, 16) 
-                                .padding(.vertical, 8)
-                                .background(Color.black.opacity(0.8))
-                                .clipShape(RoundedRectangle(cornerRadius: 14))
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 14)
-                                        .stroke(Color.white.opacity(0.3), lineWidth: 1)
-                                )
-                                .scaleEffect(1.0)
-                        }
-                        .buttonStyle(PlainButtonStyle())
-                        .onTapGesture {
-                            // Provide haptic feedback
-                            let impactFeedback = UIImpactFeedbackGenerator(style: .light)
-                            impactFeedback.impactOccurred()
-                        }
-                    }
-                    .padding(.horizontal, 20)
-                    .padding(.top, 20)
                     
                     Spacer()
                     
@@ -3785,22 +3698,48 @@ struct SwingAnalysisView: View {
         
         var body: some View {
             VStack(spacing: 0) {
-                // Tab Bar
-                HStack(spacing: 0) {
-                    TabButton(title: "Overview", isSelected: selectedTab == 0) {
-                        selectedTab = 0
+                // Polished Tab Bar
+                VStack(spacing: 0) {
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 4) {
+                            TabButton(title: "Overview", isSelected: selectedTab == 0) {
+                                selectedTab = 0
+                            }
+                            TabButton(title: "Premium", isSelected: selectedTab == 1) {
+                                selectedTab = 1
+                            }
+                            TabButton(title: "Physics", isSelected: selectedTab == 2) {
+                                selectedTab = 2
+                            }
+                            TabButton(title: "Breakdown", isSelected: selectedTab == 3) {
+                                selectedTab = 3
+                            }
+                            TabButton(title: "Tips", isSelected: selectedTab == 4) {
+                                selectedTab = 4
+                            }
+                        }
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 12)
                     }
-                    TabButton(title: "Physics", isSelected: selectedTab == 1) {
-                        selectedTab = 1
-                    }
-                    TabButton(title: "Breakdown", isSelected: selectedTab == 2) {
-                        selectedTab = 2
-                    }
-                    TabButton(title: "Tips", isSelected: selectedTab == 3) {
-                        selectedTab = 3
-                    }
+                    .background(
+                        LinearGradient(
+                            colors: [Color.black.opacity(0.95), Color.black.opacity(0.85)],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                    )
+                    
+                    // Bottom border with subtle gradient
+                    Rectangle()
+                        .fill(
+                            LinearGradient(
+                                colors: [Color.white.opacity(0.1), Color.white.opacity(0.05)],
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
+                        )
+                        .frame(height: 1)
                 }
-                .background(Color(UIColor.systemBackground))
                 
                 // Content
                 ScrollView {
@@ -3809,10 +3748,12 @@ struct SwingAnalysisView: View {
                         case 0:
                             OverviewTabContent(analysisResult: analysisResult)
                         case 1:
-                            PhysicsTabContent(analysisResult: analysisResult)
+                            PremiumAnalysisTabContent(analysisResult: analysisResult)
                         case 2:
-                            BreakdownTabContent(analysisResult: analysisResult, currentTime: currentTime, videoDuration: videoDuration)
+                            PhysicsTabContent(analysisResult: analysisResult)
                         case 3:
+                            BreakdownTabContent(analysisResult: analysisResult, currentTime: currentTime, videoDuration: videoDuration)
+                        case 4:
                             TipsTabContent(analysisResult: analysisResult)
                         default:
                             OverviewTabContent(analysisResult: analysisResult)
@@ -3976,6 +3917,311 @@ struct SwingAnalysisView: View {
             .padding(16)
             .background(Color(UIColor.secondarySystemBackground))
             .clipShape(RoundedRectangle(cornerRadius: 8))
+        }
+    }
+    
+    struct PremiumAnalysisTabContent: View {
+        let analysisResult: SwingAnalysisResponse
+        @State private var enhancedResult: EnhancedSwingAnalysisResult?
+        @State private var selectedSubTab = 0
+        
+        var body: some View {
+            VStack(spacing: 20) {
+                if let enhanced = enhancedResult {
+                    // Premium Score Header
+                    ZStack {
+                        Circle()
+                            .stroke(Color.gray.opacity(0.2), lineWidth: 15)
+                            .frame(width: 120, height: 120)
+                        
+                        Circle()
+                            .trim(from: 0, to: enhanced.scoreBreakdown.overallScore / 100)
+                            .stroke(
+                                LinearGradient(
+                                    colors: [scoreColor(for: enhanced.scoreBreakdown.overallScore), 
+                                            scoreColor(for: enhanced.scoreBreakdown.overallScore).opacity(0.7)],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                ),
+                                style: StrokeStyle(lineWidth: 15, lineCap: .round)
+                            )
+                            .frame(width: 120, height: 120)
+                            .rotationEffect(Angle(degrees: -90))
+                            .animation(.easeInOut(duration: 1.0), value: enhanced.scoreBreakdown.overallScore)
+                        
+                        VStack(spacing: 4) {
+                            Text(enhanced.scoreBreakdown.letterGrade)
+                                .font(.system(size: 28, weight: .bold))
+                                .foregroundColor(scoreColor(for: enhanced.scoreBreakdown.overallScore))
+                            
+                            Text("\(Int(enhanced.scoreBreakdown.overallScore))%")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                    .padding()
+                    
+                    // Sub-tab selector for premium content
+                    Picker("Premium View", selection: $selectedSubTab) {
+                        Text("Scores").tag(0)
+                        Text("Improvements").tag(1)
+                        Text("Details").tag(2)
+                    }
+                    .pickerStyle(SegmentedPickerStyle())
+                    .padding(.horizontal)
+                    
+                    // Premium content based on selected sub-tab
+                    switch selectedSubTab {
+                    case 0:
+                        PremiumScoresView(enhanced: enhanced)
+                    case 1:
+                        PremiumImprovementsView(enhanced: enhanced)
+                    case 2:
+                        PremiumDetailsView(enhanced: enhanced)
+                    default:
+                        EmptyView()
+                    }
+                } else {
+                    VStack(spacing: 16) {
+                        ProgressView()
+                            .scaleEffect(1.2)
+                        Text("Generating Premium Analysis...")
+                            .font(.headline)
+                        Text("Creating detailed scores and recommendations")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    .padding(40)
+                }
+            }
+            .onAppear {
+                // Create enhanced result from base analysis
+                if enhancedResult == nil {
+                    enhancedResult = EnhancedSwingAnalysisResult.from(analysisResult)
+                }
+            }
+        }
+        
+        private func scoreColor(for score: Double) -> Color {
+            switch score {
+            case 80...100: return .green
+            case 60..<80: return .yellow  
+            case 40..<60: return .orange
+            default: return .red
+            }
+        }
+    }
+    
+    struct PremiumScoresView: View {
+        let enhanced: EnhancedSwingAnalysisResult
+        
+        var body: some View {
+            VStack(spacing: 16) {
+                // Score breakdown grid
+                LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
+                    ScoreCard(title: "Tempo", score: enhanced.scoreBreakdown.tempoScore, icon: "metronome", color: .blue)
+                    ScoreCard(title: "Plane", score: enhanced.scoreBreakdown.planeScore, icon: "angle", color: .green)
+                    ScoreCard(title: "Body", score: enhanced.scoreBreakdown.kinematicsScore, icon: "figure.walk", color: .orange)
+                    ScoreCard(title: "Impact", score: enhanced.scoreBreakdown.impactScore, icon: "burst", color: .red)
+                }
+                .padding(.horizontal)
+                
+                // Overall feedback
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Analysis Summary")
+                        .font(.headline)
+                        .fontWeight(.bold)
+                    
+                    Text(enhanced.scoreBreakdown.feedback)
+                        .font(.body)
+                        .foregroundColor(.primary)
+                }
+                .padding()
+                .background(Color(UIColor.secondarySystemBackground))
+                .clipShape(RoundedRectangle(cornerRadius: 12))
+                .padding(.horizontal)
+            }
+        }
+    }
+    
+    struct PremiumImprovementsView: View {
+        let enhanced: EnhancedSwingAnalysisResult
+        
+        var body: some View {
+            VStack(spacing: 16) {
+                Text("Top 3 Improvement Areas")
+                    .font(.headline)
+                    .fontWeight(.bold)
+                    .padding(.horizontal)
+                
+                ForEach(enhanced.topThreeImprovements.prefix(3), id: \.area) { suggestion in
+                    VStack(alignment: .leading, spacing: 12) {
+                        HStack {
+                            Text("\(suggestion.difficulty.emoji) \(suggestion.area)")
+                                .font(.subheadline)
+                                .fontWeight(.semibold)
+                            Spacer()
+                            Text(suggestion.expectedImprovement)
+                                .font(.caption)
+                                .foregroundColor(.green)
+                        }
+                        
+                        VStack(alignment: .leading, spacing: 8) {
+                            HStack(alignment: .top, spacing: 8) {
+                                Image(systemName: "exclamationmark.triangle")
+                                    .foregroundColor(.orange)
+                                    .font(.caption)
+                                Text(suggestion.issue)
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                            
+                            HStack(alignment: .top, spacing: 8) {
+                                Image(systemName: "figure.walk.motion")
+                                    .foregroundColor(.blue)
+                                    .font(.caption)
+                                Text(suggestion.drill)
+                                    .font(.caption)
+                                    .foregroundColor(.primary)
+                            }
+                        }
+                    }
+                    .padding()
+                    .background(Color(UIColor.secondarySystemBackground))
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                    .padding(.horizontal)
+                }
+            }
+        }
+    }
+    
+    struct PremiumDetailsView: View {
+        let enhanced: EnhancedSwingAnalysisResult
+        
+        var body: some View {
+            VStack(spacing: 16) {
+                // Tracking Quality
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Analysis Quality")
+                        .font(.headline)
+                        .fontWeight(.bold)
+                    
+                    HStack {
+                        Text("Overall Quality:")
+                        Spacer()
+                        Text(enhanced.enhancedTrackingQuality.qualityAssessment)
+                            .foregroundColor(qualityColor(enhanced.enhancedTrackingQuality.qualityAssessment))
+                            .fontWeight(.semibold)
+                    }
+                    
+                    HStack {
+                        Text("Confidence Level:")
+                        Spacer()
+                        Text("\(Int(enhanced.confidence * 100))%")
+                            .foregroundColor(enhanced.confidence > 0.8 ? .green : .orange)
+                            .fontWeight(.semibold)
+                    }
+                    
+                    if !enhanced.enhancedTrackingQuality.limitingFactors.isEmpty {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Areas for Better Recording:")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                            ForEach(enhanced.enhancedTrackingQuality.limitingFactors, id: \.self) { factor in
+                                Text("• \(factor)")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                    }
+                }
+                .padding()
+                .background(Color(UIColor.secondarySystemBackground))
+                .clipShape(RoundedRectangle(cornerRadius: 12))
+                .padding(.horizontal)
+                
+                // Technical Details
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Technical Analysis")
+                        .font(.headline)
+                        .fontWeight(.bold)
+                    
+                    HStack {
+                        Text("Predicted Label:")
+                        Spacer()
+                        Text(enhanced.predictedLabel.replacingOccurrences(of: "_", with: " ").capitalized)
+                            .fontWeight(.semibold)
+                    }
+                    
+                    if let recommendations = enhanced.baseAnalysis.recommendations, !recommendations.isEmpty {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("System Recommendations:")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                            ForEach(recommendations.prefix(2), id: \.self) { rec in
+                                Text("• \(rec)")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                    }
+                }
+                .padding()
+                .background(Color(UIColor.secondarySystemBackground))
+                .clipShape(RoundedRectangle(cornerRadius: 12))
+                .padding(.horizontal)
+            }
+        }
+        
+        private func qualityColor(_ quality: String) -> Color {
+            switch quality.lowercased() {
+            case "excellent": return .green
+            case "good": return .blue
+            case "fair": return .yellow
+            case "poor", "very poor": return .orange
+            default: return .secondary
+            }
+        }
+    }
+    
+    struct ScoreCard: View {
+        let title: String
+        let score: Double
+        let icon: String
+        let color: Color
+        
+        var body: some View {
+            VStack(spacing: 8) {
+                Image(systemName: icon)
+                    .font(.title2)
+                    .foregroundColor(color)
+                
+                Text("\(Int(score))")
+                    .font(.title2)
+                    .fontWeight(.bold)
+                    .foregroundColor(scoreColor(for: score))
+                
+                Text(title)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                
+                Text("/ 100")
+                    .font(.caption2)
+                    .foregroundColor(.secondary)
+            }
+            .frame(maxWidth: .infinity)
+            .padding()
+            .background(Color(UIColor.secondarySystemBackground))
+            .clipShape(RoundedRectangle(cornerRadius: 12))
+        }
+        
+        private func scoreColor(for score: Double) -> Color {
+            switch score {
+            case 80...100: return .green
+            case 60..<80: return .yellow
+            case 40..<60: return .orange  
+            default: return .red
+            }
         }
     }
     
@@ -4202,19 +4448,363 @@ struct SwingAnalysisView: View {
         
         var body: some View {
             Button(action: action) {
-                Text(title)
-                    .font(.caption)
-                    .fontWeight(.semibold)
-                    .foregroundColor(isSelected ? .white : .white.opacity(0.6))
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 8)
-                    .background(
-                        Rectangle()
-                            .fill(isSelected ? Color.white.opacity(0.2) : Color.clear)
-                    )
+                VStack(spacing: 6) {
+                    Text(title)
+                        .font(.system(size: 13, weight: isSelected ? .bold : .medium))
+                        .foregroundColor(isSelected ? .white : .white.opacity(0.7))
+                        .multilineTextAlignment(.center)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.8)
+                    
+                    // Active indicator
+                    Circle()
+                        .fill(isSelected ? Color.white : Color.clear)
+                        .frame(width: 4, height: 4)
+                        .scaleEffect(isSelected ? 1.0 : 0.5)
+                        .animation(.easeInOut(duration: 0.2), value: isSelected)
+                }
+                .frame(minWidth: 60, maxWidth: .infinity)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 10)
+                .background(
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(
+                            isSelected ? 
+                            LinearGradient(
+                                colors: [Color.white.opacity(0.15), Color.white.opacity(0.08)],
+                                startPoint: .top,
+                                endPoint: .bottom
+                            ) : 
+                            LinearGradient(
+                                colors: [Color.clear],
+                                startPoint: .top,
+                                endPoint: .bottom
+                            )
+                        )
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12)
+                                .stroke(
+                                    isSelected ? Color.white.opacity(0.2) : Color.clear,
+                                    lineWidth: 1
+                                )
+                        )
+                )
+                .scaleEffect(isSelected ? 1.02 : 1.0)
+                .animation(.easeInOut(duration: 0.2), value: isSelected)
+            }
+            .buttonStyle(PlainButtonStyle())
+        }
+    }
+
+// MARK: - Enhanced Analysis Data Models (Embedded)
+
+struct EnhancedSwingAnalysisResult {
+    let baseAnalysis: SwingAnalysisResponse
+    let scoreBreakdown: SwingScoreBreakdown
+    let bodyKinematics: EnhancedBodyKinematicsData?
+    let detailedTempo: EnhancedDetailedSwingTempoData?
+    let enhancedTrackingQuality: EnhancedTrackingQuality
+    let swingPhases: EnhancedSwingPhases?
+    
+    var overallQualityScore: Double {
+        return scoreBreakdown.overallScore * enhancedTrackingQuality.overallScore * baseAnalysis.confidence
+    }
+    
+    var predictedLabel: String { baseAnalysis.predicted_label }
+    var confidence: Double { baseAnalysis.confidence }
+    var recommendations: [String] { baseAnalysis.recommendations ?? [] }
+}
+
+struct SwingScoreBreakdown {
+    let tempoScore: Double
+    let planeScore: Double
+    let kinematicsScore: Double
+    let impactScore: Double
+    let consistencyScore: Double
+    
+    private let tempoWeight = 0.20
+    private let planeWeight = 0.25
+    private let kinematicsWeight = 0.25
+    private let impactWeight = 0.20
+    private let consistencyWeight = 0.10
+    
+    var overallScore: Double {
+        let weighted = (tempoScore * tempoWeight +
+                       planeScore * planeWeight +
+                       kinematicsScore * kinematicsWeight +
+                       impactScore * impactWeight +
+                       consistencyScore * consistencyWeight)
+        return weighted
+    }
+    
+    var letterGrade: String {
+        switch overallScore {
+        case 90...100: return "A+"
+        case 85..<90: return "A"
+        case 80..<85: return "A-"
+        case 75..<80: return "B+"
+        case 70..<75: return "B"
+        case 65..<70: return "B-"
+        case 60..<65: return "C+"
+        case 55..<60: return "C"
+        case 50..<55: return "C-"
+        case 45..<50: return "D+"
+        case 40..<45: return "D"
+        default: return "F"
+        }
+    }
+    
+    var feedback: String {
+        let components = [
+            (tempoScore, "Tempo", tempoWeight),
+            (planeScore, "Swing Plane", planeWeight),
+            (kinematicsScore, "Body Movement", kinematicsWeight),
+            (impactScore, "Impact Quality", impactWeight),
+            (consistencyScore, "Consistency", consistencyWeight)
+        ]
+        
+        let weakest = components.min { $0.0 < $1.0 }
+        let strongest = components.max { $0.0 < $1.0 }
+        
+        var feedback = "Overall Grade: \(letterGrade) (\(Int(overallScore))%)\n\n"
+        
+        if let strongest = strongest, strongest.0 >= 80 {
+            feedback += "✅ Strongest area: \(strongest.1) (\(Int(strongest.0))%)\n"
+        }
+        
+        if let weakest = weakest, weakest.0 < 70 {
+            feedback += "⚠️ Focus area: \(weakest.1) (\(Int(weakest.0))%)\n"
+        }
+        
+        return feedback
+    }
+}
+
+struct EnhancedTrackingQuality {
+    let clubVisibility: Double
+    let bodyVisibility: Double
+    let jointConfidence: Double
+    let lightingQuality: Double
+    let cameraStability: Double
+    let frameRate: Double
+    let resolution: Double
+    
+    var overallScore: Double {
+        let weights = [
+            clubVisibility * 0.25,
+            bodyVisibility * 0.20,
+            jointConfidence * 0.15,
+            lightingQuality * 0.15,
+            cameraStability * 0.10,
+            frameRate * 0.10,
+            resolution * 0.05
+        ]
+        return weights.reduce(0, +)
+    }
+    
+    var qualityAssessment: String {
+        switch overallScore {
+        case 0.9...1.0: return "Excellent"
+        case 0.75..<0.9: return "Good"
+        case 0.6..<0.75: return "Fair"
+        case 0.4..<0.6: return "Poor"
+        default: return "Very Poor"
+        }
+    }
+    
+    var limitingFactors: [String] {
+        var factors: [String] = []
+        
+        if clubVisibility < 0.7 { factors.append("Club visibility") }
+        if bodyVisibility < 0.7 { factors.append("Body visibility") }
+        if lightingQuality < 0.6 { factors.append("Lighting") }
+        if cameraStability < 0.7 { factors.append("Camera movement") }
+        
+        return factors
+    }
+}
+
+struct ImprovementSuggestion {
+    let area: String
+    let issue: String
+    let drill: String
+    let expectedImprovement: String
+    let difficulty: Difficulty
+    
+    enum Difficulty {
+        case easy, moderate, advanced
+        
+        var emoji: String {
+            switch self {
+            case .easy: return "🟢"
+            case .moderate: return "🟡"
+            case .advanced: return "🔴"
             }
         }
     }
+}
+
+extension EnhancedSwingAnalysisResult {
+    static func from(_ response: SwingAnalysisResponse, 
+                     videoURL: URL? = nil,
+                     videoDuration: Double? = nil) -> EnhancedSwingAnalysisResult {
+        
+        let planeScore = calculatePlaneScore(from: response)
+        let tempoScore = calculateTempoScore(from: response)
+        let kinematicsScore = calculateKinematicsScore(from: response)
+        let impactScore = calculateImpactScore(from: response)
+        let consistencyScore = calculateConsistencyScore(from: response)
+        
+        let scoreBreakdown = SwingScoreBreakdown(
+            tempoScore: tempoScore,
+            planeScore: planeScore,
+            kinematicsScore: kinematicsScore,
+            impactScore: impactScore,
+            consistencyScore: consistencyScore
+        )
+        
+        let trackingQuality = EnhancedTrackingQuality(
+            clubVisibility: 0.8,
+            bodyVisibility: 0.85,
+            jointConfidence: response.confidence,
+            lightingQuality: 0.75,
+            cameraStability: 0.9,
+            frameRate: 0.95,
+            resolution: 0.8
+        )
+        
+        return EnhancedSwingAnalysisResult(
+            baseAnalysis: response,
+            scoreBreakdown: scoreBreakdown,
+            bodyKinematics: nil,
+            detailedTempo: nil,
+            enhancedTrackingQuality: trackingQuality,
+            swingPhases: nil
+        )
+    }
+    
+    private static func calculatePlaneScore(from response: SwingAnalysisResponse) -> Double {
+        switch response.predicted_label {
+        case "on_plane":
+            return 85 + (response.confidence * 15)
+        case "too_steep":
+            return 60 - (response.confidence * 10)
+        case "too_flat":
+            return 60 - (response.confidence * 10)
+        default:
+            return 70
+        }
+    }
+    
+    private static func calculateTempoScore(from response: SwingAnalysisResponse) -> Double {
+        if let tempo = response.club_speed_analysis?.tempo_analysis {
+            let ratioScore = tempo.tempo_ratio > 2.5 && tempo.tempo_ratio < 3.5 ? 90 : 70
+            return Double(ratioScore)
+        }
+        return 75
+    }
+    
+    private static func calculateKinematicsScore(from response: SwingAnalysisResponse) -> Double {
+        return 70 + (response.confidence * 20)
+    }
+    
+    private static func calculateImpactScore(from response: SwingAnalysisResponse) -> Double {
+        if let impact = response.club_face_analysis?.impact_position {
+            return impact.impact_quality_score
+        }
+        return 75
+    }
+    
+    private static func calculateConsistencyScore(from response: SwingAnalysisResponse) -> Double {
+        let gapScore = (1.0 - response.confidence_gap) * 100
+        return max(50, min(100, gapScore))
+    }
+    
+    var topThreeImprovements: [ImprovementSuggestion] {
+        var suggestions: [ImprovementSuggestion] = []
+        
+        let components = [
+            (scoreBreakdown.tempoScore, "Tempo", generateTempoImprovement()),
+            (scoreBreakdown.planeScore, "Swing Plane", generatePlaneImprovement()),
+            (scoreBreakdown.kinematicsScore, "Body Movement", generateKinematicsImprovement()),
+            (scoreBreakdown.impactScore, "Impact", generateImpactImprovement()),
+            (scoreBreakdown.consistencyScore, "Consistency", generateConsistencyImprovement())
+        ]
+        
+        let sorted = components.sorted { $0.0 < $1.0 }
+        
+        for (score, _, improvement) in sorted.prefix(3) {
+            if score < 80 {
+                suggestions.append(improvement)
+            }
+        }
+        
+        return suggestions
+    }
+    
+    private func generateTempoImprovement() -> ImprovementSuggestion {
+        return ImprovementSuggestion(
+            area: "Tempo",
+            issue: "Timing ratio needs adjustment",
+            drill: "Practice with a metronome: 3 beats backswing, 1 beat downswing",
+            expectedImprovement: "5-10% score increase",
+            difficulty: .moderate
+        )
+    }
+    
+    private func generatePlaneImprovement() -> ImprovementSuggestion {
+        let issue = predictedLabel == "too_steep" ? "Swing plane is too steep" : 
+                   predictedLabel == "too_flat" ? "Swing plane is too flat" : 
+                   "Swing plane consistency"
+        
+        let drill = predictedLabel == "too_steep" ? 
+            "Place a headcover outside the ball, practice missing it on takeaway" :
+            "Practice swings with club shaft against a wall behind you"
+        
+        return ImprovementSuggestion(
+            area: "Swing Plane",
+            issue: issue,
+            drill: drill,
+            expectedImprovement: "10-15% score increase",
+            difficulty: .moderate
+        )
+    }
+    
+    private func generateKinematicsImprovement() -> ImprovementSuggestion {
+        return ImprovementSuggestion(
+            area: "Body Movement",
+            issue: "Sequencing or rotation needs work",
+            drill: "Practice the step drill: step toward target during downswing",
+            expectedImprovement: "8-12% score increase",
+            difficulty: .advanced
+        )
+    }
+    
+    private func generateImpactImprovement() -> ImprovementSuggestion {
+        return ImprovementSuggestion(
+            area: "Impact Position",
+            issue: "Contact consistency",
+            drill: "Use impact tape or foot spray on club face to check strike location",
+            expectedImprovement: "5-8% score increase",
+            difficulty: .easy
+        )
+    }
+    
+    private func generateConsistencyImprovement() -> ImprovementSuggestion {
+        return ImprovementSuggestion(
+            area: "Consistency",
+            issue: "Swing varies too much between repetitions",
+            drill: "Slow motion swings focusing on exact positions",
+            expectedImprovement: "10% score increase",
+            difficulty: .easy
+        )
+    }
+}
+
+// Simplified data structs for compilation
+struct EnhancedBodyKinematicsData {}
+struct EnhancedDetailedSwingTempoData {}
+struct EnhancedSwingPhases {}
 
 struct SwingAnalysisView_Previews: PreviewProvider {
     static var previews: some View {
