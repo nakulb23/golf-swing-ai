@@ -1,5 +1,10 @@
 import sys
-sys.path.append('scripts')
+from pathlib import Path
+
+# Add backend directories to path
+backend_root = Path(__file__).parent.parent
+sys.path.append(str(backend_root / "scripts"))
+sys.path.append(str(backend_root / "utils"))
 
 import numpy as np
 import torch
@@ -7,7 +12,7 @@ import torch.nn.functional as F
 from physics_based_features import GolfSwingPhysicsExtractor, PhysicsBasedSwingClassifier
 from view_invariant_features import ViewInvariantFeatureExtractor
 from camera_angle_detector import CameraAngle
-from scripts.extract_features_robust import extract_keypoints_from_video_robust
+from extract_features_robust import extract_keypoints_from_video_robust
 import joblib
 import os
 import logging
@@ -15,9 +20,21 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-def predict_with_multi_angle_model(video_path, model_path="models/physics_based_model.pt", 
-                                 scaler_path="models/physics_scaler.pkl", 
-                                 encoder_path="models/physics_label_encoder.pkl"):
+def get_model_path(filename):
+    """Get the correct path to model files"""
+    models_dir = backend_root / "models"
+    return str(models_dir / filename)
+
+def predict_with_multi_angle_model(video_path, model_path=None, 
+                                 scaler_path=None, 
+                                 encoder_path=None):
+    # Set default model paths
+    if model_path is None:
+        model_path = get_model_path("physics_based_model.pt")
+    if scaler_path is None:
+        scaler_path = get_model_path("physics_scaler.pkl")
+    if encoder_path is None:
+        encoder_path = get_model_path("physics_label_encoder.pkl")
     """
     Enhanced prediction using multi-angle camera support and view-invariant features.
     

@@ -12,16 +12,23 @@ import os
 import sys
 from pathlib import Path
 
-# Add current directory to path for imports
-sys.path.append(str(Path(__file__).parent))
+# Add backend directories to path for imports
+backend_root = Path(__file__).parent.parent
+sys.path.append(str(backend_root))
+sys.path.append(str(backend_root / "core"))
+sys.path.append(str(backend_root / "utils"))
+sys.path.append(str(backend_root / "scripts"))
 
+# Core prediction modules
 from predict_multi_angle import predict_with_multi_angle_model
 from predict_physics_based import predict_with_physics_model  # Keep for fallback
 from predict_enhanced_lstm import predict_with_enhanced_lstm  # Enhanced LSTM model
 from detailed_swing_analysis import analyze_swing_with_details
+from incremental_lstm_trainer import get_trainer, add_user_contribution, get_training_status
+
+# Utility modules
 from golf_chatbot import CaddieChat
 from ball_tracking import GolfBallTracker
-from incremental_lstm_trainer import get_trainer, add_user_contribution, get_training_status
 
 # Initialize components
 chatbot = CaddieChat()

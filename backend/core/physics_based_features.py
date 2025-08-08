@@ -693,16 +693,8 @@ def main():
         except:
             return [0.0] * 4
 
-# Add to GolfSwingPhysicsExtractor class
-GolfSwingPhysicsExtractor.extract_feature_sequence = extract_feature_sequence
-GolfSwingPhysicsExtractor._extract_single_frame_features = _extract_single_frame_features
-GolfSwingPhysicsExtractor._extract_basic_pose_features = _extract_basic_pose_features
-GolfSwingPhysicsExtractor._calculate_velocity_features = _calculate_velocity_features
-GolfSwingPhysicsExtractor._estimate_swing_phase = _estimate_swing_phase
-GolfSwingPhysicsExtractor._extract_phase_features = _extract_phase_features
-GolfSwingPhysicsExtractor._calculate_consistency_features = _calculate_consistency_features
-    
-    return real_features, real_labels, synthetic_features, synthetic_labels, feature_names
+# Enhanced methods are already embedded in the main() function
+# This section handles the modular function definitions when needed
 
 if __name__ == "__main__":
     main()

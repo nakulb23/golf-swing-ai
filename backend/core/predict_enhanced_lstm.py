@@ -4,7 +4,12 @@ Combines the best of physics-based features with temporal sequence learning
 """
 
 import sys
-sys.path.append('scripts')
+from pathlib import Path
+
+# Add backend directories to path
+backend_root = Path(__file__).parent.parent
+sys.path.append(str(backend_root / "scripts"))
+sys.path.append(str(backend_root / "utils"))
 
 import numpy as np
 import torch
@@ -13,13 +18,18 @@ import torch.nn.functional as F
 from physics_based_features import GolfSwingPhysicsExtractor, PhysicsBasedSwingClassifier
 from view_invariant_features import ViewInvariantFeatureExtractor
 from camera_angle_detector import CameraAngle
-from scripts.extract_features_robust import extract_keypoints_from_video_robust
+from extract_features_robust import extract_keypoints_from_video_robust
 import joblib
 import os
 import logging
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+def get_model_path(filename):
+    """Get the correct path to model files"""
+    models_dir = backend_root / "models"
+    return str(models_dir / filename)
 
 # MARK: - Enhanced LSTM Temporal Classifier
 class EnhancedTemporalSwingClassifier(nn.Module):
@@ -117,11 +127,20 @@ class HybridSwingAnalyzer(nn.Module):
         return final_logits, phase_logits, confidence, weights
 
 def predict_with_enhanced_lstm(video_path, 
-                              lstm_model_path="models/enhanced_temporal_model.pt", 
-                              physics_model_path="models/physics_based_model.pt",
-                              scaler_path="models/physics_scaler.pkl", 
-                              encoder_path="models/physics_label_encoder.pkl",
+                              lstm_model_path=None, 
+                              physics_model_path=None,
+                              scaler_path=None, 
+                              encoder_path=None,
                               use_ensemble=True):
+    # Set default model paths
+    if lstm_model_path is None:
+        lstm_model_path = get_model_path("enhanced_temporal_model.pt")
+    if physics_model_path is None:
+        physics_model_path = get_model_path("physics_based_model.pt")
+    if scaler_path is None:
+        scaler_path = get_model_path("physics_scaler.pkl")
+    if encoder_path is None:
+        encoder_path = get_model_path("physics_label_encoder.pkl")
     """
     Enhanced prediction using LSTM temporal analysis with optional ensemble
     
@@ -410,18 +429,31 @@ def generate_enhanced_insights(predicted_label, confidence, confidence_gap,
     return insights
 
 # Backwards compatibility functions
-def predict_with_multi_angle_lstm(video_path, model_path="models/enhanced_temporal_model.pt", 
-                                 scaler_path="models/physics_scaler.pkl", 
-                                 encoder_path="models/physics_label_encoder.pkl"):
+def predict_with_multi_angle_lstm(video_path, model_path=None, 
+                                 scaler_path=None, 
+                                 encoder_path=None):
+    if model_path is None:
+        model_path = get_model_path("enhanced_temporal_model.pt")
+    if scaler_path is None:
+        scaler_path = get_model_path("physics_scaler.pkl")
+    if encoder_path is None:
+        encoder_path = get_model_path("physics_label_encoder.pkl")
     """Compatibility wrapper for the enhanced LSTM prediction"""
     return predict_with_enhanced_lstm(video_path, model_path, scaler_path, encoder_path, use_ensemble=False)
 
-def predict_with_multi_angle_model(video_path, model_path="models/physics_based_model.pt", 
-                                 scaler_path="models/physics_scaler.pkl", 
-                                 encoder_path="models/physics_label_encoder.pkl"):
+def predict_with_multi_angle_model(video_path, model_path=None, 
+                                 scaler_path=None, 
+                                 encoder_path=None):
     """Enhanced version of the original multi-angle model with LSTM capabilities"""
+    if model_path is None:
+        model_path = get_model_path("physics_based_model.pt")
+    if scaler_path is None:
+        scaler_path = get_model_path("physics_scaler.pkl")
+    if encoder_path is None:
+        encoder_path = get_model_path("physics_label_encoder.pkl")
+    
     # Try enhanced LSTM first, fallback to physics model
-    lstm_path = "models/enhanced_temporal_model.pt"
+    lstm_path = get_model_path("enhanced_temporal_model.pt")
     
     if os.path.exists(lstm_path):
         print("🚀 Using enhanced LSTM model...")
@@ -442,10 +474,10 @@ if __name__ == "__main__":
     use_ensemble = "--no-ensemble" not in sys.argv
     
     # Model paths
-    lstm_model_path = "models/enhanced_temporal_model.pt"
-    physics_model_path = "models/physics_based_model.pt" 
-    scaler_path = "models/physics_scaler.pkl"
-    encoder_path = "models/physics_label_encoder.pkl"
+    lstm_model_path = get_model_path("enhanced_temporal_model.pt")
+    physics_model_path = get_model_path("physics_based_model.pt")
+    scaler_path = get_model_path("physics_scaler.pkl")
+    encoder_path = get_model_path("physics_label_encoder.pkl")
     
     print("🏌️ ENHANCED GOLF SWING AI - LSTM TEMPORAL ANALYSIS")
     print("="*60)

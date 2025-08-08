@@ -15,10 +15,21 @@ from datetime import datetime, timedelta
 import threading
 import time
 from pathlib import Path
+import sys
+
+# Add backend directories to path
+backend_root = Path(__file__).parent.parent
+sys.path.append(str(backend_root / "scripts"))
+sys.path.append(str(backend_root / "utils"))
 
 from predict_enhanced_lstm import EnhancedTemporalSwingClassifier
 from physics_based_features import GolfSwingPhysicsExtractor
-from scripts.extract_features_robust import extract_keypoints_from_video_robust
+from extract_features_robust import extract_keypoints_from_video_robust
+
+def get_model_path(filename):
+    """Get the correct path to model files"""
+    models_dir = backend_root / "models"
+    return str(models_dir / filename)
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -55,10 +66,20 @@ class SwingDataset(Dataset):
 class IncrementalLSTMTrainer:
     """Manages incremental training of the LSTM model"""
     
-    def __init__(self, model_path="models/enhanced_temporal_model.pt",
-                 scaler_path="models/physics_scaler.pkl",
-                 encoder_path="models/physics_label_encoder.pkl",
-                 data_cache_path="models/training_cache.json"):
+    def __init__(self, model_path=None,
+                 scaler_path=None,
+                 encoder_path=None,
+                 data_cache_path=None):
+        
+        # Set default model paths
+        if model_path is None:
+            model_path = get_model_path("enhanced_temporal_model.pt")
+        if scaler_path is None:
+            scaler_path = get_model_path("physics_scaler.pkl")
+        if encoder_path is None:
+            encoder_path = get_model_path("physics_label_encoder.pkl")
+        if data_cache_path is None:
+            data_cache_path = get_model_path("training_cache.json")
         
         self.model_path = model_path
         self.scaler_path = scaler_path  
@@ -344,7 +365,7 @@ class IncrementalLSTMTrainer:
             'model_version': 'enhanced_temporal_incremental'
         }
         
-        stats_path = "models/training_stats.json"
+        stats_path = get_model_path("training_stats.json")
         
         try:
             # Load existing stats
