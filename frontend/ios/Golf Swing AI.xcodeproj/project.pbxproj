@@ -47,7 +47,7 @@
 		CFB40C5F2DF20679005A1B24 /* Golf Swing AIUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Golf Swing AIUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		CFB40C762DF207D1005A1B24 /* Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
 		CFB40C772DF20856005A1B24 /* APIModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIModels.swift; sourceTree = "<group>"; };
-		CFB40C782DF20876005A1B24 /* API Service.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Services/API Service.swift"; sourceTree = "<group>"; };
+		CFB40C782DF20876005A1B24 /* API Service.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "API Service.swift"; sourceTree = "<group>"; };
 		CFB40C792DF208E6005A1B24 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
 		CFB40C7A2DF2092A005A1B24 /* CaddieChatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaddieChatView.swift; sourceTree = "<group>"; };
 		CFE428452E2DD3DA004354CC /* PhysicsEngineView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhysicsEngineView.swift; sourceTree = "<group>"; };
@@ -55,8 +55,8 @@
 		CFF2713A2DF2122700519FA1 /* ColorTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorTheme.swift; sourceTree = "<group>"; };
 		CFF2713D2DF2130000519FA1 /* SwingAnalysisView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwingAnalysisView.swift; sourceTree = "<group>"; };
 		CFF2713F2DF2130100519FA1 /* BallTrackingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BallTrackingView.swift; sourceTree = "<group>"; };
-		CFF271512E2DD500004354CC /* PremiumManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Services/PremiumManager.swift"; sourceTree = "<group>"; };
-		3571F2BC2CB0D469C9DBD538 /* CameraManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Services/CameraManager.swift"; sourceTree = "<group>"; };
+		CFF271512E2DD500004354CC /* PremiumManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PremiumManager.swift"; sourceTree = "<group>"; };
+		3571F2BC2CB0D469C9DBD538 /* CameraManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CameraManager.swift"; sourceTree = "<group>"; };
 		11B5441795A647CB9C0275159C3B1BC5 /* Configuration.storekit */ = {isa = PBXFileReference; lastKnownFileType = text; name = "Configuration.storekit"; path = "Golf Swing AI.xcodeproj/project.xcworkspace/Configuration.storekit"; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
@@ -154,6 +154,8 @@
 			isa = PBXGroup;
 			children = (
 				CFB40C782DF20876005A1B24 /* API Service.swift */,
+				CFF271512E2DD500004354CC /* PremiumManager.swift */,
+				3571F2BC2CB0D469C9DBD538 /* CameraManager.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
