@@ -22,9 +22,21 @@ sys.path.append(str(backend_root / "scripts"))
 # Core prediction modules
 from predict_multi_angle import predict_with_multi_angle_model
 from predict_physics_based import predict_with_physics_model  # Keep for fallback
-from predict_enhanced_lstm import predict_with_enhanced_lstm  # Enhanced LSTM model
+# Conditional import for enhanced LSTM model (only if available)
+try:
+    from predict_enhanced_lstm import predict_with_enhanced_lstm
+    LSTM_AVAILABLE = True
+except ImportError:
+    print("ℹ️ Enhanced LSTM module not available")
+    LSTM_AVAILABLE = False
 from detailed_swing_analysis import analyze_swing_with_details
-from incremental_lstm_trainer import get_trainer, add_user_contribution, get_training_status
+# Conditional import for incremental LSTM trainer
+try:
+    from incremental_lstm_trainer import get_trainer, add_user_contribution, get_training_status
+    INCREMENTAL_TRAINER_AVAILABLE = True
+except ImportError:
+    print("ℹ️ Incremental LSTM trainer not available")
+    INCREMENTAL_TRAINER_AVAILABLE = False
 
 # Utility modules
 from golf_chatbot import CaddieChat
@@ -33,7 +45,8 @@ from ball_tracking import GolfBallTracker
 # Initialize components
 chatbot = CaddieChat()
 ball_tracker = GolfBallTracker()
-lstm_trainer = get_trainer()  # Initialize incremental trainer
+# Initialize incremental trainer (if available)
+lstm_trainer = get_trainer() if INCREMENTAL_TRAINER_AVAILABLE else None
 
 # Pydantic models for request/response
 class ChatRequest(BaseModel):
@@ -156,25 +169,40 @@ async def predict_swing(file: UploadFile = File(...)):
         print(f"📹 Saved video to temporary file: {tmp_path}")
     
     try:
-        # Try enhanced LSTM model first (best performance)
-        print("🚀 Attempting enhanced LSTM temporal analysis...")
-        result = predict_with_enhanced_lstm(
-            tmp_path, 
-            lstm_model_path="models/enhanced_temporal_model.pt",
-            physics_model_path="models/physics_based_model.pt",
-            scaler_path="models/physics_scaler.pkl",
-            encoder_path="models/physics_label_encoder.pkl",
-            use_ensemble=True
-        )
+        # Try enhanced LSTM model first (if available)
+        result = None
+        if LSTM_AVAILABLE and os.path.exists("models/enhanced_temporal_model.pt"):
+            print("🚀 Attempting enhanced LSTM temporal analysis...")
+            try:
+                result = predict_with_enhanced_lstm(
+                    tmp_path, 
+                    lstm_model_path="models/enhanced_temporal_model.pt",
+                    physics_model_path="models/physics_based_model.pt",
+                    scaler_path="models/physics_scaler.pkl",
+                    encoder_path="models/physics_label_encoder.pkl",
+                    use_ensemble=True
+                )
+            except Exception as e:
+                print(f"⚠️ Enhanced LSTM failed: {str(e)}")
+                result = None
+        else:
+            if not LSTM_AVAILABLE:
+                print("ℹ️ Enhanced LSTM module not available, skipping...")
+            else:
+                print("ℹ️ Enhanced LSTM model file not found, skipping...")
         
         if result is None:
             # Fallback to multi-angle model
-            print("⚠️ Enhanced LSTM failed, falling back to multi-angle model...")
-            result = predict_with_multi_angle_model(tmp_path)
+            print("🚀 Attempting multi-angle model...")
+            try:
+                result = predict_with_multi_angle_model(tmp_path)
+            except Exception as e:
+                print(f"⚠️ Multi-angle model failed: {str(e)}")
+                result = None
             
             if result is None:
                 # Final fallback to traditional physics model
-                print("⚠️ Multi-angle prediction failed, falling back to traditional model...")
+                print("🚀 Attempting traditional physics model...")
                 result = predict_with_physics_model(tmp_path)
             if result is None:
                 raise HTTPException(status_code=400, detail="Failed to process video with both models")
