@@ -497,7 +497,6 @@
 				DEVELOPMENT_TEAM = 9627R7543L;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = "Golf-Swing-AI-Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = "AI Golf";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.sports";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Golf Swing AI uses your camera to record and analyze your golf swing videos, providing detailed feedback on swing plane, tempo, and technique to help improve your game.";
@@ -506,8 +505,32 @@
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Golf Swing AI needs access to your photo library to save analyzed swing videos and allow you to import existing swing videos for analysis.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_NSAppTransportSecurity = {
+					NSAllowsArbitraryLoads = YES;
+					NSAllowsArbitraryLoadsInWebContent = YES;
+					NSExceptionDomains = {
+						"golfai.duckdns.org" = {
+							NSExceptionAllowsInsecureHTTPLoads = YES;
+							NSExceptionRequiresForwardSecrecy = NO;
+							NSExceptionMinimumTLSVersion = "TLSv1.2";
+							NSIncludesSubdomains = YES;
+							NSThirdPartyExceptionAllowsInsecureHTTPLoads = YES;
+							NSThirdPartyExceptionRequiresForwardSecrecy = NO;
+							NSThirdPartyExceptionMinimumTLSVersion = "TLSv1.2";
+						};
+					};
+				};
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				INFOPLIST_KEY_CFBundleURLTypes = (
+					{
+						CFBundleTypeRole = Editor;
+						CFBundleURLName = GoogleSignIn;
+						CFBundleURLSchemes = (
+							"com.googleusercontent.apps.565652533895-84ia5eudkma9ch65ciu5blm9pd8jtk8t"
+						);
+					}
+				);
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -539,7 +562,6 @@
 				DEVELOPMENT_TEAM = 9627R7543L;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = "Golf-Swing-AI-Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = "AI Golf";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.sports";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Golf Swing AI uses your camera to record and analyze your golf swing videos, providing detailed feedback on swing plane, tempo, and technique to help improve your game.";
@@ -548,8 +570,32 @@
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Golf Swing AI needs access to your photo library to save analyzed swing videos and allow you to import existing swing videos for analysis.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_NSAppTransportSecurity = {
+					NSAllowsArbitraryLoads = YES;
+					NSAllowsArbitraryLoadsInWebContent = YES;
+					NSExceptionDomains = {
+						"golfai.duckdns.org" = {
+							NSExceptionAllowsInsecureHTTPLoads = YES;
+							NSExceptionRequiresForwardSecrecy = NO;
+							NSExceptionMinimumTLSVersion = "TLSv1.2";
+							NSIncludesSubdomains = YES;
+							NSThirdPartyExceptionAllowsInsecureHTTPLoads = YES;
+							NSThirdPartyExceptionRequiresForwardSecrecy = NO;
+							NSThirdPartyExceptionMinimumTLSVersion = "TLSv1.2";
+						};
+					};
+				};
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				INFOPLIST_KEY_CFBundleURLTypes = (
+					{
+						CFBundleTypeRole = Editor;
+						CFBundleURLName = GoogleSignIn;
+						CFBundleURLSchemes = (
+							"com.googleusercontent.apps.565652533895-84ia5eudkma9ch65ciu5blm9pd8jtk8t"
+						);
+					}
+				);
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
