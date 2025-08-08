@@ -19,6 +19,7 @@
 		CFF2713B2DF2122700519FA1 /* ColorTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFF2713A2DF2122700519FA1 /* ColorTheme.swift */; };
 		CFF2713C2DF2130000519FA1 /* SwingAnalysisView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFF2713D2DF2130000519FA1 /* SwingAnalysisView.swift */; };
 		CFF2713E2DF2130100519FA1 /* BallTrackingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFF2713F2DF2130100519FA1 /* BallTrackingView.swift */; };
+		CFF2714A2DF2140000519FA1 /* VideoSwingPlaneAnalysisView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFF2714B2DF2140000519FA1 /* VideoSwingPlaneAnalysisView.swift */; };
 		CFF271502E2DD500004354CC /* PremiumManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFF271512E2DD500004354CC /* PremiumManager.swift */; };
 		FD00743F2FBCC48A9D84C5E9 /* CameraManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3571F2BC2CB0D469C9DBD538 /* CameraManager.swift */; };
 		11B5441795A647CB9C0275159C3B1BC6 /* Configuration.storekit in Resources */ = {isa = PBXBuildFile; fileRef = 11B5441795A647CB9C0275159C3B1BC5 /* Configuration.storekit */; };
@@ -47,7 +48,7 @@
 		CFB40C5F2DF20679005A1B24 /* Golf Swing AIUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Golf Swing AIUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		CFB40C762DF207D1005A1B24 /* Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
 		CFB40C772DF20856005A1B24 /* APIModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIModels.swift; sourceTree = "<group>"; };
-		CFB40C782DF20876005A1B24 /* API Service.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Services/API Service.swift"; sourceTree = "<group>"; };
+		CFB40C782DF20876005A1B24 /* API Service.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "API Service.swift"; sourceTree = "<group>"; };
 		CFB40C792DF208E6005A1B24 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
 		CFB40C7A2DF2092A005A1B24 /* CaddieChatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaddieChatView.swift; sourceTree = "<group>"; };
 		CFE428452E2DD3DA004354CC /* PhysicsEngineView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhysicsEngineView.swift; sourceTree = "<group>"; };
@@ -55,6 +56,7 @@
 		CFF2713A2DF2122700519FA1 /* ColorTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorTheme.swift; sourceTree = "<group>"; };
 		CFF2713D2DF2130000519FA1 /* SwingAnalysisView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwingAnalysisView.swift; sourceTree = "<group>"; };
 		CFF2713F2DF2130100519FA1 /* BallTrackingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BallTrackingView.swift; sourceTree = "<group>"; };
+		CFF2714B2DF2140000519FA1 /* VideoSwingPlaneAnalysisView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoSwingPlaneAnalysisView.swift; sourceTree = "<group>"; };
 		CFF271512E2DD500004354CC /* PremiumManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Services/PremiumManager.swift"; sourceTree = "<group>"; };
 		3571F2BC2CB0D469C9DBD538 /* CameraManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Services/CameraManager.swift"; sourceTree = "<group>"; };
 		11B5441795A647CB9C0275159C3B1BC5 /* Configuration.storekit */ = {isa = PBXFileReference; lastKnownFileType = text; name = "Configuration.storekit"; path = "Golf Swing AI.xcodeproj/project.xcworkspace/Configuration.storekit"; sourceTree = SOURCE_ROOT; };
@@ -146,6 +148,7 @@
 				CFB40C7A2DF2092A005A1B24 /* CaddieChatView.swift */,
 				CFB40C792DF208E6005A1B24 /* HomeView.swift */,
 				CFF2713D2DF2130000519FA1 /* SwingAnalysisView.swift */,
+				CFF2714B2DF2140000519FA1 /* VideoSwingPlaneAnalysisView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -326,6 +329,7 @@
 				CFB40C7E2DF20A1E005A1B24 /* HomeView.swift in Sources */,
 				CFF2713C2DF2130000519FA1 /* SwingAnalysisView.swift in Sources */,
 				CFE428462E2DD3DA004354CC /* PhysicsEngineView.swift in Sources */,
+				CFF2714A2DF2140000519FA1 /* VideoSwingPlaneAnalysisView.swift in Sources */,
 				CFB40C7F2DF20A1E005A1B24 /* APIModels.swift in Sources */,
 				CFE4284A2E2DD452004354CC /* PhysicsCalculator.swift in Sources */,
 				CFF271502E2DD500004354CC /* PremiumManager.swift in Sources */,
