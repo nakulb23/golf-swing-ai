@@ -223,6 +223,25 @@ class APIService: NSObject, ObservableObject {
             print("❌ JSON decoding error: \(error)")
             print("❌ Raw data: \(responseString)")
             
+            // More detailed decoding error information
+            if let decodingError = error as? DecodingError {
+                switch decodingError {
+                case .keyNotFound(let key, let context):
+                    print("🔍 Missing key: \(key.stringValue)")
+                    print("🔍 Context: \(context)")
+                case .typeMismatch(let type, let context):
+                    print("🔍 Type mismatch for type: \(type)")
+                    print("🔍 Context: \(context)")
+                case .valueNotFound(let type, let context):
+                    print("🔍 Value not found for type: \(type)")
+                    print("🔍 Context: \(context)")
+                case .dataCorrupted(let context):
+                    print("🔍 Data corrupted: \(context)")
+                @unknown default:
+                    print("🔍 Unknown decoding error")
+                }
+            }
+            
             // Check if it's a server error response
             if let errorDict = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
                let detail = errorDict["detail"] as? String {

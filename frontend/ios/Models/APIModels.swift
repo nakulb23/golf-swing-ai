@@ -200,8 +200,8 @@ import Foundation
       init(from decoder: Decoder) throws {
           let container = try decoder.container(keyedBy: CodingKeys.self)
           
-          predicted_label = try container.decode(String.self, forKey: .predicted_label)
-          confidence = try container.decode(Double.self, forKey: .confidence)
+          predicted_label = try container.decodeIfPresent(String.self, forKey: .predicted_label) ?? "unknown"
+          confidence = try container.decodeIfPresent(Double.self, forKey: .confidence) ?? 0.5
           confidence_gap = try container.decodeIfPresent(Double.self, forKey: .confidence_gap) ?? 0.0
           all_probabilities = try container.decodeIfPresent([String: Double].self, forKey: .all_probabilities) ?? [:]
           extraction_status = try container.decodeIfPresent(String.self, forKey: .extraction_status) ?? "success"
