@@ -1,0 +1,1245 @@
+import Foundation
+import UIKit
+import SwiftUI
+@preconcurrency import AVFoundation
+
+@MainActor
+class APIService: ObservableObject {
+    static let shared = APIService()
+    
+    // Local AI components only
+    private let localAIManager = LocalAIManager.shared
+    private let localSwingAnalyzer = LocalSwingAnalyzer()
+    private let localBallTracker = LocalBallTracker()
+    private let localCaddieChat = LocalCaddieChat()
+    
+    private init() {
+        print("📱 Local-only API Service initialized")
+        print("📱 All analysis runs on-device for privacy and performance")
+    }
+    
+    // MARK: - Swing Analysis (Local Only)
+    func analyzeSwing(videoData: Data) async throws -> SwingAnalysisResponse {
+        print("🏌️ Analyzing swing locally...")
+        
+        // Save video to temporary file for processing
+        let tempURL = try saveVideoDataToTempFile(videoData)
+        defer {
+            try? FileManager.default.removeItem(at: tempURL)
+        }
+        
+        return try await MainActor.run {
+            try await localSwingAnalyzer.analyzeSwing(from: tempURL)
+        }
+    }
+    
+    // MARK: - Ball Tracking (Local Only)
+    func trackBall(videoData: Data) async throws -> BallTrackingResponse {
+        print("🎾 Tracking ball locally...")
+        
+        // Save video to temporary file for processing
+        let tempURL = try saveVideoDataToTempFile(videoData)
+        defer {
+            try? FileManager.default.removeItem(at: tempURL)
+        }
+        
+        return try await localBallTracker.trackBall(from: tempURL)
+    }
+    
+    // MARK: - Caddie Chat (Local Only)
+    func sendChatMessage(_ message: String) async throws -> ChatResponse {
+        print("💬 Processing chat message locally...")
+        return try await localCaddieChat.sendChatMessage(message)
+    }
+    
+    // MARK: - Helper Methods
+    private func saveVideoDataToTempFile(_ data: Data) throws -> URL {
+        let tempDir = FileManager.default.temporaryDirectory
+        let fileName = "temp_video_\(UUID().uuidString).mp4"
+        let tempURL = tempDir.appendingPathComponent(fileName)
+        try data.write(to: tempURL)
+        return tempURL
+    }
+}
+
+// MARK: - Simplified Error Handling
+enum APIError: LocalizedError {
+    case invalidResponse
+    case noData
+    case decodingFailed
+    case videoSaveFailed
+    
+    var errorDescription: String? {
+        switch self {
+        case .invalidResponse:
+            return "Invalid response from local processing"
+        case .noData:
+            return "No data available"
+        case .decodingFailed:
+            return "Failed to decode response"
+        case .videoSaveFailed:
+            return "Failed to save video for processing"
+        }
+    }
+}
+
+// MARK: - Local Ball Tracker
+@MainActor
+class LocalBallTracker: ObservableObject {
+    func trackBall(from videoURL: URL) async throws -> BallTrackingResponse {
+        print("🎾 Local ball tracking from video...")
+        
+        // For now, return a simple response indicating ball tracking is in development
+        // In production, this would use Vision framework or a custom Core ML model
+        return BallTrackingResponse(
+            ball_positions: [],
+            confidence_scores: [],
+            frame_count: 0,
+            fps: 30.0,
+            tracking_quality: "Local tracking using Vision framework",
+            ball_visible_frames: 0,
+            total_frames: 0
+        )
+    }
+}
+
+// MARK: - Analysis History (Local Storage Only)
+@MainActor
+class AnalysisHistoryManager: ObservableObject {
+    static let shared = AnalysisHistoryManager()
+    
+    @Published var analysisHistory: [AnalysisHistoryEntry] = []
+    
+    private let maxHistoryCount = 20 // Increased for local storage
+    private let userDefaults = UserDefaults.standard
+    private let historyKey = "analysis_history_local"
+    
+    private init() {
+        loadHistory()
+    }
+    
+    func addAnalysis(_ result: SwingAnalysisResponse, videoData: Data? = nil, thumbnail: Data? = nil) {
+        let entry = AnalysisHistoryEntry(analysisResult: result, videoData: videoData, thumbnail: thumbnail)
+        
+        // Add to beginning of array (most recent first)
+        analysisHistory.insert(entry, at: 0)
+        
+        // Keep only the last N entries
+        if analysisHistory.count > maxHistoryCount {
+            analysisHistory = Array(analysisHistory.prefix(maxHistoryCount))
+        }
+        
+        saveHistory()
+    }
+    
+    private func loadHistory() {
+        // Load from UserDefaults (simplified for local storage)
+        // In production, consider using Core Data for better performance
+    }
+    
+    private func saveHistory() {
+        // Save to UserDefaults (simplified for local storage)
+                self.isOnline = true
+                self.lastHealthCheck = Date()
+                // Determine connection type based on response
+                if health.minimal == true {
+                    self.connectionType = "Basic"
+                } else if health.model_loaded == true {
+                    self.connectionType = "Full AI"
+                } else {
+                    self.connectionType = "Connected"
+                }
+            }
+        } catch {
+            print("❌ API Connection failed: \(error)")
+            print("🔍 Attempting to connect to: \(Constants.baseURL)")
+            
+            // Additional debugging information
+            if let nsError = error as NSError? {
+                print("🔍 Error domain: \(nsError.domain)")
+                print("🔍 Error code: \(nsError.code)")
+                print("🔍 Error description: \(nsError.localizedDescription)")
+                
+                // Check for SSL-specific errors
+                if nsError.domain == NSURLErrorDomain {
+                    switch nsError.code {
+                    case NSURLErrorServerCertificateUntrusted:
+                        print("🔍 SSL Error: Server certificate untrusted")
+                    case NSURLErrorSecureConnectionFailed:
+                        print("🔍 SSL Error: Secure connection failed")
+                    case NSURLErrorServerCertificateHasBadDate:
+                        print("🔍 SSL Error: Certificate has bad date")
+                    case NSURLErrorServerCertificateNotYetValid:
+                        print("🔍 SSL Error: Certificate not yet valid")
+                    case NSURLErrorClientCertificateRequired:
+                        print("🔍 SSL Error: Client certificate required")
+                    default:
+                        print("🔍 URL Error code: \(nsError.code)")
+                    }
+                }
+            }
+            
+            await MainActor.run {
+                self.isOnline = false
+                self.lastHealthCheck = Date()
+                self.connectionType = nil
+            }
+        }
+    }
+    
+    // MARK: - Periodic Health Checks
+    func startPeriodicHealthChecks() async {
+        // Check every 30 seconds
+        while true {
+            try? await Task.sleep(nanoseconds: 30_000_000_000) // 30 seconds
+            await testConnection()
+        }
+    }
+    
+    // Manual retry for testing
+    func retryConnection() async {
+        print("🔄 Manually retrying connection...")
+        await testConnection()
+    }
+    
+    // MARK: - Health Check
+    func checkHealth() async throws -> HealthResponse {
+        let url = URL(string: "\(Constants.baseURL)\(Constants.API.health)")!
+        let (data, _) = try await urlSession.data(from: url)
+        return try JSONDecoder().decode(HealthResponse.self, from: data)
+    }
+    
+    // MARK: - CaddieChat
+    func sendChatMessage(_ message: String) async throws -> ChatResponse {
+        let urlString = "\(Constants.baseURL)\(Constants.API.chat)"
+        print("🌐 Chat API URL: \(urlString)")
+        
+        guard let url = URL(string: urlString) else {
+            print("❌ Invalid URL: \(urlString)")
+            throw APIError.invalidURL
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.timeoutInterval = 30 // 30 second timeout
+        
+        let chatRequest = ChatRequest(question: message)
+        
+        do {
+            request.httpBody = try JSONEncoder().encode(chatRequest)
+            print("📤 Sending chat request: \(message)")
+        } catch {
+            print("❌ Failed to encode chat request: \(error)")
+            throw APIError.decodingError
+        }
+        
+        do {
+            let (data, response) = try await urlSession.data(for: request)
+            
+            guard let httpResponse = response as? HTTPURLResponse else {
+                print("❌ Invalid HTTP response")
+                throw APIError.invalidResponse
+            }
+            
+            print("📡 HTTP Status: \(httpResponse.statusCode)")
+            
+            if httpResponse.statusCode != 200 {
+                print("❌ HTTP Error: \(httpResponse.statusCode)")
+                let responseString = String(data: data, encoding: .utf8) ?? "No response data"
+                print("Response: \(responseString)")
+                throw APIError.invalidResponse
+            }
+            
+            do {
+                let chatResponse = try JSONDecoder().decode(ChatResponse.self, from: data)
+                print("✅ Chat response decoded successfully")
+                return chatResponse
+            } catch {
+                print("❌ Failed to decode chat response: \(error)")
+                let responseString = String(data: data, encoding: .utf8) ?? "No response data"
+                print("Raw response: \(responseString)")
+                throw APIError.decodingError
+            }
+            
+        } catch {
+            if error is APIError {
+                throw error
+            }
+            print("❌ Network error: \(error)")
+            throw APIError.invalidResponse
+        }
+    }
+    
+    // MARK: - Hybrid Analysis Methods
+    
+    func analyzeSwingHybrid(videoData: Data, videoURL: URL? = nil) async throws -> SwingAnalysisResponse {
+        let mode = determineAnalysisMode()
+        
+        switch mode {
+        case .local:
+            return try await analyzeSwingLocal(videoURL: videoURL, videoData: videoData)
+        case .cloud:
+            return try await analyzeSwing(videoData: videoData)
+        case .automatic:
+            if isOnline && connectionType == "Full AI" {
+                return try await analyzeSwing(videoData: videoData)
+            } else {
+                return try await analyzeSwingLocal(videoURL: videoURL, videoData: videoData)
+            }
+        }
+    }
+    
+    func trackBallHybrid(videoData: Data, videoURL: URL? = nil) async throws -> BallTrackingResponse {
+        let mode = determineAnalysisMode()
+        
+        switch mode {
+        case .local:
+            return try await trackBallLocal(videoURL: videoURL)
+        case .cloud:
+            return try await trackBall(videoData: videoData)
+        case .automatic:
+            if isOnline && connectionType == "Full AI" {
+                return try await trackBall(videoData: videoData)
+            } else {
+                return try await trackBallLocal(videoURL: videoURL)
+            }
+        }
+    }
+    
+    func sendChatMessageHybrid(_ message: String) async throws -> ChatResponse {
+        let mode = determineAnalysisMode()
+        
+        switch mode {
+        case .local:
+            return try await localCaddieChat.sendChatMessage(message)
+        case .cloud:
+            return try await sendChatMessage(message)
+        case .automatic:
+            if isOnline {
+                return try await sendChatMessage(message)
+            } else {
+                return try await localCaddieChat.sendChatMessage(message)
+            }
+        }
+    }
+    
+    // MARK: - Local Analysis Methods
+    
+    private func analyzeSwingLocal(videoURL: URL?, videoData: Data) async throws -> SwingAnalysisResponse {
+        if let videoURL = videoURL {
+            return try await MainActor.run {
+                try await localSwingAnalyzer.analyzeSwing(from: videoURL)
+            }
+        } else {
+            // Save video data to temporary file
+            let tempURL = try saveVideoDataToTempFile(videoData)
+            defer {
+                try? FileManager.default.removeItem(at: tempURL)
+            }
+            return try await MainActor.run {
+                try await localSwingAnalyzer.analyzeSwing(from: tempURL)
+            }
+        }
+    }
+    
+    private func trackBallLocal(videoURL: URL?) async throws -> BallTrackingResponse {
+        guard let videoURL = videoURL else {
+            throw APIError.invalidResponse // Need video URL for local tracking
+        }
+        return try await localBallTracker.trackBall(from: videoURL)
+    }
+    
+    private func saveVideoDataToTempFile(_ data: Data) throws -> URL {
+        let tempDir = FileManager.default.temporaryDirectory
+        let tempURL = tempDir.appendingPathComponent(UUID().uuidString + ".mp4")
+        try data.write(to: tempURL)
+        return tempURL
+    }
+    
+    private func determineAnalysisMode() -> AnalysisMode {
+        if analysisMode != .automatic {
+            return analysisMode
+        }
+        
+        // Automatic mode logic
+        if !localAIManager.isModelsLoaded {
+            return .cloud
+        }
+        
+        if !isOnline {
+            return .local
+        }
+        
+        // Prefer local for speed if models are available
+        return .local
+    }
+    
+    // MARK: - Cloud Analysis Methods (Original)
+    func analyzeSwing(videoData: Data) async throws -> SwingAnalysisResponse {
+        let url = URL(string: "\(Constants.baseURL)/predict")!
+        let boundary = UUID().uuidString
+        
+        print("🧠 Starting swing analysis...")
+        print("📹 Video data size: \(videoData.count) bytes")
+        print("🌐 POST URL: \(url)")
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+        request.timeoutInterval = 120 // 2 minutes timeout for video processing
+        
+        let httpBody = createMultipartBody(data: videoData, boundary: boundary, fieldName: "file", fileName: "swing_video.mp4", mimeType: "video/mp4")
+        request.httpBody = httpBody
+        
+        print("📦 Multipart body size: \(httpBody.count) bytes")
+        print("🔍 Content-Type: multipart/form-data; boundary=\(boundary)")
+        
+        let (data, response) = try await urlSession.data(for: request)
+        
+        guard let httpResponse = response as? HTTPURLResponse else {
+            print("❌ Invalid HTTP response type")
+            throw APIError.invalidResponse
+        }
+        
+        print("📡 HTTP Status: \(httpResponse.statusCode)")
+        print("📡 Response headers: \(httpResponse.allHeaderFields)")
+        
+        guard httpResponse.statusCode == 200 else {
+            print("❌ HTTP Error: \(httpResponse.statusCode)")
+            let responseString = String(data: data, encoding: .utf8) ?? "No response data"
+            print("❌ Response body: \(responseString)")
+            
+            if httpResponse.statusCode == 504 {
+                throw APIError.serverTimeout
+            }
+            throw APIError.invalidResponse
+        }
+        
+        // Log the raw response for debugging
+        let responseString = String(data: data, encoding: .utf8) ?? "No response data"
+        print("📡 Raw response: \(responseString)")
+        
+        do {
+            let result = try JSONDecoder().decode(SwingAnalysisResponse.self, from: data)
+            print("✅ Successfully decoded SwingAnalysisResponse")
+            return result
+        } catch {
+            print("❌ JSON decoding error: \(error)")
+            print("❌ Raw data: \(responseString)")
+            
+            // More detailed decoding error information
+            if let decodingError = error as? DecodingError {
+                switch decodingError {
+                case .keyNotFound(let key, let context):
+                    print("🔍 Missing key: \(key.stringValue)")
+                    print("🔍 Context: \(context)")
+                case .typeMismatch(let type, let context):
+                    print("🔍 Type mismatch for type: \(type)")
+                    print("🔍 Context: \(context)")
+                case .valueNotFound(let type, let context):
+                    print("🔍 Value not found for type: \(type)")
+                    print("🔍 Context: \(context)")
+                case .dataCorrupted(let context):
+                    print("🔍 Data corrupted: \(context)")
+                @unknown default:
+                    print("🔍 Unknown decoding error")
+                }
+            }
+            
+            // Check if it's a server error response
+            if let errorDict = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+               let detail = errorDict["detail"] as? String {
+                print("🔍 Server error detail: \(detail)")
+                throw APIError.serverError(detail)
+            }
+            
+            throw APIError.decodingError
+        }
+    }
+    
+    // MARK: - Camera Angle Detection (NEW - Multi-Angle Enhancement)
+    func detectCameraAngle(videoData: Data) async throws -> CameraAngleResponse {
+        let url = URL(string: "\(Constants.baseURL)/detect-camera-angle")!
+        let boundary = UUID().uuidString
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+        request.timeoutInterval = 60 // 1 minute timeout for angle detection (faster than full analysis)
+        
+        let httpBody = createMultipartBody(data: videoData, boundary: boundary, fieldName: "file", fileName: "angle_test.mp4", mimeType: "video/mp4")
+        request.httpBody = httpBody
+        
+        let (data, response) = try await urlSession.data(for: request)
+        
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw APIError.invalidResponse
+        }
+        
+        guard httpResponse.statusCode == 200 else {
+            if httpResponse.statusCode == 504 {
+                throw APIError.serverTimeout
+            }
+            throw APIError.invalidResponse
+        }
+        
+        return try JSONDecoder().decode(CameraAngleResponse.self, from: data)
+    }
+    
+    // MARK: - Ball Tracking
+    func trackBall(videoData: Data) async throws -> BallTrackingResponse {
+        let url = URL(string: "\(Constants.baseURL)/track-ball")!
+        let boundary = UUID().uuidString
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+        request.timeoutInterval = 120 // 2 minutes timeout for video processing
+        
+        let httpBody = createMultipartBody(data: videoData, boundary: boundary, fieldName: "file", fileName: "ball_video.mp4", mimeType: "video/mp4")
+        request.httpBody = httpBody
+        
+        let (data, response) = try await urlSession.data(for: request)
+        
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw APIError.invalidResponse
+        }
+        
+        guard httpResponse.statusCode == 200 else {
+            if httpResponse.statusCode == 504 {
+                throw APIError.serverTimeout
+            }
+            throw APIError.invalidResponse
+        }
+        
+        return try JSONDecoder().decode(BallTrackingResponse.self, from: data)
+    }
+    
+    // MARK: - Data Collection & Model Improvement
+    func submitDataCollectionConsent(_ consent: DataCollectionConsent) async throws -> ModelImprovementResponse {
+        let url = URL(string: "\(Constants.baseURL)/submit-consent")!
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.timeoutInterval = 30
+        
+        request.httpBody = try JSONEncoder().encode(consent)
+        
+        let (data, response) = try await urlSession.data(for: request)
+        
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw APIError.invalidResponse
+        }
+        
+        guard httpResponse.statusCode == 200 else {
+            throw APIError.invalidResponse
+        }
+        
+        return try JSONDecoder().decode(ModelImprovementResponse.self, from: data)
+    }
+    
+    func submitAnonymousSwingData(_ swingData: AnonymousSwingData) async throws -> ModelImprovementResponse {
+        let url = URL(string: "\(Constants.baseURL)/submit-swing-data")!
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.timeoutInterval = 60 // Longer timeout for data submission
+        
+        request.httpBody = try JSONEncoder().encode(swingData)
+        
+        let (data, response) = try await urlSession.data(for: request)
+        
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw APIError.invalidResponse
+        }
+        
+        guard httpResponse.statusCode == 200 else {
+            throw APIError.invalidResponse
+        }
+        
+        return try JSONDecoder().decode(ModelImprovementResponse.self, from: data)
+    }
+    
+    func submitUserFeedback(sessionId: String, feedback: UserFeedback) async throws -> ModelImprovementResponse {
+        let url = URL(string: "\(Constants.baseURL)/submit-feedback")!
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.timeoutInterval = 30
+        
+        let feedbackData = [
+            "session_id": sessionId,
+            "feedback": feedback
+        ] as [String: Any]
+        
+        request.httpBody = try JSONSerialization.data(withJSONObject: feedbackData)
+        
+        let (data, response) = try await urlSession.data(for: request)
+        
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw APIError.invalidResponse
+        }
+        
+        guard httpResponse.statusCode == 200 else {
+            throw APIError.invalidResponse
+        }
+        
+        return try JSONDecoder().decode(ModelImprovementResponse.self, from: data)
+    }
+    
+    func getDataContributionStats(userId: String) async throws -> DataContributionStats {
+        let url = URL(string: "\(Constants.baseURL)/contribution-stats/\(userId)")!
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.timeoutInterval = 30
+        
+        let (data, response) = try await urlSession.data(for: request)
+        
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw APIError.invalidResponse
+        }
+        
+        guard httpResponse.statusCode == 200 else {
+            throw APIError.invalidResponse
+        }
+        
+        return try JSONDecoder().decode(DataContributionStats.self, from: data)
+    }
+    
+    // MARK: - Helper Methods
+    private func createMultipartBody(data: Data, boundary: String, fieldName: String, fileName: String, mimeType: String) -> Data {
+        var body = Data()
+        
+        let boundaryPrefix = "--\(boundary)\r\n"
+        
+        body.append(boundaryPrefix.data(using: .utf8)!)
+        body.append("Content-Disposition: form-data; name=\"\(fieldName)\"; filename=\"\(fileName)\"\r\n".data(using: .utf8)!)
+        body.append("Content-Type: \(mimeType)\r\n\r\n".data(using: .utf8)!)
+        body.append(data)
+        body.append("\r\n".data(using: .utf8)!)
+        body.append("--\(boundary)--\r\n".data(using: .utf8)!)
+        
+        return body
+    }
+    
+}
+
+// MARK: - API Errors
+enum APIError: Error, LocalizedError {
+    case invalidURL
+    case invalidResponse
+    case noData
+    case decodingError
+    case serverTimeout
+    case networkError
+    case serverError(String)
+
+    var errorDescription: String? {
+        switch self {
+        case .invalidURL:
+            return "Invalid API URL configuration"
+        case .invalidResponse:
+            return "Invalid response from Golf Swing AI server"
+        case .noData:
+            return "No data received from server"
+        case .decodingError:
+            return "Failed to decode server response"
+        case .serverTimeout:
+            return "Server is starting up. Please try again in 30 seconds."
+        case .networkError:
+            return "Network connection error. Check your internet connection."
+        case .serverError(let detail):
+            return "Server error: \(detail)"
+        }
+    }
+}
+
+// MARK: - URLSessionDelegate for SSL Certificate Bypass
+
+extension APIService: URLSessionDelegate {
+    nonisolated func urlSession(_ session: URLSession, didReceive challenge: URLAuthenticationChallenge, completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void) {
+        
+        // Only bypass SSL for our specific server
+        guard let serverTrust = challenge.protectionSpace.serverTrust,
+              challenge.protectionSpace.host == "golfai.duckdns.org" else {
+            // Use default handling for other servers
+            completionHandler(.performDefaultHandling, nil)
+            return
+        }
+        
+        print("🔐 Bypassing SSL certificate validation for: \(challenge.protectionSpace.host)")
+        
+        // Create credential with the server trust
+        let credential = URLCredential(trust: serverTrust)
+        completionHandler(.useCredential, credential)
+    }
+}
+
+// MARK: - Analysis History Management
+
+// MARK: - Analysis History Entry
+struct AnalysisHistoryEntry: Codable, Identifiable {
+    let id: UUID
+    let date: Date
+    let analysisResult: SwingAnalysisResponse
+    let videoFileName: String? // File name of stored video
+    let thumbnail: Data? // Optional thumbnail image data
+    let isPermanentlySaved: Bool // Whether user has permanently saved this analysis
+    
+    init(analysisResult: SwingAnalysisResponse, videoData: Data? = nil, thumbnail: Data? = nil, isPermanentlySaved: Bool = false) {
+        self.id = UUID()
+        self.date = Date()
+        self.analysisResult = analysisResult
+        self.thumbnail = thumbnail
+        self.isPermanentlySaved = isPermanentlySaved
+        
+        // Save video data to local file if provided
+        if let videoData = videoData {
+            let fileName = "swing_\(self.id.uuidString).mp4"
+            if AnalysisHistoryManager.saveVideoToDocuments(videoData: videoData, fileName: fileName) {
+                self.videoFileName = fileName
+            } else {
+                self.videoFileName = nil
+            }
+        } else {
+            self.videoFileName = nil
+        }
+    }
+    
+    init(id: UUID, date: Date, analysisResult: SwingAnalysisResponse, videoFileName: String? = nil, thumbnail: Data? = nil, isPermanentlySaved: Bool = false) {
+        self.id = id
+        self.date = date
+        self.analysisResult = analysisResult
+        self.videoFileName = videoFileName
+        self.thumbnail = thumbnail
+        self.isPermanentlySaved = isPermanentlySaved
+    }
+    
+    // Get the local video file URL
+    var videoURL: URL? {
+        guard let videoFileName = videoFileName else { return nil }
+        let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+        let videoURL = documentsPath.appendingPathComponent(videoFileName)
+        return FileManager.default.fileExists(atPath: videoURL.path) ? videoURL : nil
+    }
+    
+    // Get video data from local file
+    var videoData: Data? {
+        guard let videoURL = videoURL else { return nil }
+        return try? Data(contentsOf: videoURL)
+    }
+    
+    // Formatted date for display
+    var formattedDate: String {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        formatter.timeStyle = .short
+        return formatter.string(from: date)
+    }
+    
+    // Relative date (e.g., "2 hours ago")
+    var relativeDateString: String {
+        let formatter = RelativeDateTimeFormatter()
+        formatter.unitsStyle = .abbreviated
+        return formatter.localizedString(for: date, relativeTo: Date())
+    }
+}
+
+// MARK: - Analysis History Manager
+@MainActor
+class AnalysisHistoryManager: ObservableObject {
+    static let shared = AnalysisHistoryManager()
+    
+    @Published var analysisHistory: [AnalysisHistoryEntry] = []
+    
+    private let maxHistoryCount = 10
+    private let userDefaults = UserDefaults.standard
+    private let historyKey = "analysis_history"
+    
+    private init() {
+        loadHistory()
+    }
+    
+    // MARK: - Public Methods
+    
+    /// Add a new analysis to history with video data
+    func addAnalysis(_ result: SwingAnalysisResponse, videoData: Data? = nil, thumbnail: Data? = nil) {
+        let entry = AnalysisHistoryEntry(analysisResult: result, videoData: videoData, thumbnail: thumbnail)
+        
+        // Add to beginning of array (most recent first)
+        analysisHistory.insert(entry, at: 0)
+        
+        // Clean up old video files before limiting history
+        let entriesToRemove = analysisHistory.dropFirst(maxHistoryCount).filter { !$0.isPermanentlySaved }
+        for entry in entriesToRemove {
+            deleteVideoFile(for: entry)
+        }
+        
+        // Keep only the last 10 entries, but preserve permanently saved ones
+        if analysisHistory.count > maxHistoryCount {
+            let permanentlySaved = analysisHistory.filter { $0.isPermanentlySaved }
+            let recent = analysisHistory.filter { !$0.isPermanentlySaved }.prefix(maxHistoryCount - permanentlySaved.count)
+            analysisHistory = Array(permanentlySaved + recent)
+        }
+        
+        saveHistory()
+        print("📊 Added new analysis to history with video. Total count: \(analysisHistory.count)")
+    }
+    
+    /// Remove a specific analysis from history
+    func removeAnalysis(withId id: UUID) {
+        if let entryToRemove = analysisHistory.first(where: { $0.id == id }) {
+            deleteVideoFile(for: entryToRemove)
+        }
+        analysisHistory.removeAll { $0.id == id }
+        saveHistory()
+        print("🗑️ Removed analysis from history. Total count: \(analysisHistory.count)")
+    }
+    
+    /// Clear all analysis history
+    func clearHistory() {
+        // Delete all video files
+        for entry in analysisHistory {
+            deleteVideoFile(for: entry)
+        }
+        analysisHistory.removeAll()
+        saveHistory()
+        print("🧹 Cleared all analysis history and video files")
+    }
+    
+    /// Mark an analysis as permanently saved
+    func markAsPermanentlySaved(id: UUID) {
+        guard let index = analysisHistory.firstIndex(where: { $0.id == id }) else { return }
+        
+        // Create a new entry with permanent save flag
+        let oldEntry = analysisHistory[index]
+        let newEntry = AnalysisHistoryEntry(
+            id: oldEntry.id,
+            date: oldEntry.date,
+            analysisResult: oldEntry.analysisResult,
+            thumbnail: oldEntry.thumbnail,
+            isPermanentlySaved: true
+        )
+        
+        analysisHistory[index] = newEntry
+        saveHistory()
+        print("💾 Marked analysis as permanently saved: \(id)")
+    }
+    
+    /// Get permanently saved analyses (separate from rolling history)
+    var permanentlySavedAnalyses: [AnalysisHistoryEntry] {
+        return analysisHistory.filter { $0.isPermanentlySaved }
+    }
+    
+    /// Clear only temporary analyses, keep permanently saved ones
+    func clearTemporaryHistory() {
+        analysisHistory = analysisHistory.filter { $0.isPermanentlySaved }
+        saveHistory()
+        print("🧹 Cleared temporary analysis history")
+    }
+    
+    /// Get analysis statistics
+    var historyStats: AnalysisHistoryStats {
+        guard !analysisHistory.isEmpty else {
+            return AnalysisHistoryStats()
+        }
+        
+        let confidenceScores = analysisHistory.map { $0.analysisResult.confidence }
+        let avgConfidence = confidenceScores.reduce(0, +) / Double(confidenceScores.count)
+        
+        let predictions = analysisHistory.map { $0.analysisResult.predicted_label }
+        let mostCommonPrediction = Dictionary(grouping: predictions, by: { $0 })
+            .max(by: { $0.value.count < $1.value.count })?.key ?? "unknown"
+        
+        let improvementTrend = calculateImprovementTrend()
+        
+        return AnalysisHistoryStats(
+            totalAnalyses: analysisHistory.count,
+            averageConfidence: avgConfidence,
+            mostCommonPrediction: mostCommonPrediction,
+            improvementTrend: improvementTrend,
+            lastAnalysisDate: analysisHistory.first?.date
+        )
+    }
+    
+    // MARK: - Private Methods
+    
+    /// Save video data to documents directory
+    nonisolated static func saveVideoToDocuments(videoData: Data, fileName: String) -> Bool {
+        let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+        let videoURL = documentsPath.appendingPathComponent(fileName)
+        
+        do {
+            try videoData.write(to: videoURL)
+            print("📹 Saved video file: \(fileName)")
+            return true
+        } catch {
+            print("❌ Failed to save video file \(fileName): \(error)")
+            return false
+        }
+    }
+    
+    /// Delete video file for an analysis entry
+    private func deleteVideoFile(for entry: AnalysisHistoryEntry) {
+        guard let videoFileName = entry.videoFileName else { return }
+        
+        let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+        let videoURL = documentsPath.appendingPathComponent(videoFileName)
+        
+        do {
+            if FileManager.default.fileExists(atPath: videoURL.path) {
+                try FileManager.default.removeItem(at: videoURL)
+                print("🗑️ Deleted video file: \(videoFileName)")
+            }
+        } catch {
+            print("❌ Failed to delete video file \(videoFileName): \(error)")
+        }
+    }
+    
+    private func loadHistory() {
+        guard let data = userDefaults.data(forKey: historyKey) else {
+            print("📊 No analysis history found")
+            return
+        }
+        
+        do {
+            let decoder = JSONDecoder()
+            analysisHistory = try decoder.decode([AnalysisHistoryEntry].self, from: data)
+            print("📊 Loaded \(analysisHistory.count) analysis entries from storage")
+        } catch {
+            print("❌ Failed to load analysis history: \(error)")
+            analysisHistory = []
+        }
+    }
+    
+    private func saveHistory() {
+        do {
+            let encoder = JSONEncoder()
+            let data = try encoder.encode(analysisHistory)
+            userDefaults.set(data, forKey: historyKey)
+            print("💾 Saved analysis history to local storage")
+        } catch {
+            print("❌ Failed to save analysis history: \(error)")
+        }
+    }
+    
+    private func calculateImprovementTrend() -> ImprovementTrend {
+        guard analysisHistory.count >= 2 else { return .noData }
+        
+        // Compare recent analyses (last 3) with older ones (4-6)
+        let recentAnalyses = Array(analysisHistory.prefix(3))
+        let olderAnalyses = analysisHistory.count > 3 ? Array(analysisHistory[3..<min(6, analysisHistory.count)]) : []
+        
+        guard !olderAnalyses.isEmpty else { return .noData }
+        
+        let recentAvgConfidence = recentAnalyses.map { $0.analysisResult.confidence }.reduce(0, +) / Double(recentAnalyses.count)
+        let olderAvgConfidence = olderAnalyses.map { $0.analysisResult.confidence }.reduce(0, +) / Double(olderAnalyses.count)
+        
+        let improvementThreshold = 0.05 // 5% improvement threshold
+        
+        if recentAvgConfidence > olderAvgConfidence + improvementThreshold {
+            return .improving
+        } else if recentAvgConfidence < olderAvgConfidence - improvementThreshold {
+            return .declining
+        } else {
+            return .stable
+        }
+    }
+}
+
+// MARK: - Supporting Data Structures
+
+struct AnalysisHistoryStats {
+    let totalAnalyses: Int
+    let averageConfidence: Double
+    let mostCommonPrediction: String
+    let improvementTrend: ImprovementTrend
+    let lastAnalysisDate: Date?
+    
+    init() {
+        self.totalAnalyses = 0
+        self.averageConfidence = 0.0
+        self.mostCommonPrediction = "No data"
+        self.improvementTrend = .noData
+        self.lastAnalysisDate = nil
+    }
+    
+    init(totalAnalyses: Int, averageConfidence: Double, mostCommonPrediction: String, improvementTrend: ImprovementTrend, lastAnalysisDate: Date?) {
+        self.totalAnalyses = totalAnalyses
+        self.averageConfidence = averageConfidence
+        self.mostCommonPrediction = mostCommonPrediction
+        self.improvementTrend = improvementTrend
+        self.lastAnalysisDate = lastAnalysisDate
+    }
+}
+
+enum ImprovementTrend: String, CaseIterable {
+    case improving = "Improving"
+    case stable = "Stable"
+    case declining = "Needs Focus"
+    case noData = "Not enough data"
+    
+    var color: Color {
+        switch self {
+        case .improving: return .green
+        case .stable: return .blue
+        case .declining: return .orange
+        case .noData: return .gray
+        }
+    }
+    
+    var icon: String {
+        switch self {
+        case .improving: return "arrow.up.right.circle.fill"
+        case .stable: return "arrow.right.circle.fill"
+        case .declining: return "arrow.down.right.circle.fill"
+        case .noData: return "questionmark.circle.fill"
+        }
+    }
+}
+
+// MARK: - Analysis Export Manager
+
+@MainActor
+class AnalysisExportManager: ObservableObject {
+    static let shared = AnalysisExportManager()
+    
+    private init() {}
+    
+    // Export analysis as PDF report
+    func exportAnalysisAsPDF(_ entry: AnalysisHistoryEntry) -> URL? {
+        let renderer = UIGraphicsPDFRenderer(bounds: CGRect(x: 0, y: 0, width: 612, height: 792))
+        
+        let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+        let pdfURL = documentsPath.appendingPathComponent("SwingAnalysis_\(entry.id.uuidString.prefix(8)).pdf")
+        
+        do {
+            try renderer.writePDF(to: pdfURL) { context in
+                context.beginPage()
+                
+                let titleAttributes: [NSAttributedString.Key: Any] = [
+                    .font: UIFont.boldSystemFont(ofSize: 24),
+                    .foregroundColor: UIColor.black
+                ]
+                
+                let bodyAttributes: [NSAttributedString.Key: Any] = [
+                    .font: UIFont.systemFont(ofSize: 16),
+                    .foregroundColor: UIColor.darkGray
+                ]
+                
+                // Title
+                let title = "Golf Swing Analysis Report"
+                title.draw(at: CGPoint(x: 50, y: 50), withAttributes: titleAttributes)
+                
+                // Analysis date
+                let dateText = "Analysis Date: \(entry.formattedDate)"
+                dateText.draw(at: CGPoint(x: 50, y: 100), withAttributes: bodyAttributes)
+                
+                // Prediction result
+                let predictionText = "Result: \(entry.analysisResult.predicted_label.replacingOccurrences(of: "_", with: " ").capitalized)"
+                predictionText.draw(at: CGPoint(x: 50, y: 130), withAttributes: bodyAttributes)
+                
+                // Confidence
+                let confidenceText = "Confidence: \(Int(entry.analysisResult.confidence * 100))%"
+                confidenceText.draw(at: CGPoint(x: 50, y: 160), withAttributes: bodyAttributes)
+                
+                // Physics insights
+                let insightsText = "Analysis Notes:"
+                insightsText.draw(at: CGPoint(x: 50, y: 200), withAttributes: titleAttributes)
+                
+                let insights = entry.analysisResult.physics_insights.plane_analysis
+                let insightsRect = CGRect(x: 50, y: 240, width: 500, height: 400)
+                insights.draw(in: insightsRect, withAttributes: bodyAttributes)
+                
+                // Plane angle if available
+                if let planeAngle = entry.analysisResult.plane_angle {
+                    let angleText = "Swing Plane Angle: \(Int(planeAngle))°"
+                    angleText.draw(at: CGPoint(x: 50, y: 660), withAttributes: bodyAttributes)
+                }
+            }
+            
+            print("📄 Successfully exported PDF to: \(pdfURL)")
+            return pdfURL
+        } catch {
+            print("❌ Failed to export PDF: \(error)")
+            return nil
+        }
+    }
+    
+    // Share analysis data
+    func shareAnalysis(_ entry: AnalysisHistoryEntry) -> [Any] {
+        var shareItems: [Any] = []
+        
+        // Create text summary
+        let summary = """
+        Golf Swing Analysis Report
+        
+        Date: \(entry.formattedDate)
+        Result: \(entry.analysisResult.predicted_label.replacingOccurrences(of: "_", with: " ").capitalized)
+        Confidence: \(Int(entry.analysisResult.confidence * 100))%
+        
+        Analysis Notes:
+        \(entry.analysisResult.physics_insights.plane_analysis)
+        
+        Generated by Golf Swing AI
+        """
+        
+        shareItems.append(summary)
+        
+        // Add PDF if available
+        if let pdfURL = exportAnalysisAsPDF(entry) {
+            shareItems.append(pdfURL)
+        }
+        
+        return shareItems
+    }
+    
+    // Export video with overlay stats
+    func exportVideoWithOverlay(_ entry: AnalysisHistoryEntry) async -> URL? {
+        guard let videoURL = entry.videoURL else {
+            print("❌ No video file available for export")
+            return nil
+        }
+        
+        let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+        let exportURL = documentsPath.appendingPathComponent("SwingExport_\(entry.id.uuidString.prefix(8)).mp4")
+        
+        // Create composition
+        let composition = AVMutableComposition()
+        let asset = AVURLAsset(url: videoURL)
+        var videoComposition: AVMutableVideoComposition!
+        
+        do {
+            let videoTracks = try await asset.loadTracks(withMediaType: .video)
+            guard let videoTrack = videoTracks.first else {
+                print("❌ Failed to get video track")
+                return nil
+            }
+            
+            let audioTracks = try await asset.loadTracks(withMediaType: .audio)
+            let audioTrack = audioTracks.first // Optional audio track
+            
+            // Get duration using modern API
+            let duration = try await asset.load(.duration)
+            
+            // Add video track
+            let compositionVideoTrack = composition.addMutableTrack(withMediaType: .video, preferredTrackID: kCMPersistentTrackID_Invalid)
+            let compositionAudioTrack = audioTrack != nil ? composition.addMutableTrack(withMediaType: .audio, preferredTrackID: kCMPersistentTrackID_Invalid) : nil
+            
+            let timeRange = CMTimeRange(start: .zero, duration: duration)
+            
+            try compositionVideoTrack?.insertTimeRange(timeRange, of: videoTrack, at: .zero)
+            if let audioTrack = audioTrack, let compositionAudioTrack = compositionAudioTrack {
+                try compositionAudioTrack.insertTimeRange(timeRange, of: audioTrack, at: .zero)
+            }
+            
+            // Create video composition with overlay
+            videoComposition = AVMutableVideoComposition()
+            let naturalSize = try await videoTrack.load(.naturalSize)
+            videoComposition.renderSize = naturalSize
+            videoComposition.frameDuration = CMTime(value: 1, timescale: 30)
+            
+            // Create overlay instruction
+            let instruction = AVMutableVideoCompositionInstruction()
+            instruction.timeRange = timeRange
+            
+            let layerInstruction = AVMutableVideoCompositionLayerInstruction(assetTrack: compositionVideoTrack!)
+            instruction.layerInstructions = [layerInstruction]
+            
+            videoComposition.instructions = [instruction]
+            
+            // Create text overlay layer
+            let overlayLayer = createOverlayLayer(for: entry, videoSize: naturalSize)
+            let parentLayer = CALayer()
+            let videoLayer = CALayer()
+            
+            parentLayer.frame = CGRect(origin: .zero, size: naturalSize)
+            videoLayer.frame = CGRect(origin: .zero, size: naturalSize)
+            parentLayer.addSublayer(videoLayer)
+            parentLayer.addSublayer(overlayLayer)
+            
+            videoComposition.animationTool = AVVideoCompositionCoreAnimationTool(
+                postProcessingAsVideoLayer: videoLayer,
+                in: parentLayer
+            )
+        } catch {
+            print("❌ Failed to load asset properties or create composition: \(error)")
+            return nil
+        }
+        
+        // Export
+        guard let exporter = AVAssetExportSession(asset: composition, presetName: AVAssetExportPresetHighestQuality) else {
+            print("❌ Failed to create export session")
+            return nil
+        }
+        
+        exporter.outputURL = exportURL
+        exporter.outputFileType = .mp4
+        exporter.videoComposition = videoComposition
+        
+        // Use modern async/await approach
+        do {
+            _ = try await exporter.export(to: exportURL, as: .mp4)
+            print("📹 Successfully exported video with overlay to: \(exportURL)")
+            return exportURL
+        } catch {
+            print("❌ Export failed: \(error.localizedDescription)")
+            return nil
+        }
+    }
+    
+    // Create overlay layer with analysis stats
+    private func createOverlayLayer(for entry: AnalysisHistoryEntry, videoSize: CGSize) -> CALayer {
+        let overlayLayer = CALayer()
+        overlayLayer.frame = CGRect(origin: .zero, size: videoSize)
+        
+        // Background for text
+        let backgroundLayer = CALayer()
+        let backgroundHeight: CGFloat = 120
+        backgroundLayer.frame = CGRect(x: 0, y: videoSize.height - backgroundHeight, width: videoSize.width, height: backgroundHeight)
+        backgroundLayer.backgroundColor = UIColor.black.withAlphaComponent(0.7).cgColor
+        overlayLayer.addSublayer(backgroundLayer)
+        
+        // Analysis result text
+        let resultLayer = CATextLayer()
+        let result = entry.analysisResult.predicted_label.replacingOccurrences(of: "_", with: " ").capitalized
+        resultLayer.string = "Result: \(result)"
+        resultLayer.fontSize = 24
+        resultLayer.foregroundColor = UIColor.white.cgColor
+        resultLayer.frame = CGRect(x: 20, y: videoSize.height - 110, width: videoSize.width - 40, height: 30)
+        overlayLayer.addSublayer(resultLayer)
+        
+        // Confidence text
+        let confidenceLayer = CATextLayer()
+        confidenceLayer.string = "Confidence: \(Int(entry.analysisResult.confidence * 100))%"
+        confidenceLayer.fontSize = 20
+        confidenceLayer.foregroundColor = UIColor.white.cgColor
+        confidenceLayer.frame = CGRect(x: 20, y: videoSize.height - 80, width: videoSize.width - 40, height: 25)
+        overlayLayer.addSublayer(confidenceLayer)
+        
+        // Plane angle if available
+        if let planeAngle = entry.analysisResult.plane_angle {
+            let angleLayer = CATextLayer()
+            angleLayer.string = "Plane Angle: \(Int(planeAngle))°"
+            angleLayer.fontSize = 20
+            angleLayer.foregroundColor = UIColor.white.cgColor
+            angleLayer.frame = CGRect(x: 20, y: videoSize.height - 50, width: videoSize.width - 40, height: 25)
+            overlayLayer.addSublayer(angleLayer)
+        }
+        
+        // Timestamp
+        let timestampLayer = CATextLayer()
+        timestampLayer.string = entry.formattedDate
+        timestampLayer.fontSize = 16
+        timestampLayer.foregroundColor = UIColor.white.withAlphaComponent(0.8).cgColor
+        timestampLayer.frame = CGRect(x: 20, y: videoSize.height - 25, width: videoSize.width - 40, height: 20)
+        overlayLayer.addSublayer(timestampLayer)
+        
+        return overlayLayer
+    }
+}

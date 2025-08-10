@@ -41,6 +41,12 @@ import Foundation
       let angle_confidence: Double?
       let feature_reliability: [String: Double]?
       
+      // New fields for enhanced UI
+      let plane_angle: Double?
+      let tempo_ratio: Double?
+      let shoulder_tilt: Double?
+      let video_duration_seconds: Double?
+      
       // Quality validation fields (optional)
       let feature_dimension_ok: Bool?
       let quality_score: Double?
@@ -89,7 +95,9 @@ import Foundation
            club_face_analysis: ClubFaceAnalysis?, club_speed_analysis: ClubSpeedAnalysis?,
            premium_features_available: Bool?, physics_insights: String, angle_insights: String?, 
            recommendations: [String]?, extraction_status: String,
-           analysis_type: String?, model_version: String?) {
+           analysis_type: String?, model_version: String?,
+           plane_angle: Double? = nil, tempo_ratio: Double? = nil, 
+           shoulder_tilt: Double? = nil, video_duration_seconds: Double? = nil) {
           self.predicted_label = predicted_label
           self.confidence = confidence
           self.confidence_gap = confidence_gap
@@ -97,6 +105,12 @@ import Foundation
           self.camera_angle = camera_angle
           self.angle_confidence = angle_confidence
           self.feature_reliability = feature_reliability
+          
+          // New enhanced UI fields
+          self.plane_angle = plane_angle
+          self.tempo_ratio = tempo_ratio
+          self.shoulder_tilt = shoulder_tilt
+          self.video_duration_seconds = video_duration_seconds
           
           // Initialize optional detailed analysis fields
           self.feature_dimension_ok = nil
@@ -130,6 +144,12 @@ import Foundation
           self.camera_angle = nil
           self.angle_confidence = nil
           self.feature_reliability = nil
+          
+          // New enhanced UI fields - defaults for backward compatibility
+          self.plane_angle = nil
+          self.tempo_ratio = nil
+          self.shoulder_tilt = nil
+          self.video_duration_seconds = nil
           
           // Initialize optional detailed analysis fields
           self.feature_dimension_ok = nil
@@ -194,6 +214,7 @@ import Foundation
           case _physics_insights = "physics_insights"
           case angle_insights, recommendations, extraction_status
           case analysis_type, model_version
+          case plane_angle, tempo_ratio, shoulder_tilt, video_duration_seconds
       }
       
       // Custom decoder to handle both string and object formats
@@ -210,6 +231,12 @@ import Foundation
           camera_angle = try container.decodeIfPresent(String.self, forKey: .camera_angle)
           angle_confidence = try container.decodeIfPresent(Double.self, forKey: .angle_confidence)
           feature_reliability = try container.decodeIfPresent([String: Double].self, forKey: .feature_reliability)
+          
+          // Enhanced UI fields
+          plane_angle = try container.decodeIfPresent(Double.self, forKey: .plane_angle)
+          tempo_ratio = try container.decodeIfPresent(Double.self, forKey: .tempo_ratio)
+          shoulder_tilt = try container.decodeIfPresent(Double.self, forKey: .shoulder_tilt)
+          video_duration_seconds = try container.decodeIfPresent(Double.self, forKey: .video_duration_seconds)
           
           // Quality validation fields
           feature_dimension_ok = try container.decodeIfPresent(Bool.self, forKey: .feature_dimension_ok)
@@ -275,6 +302,10 @@ import Foundation
           try container.encodeIfPresent(recommendations, forKey: .recommendations)
           try container.encodeIfPresent(analysis_type, forKey: .analysis_type)
           try container.encodeIfPresent(model_version, forKey: .model_version)
+          try container.encodeIfPresent(plane_angle, forKey: .plane_angle)
+          try container.encodeIfPresent(tempo_ratio, forKey: .tempo_ratio)
+          try container.encodeIfPresent(shoulder_tilt, forKey: .shoulder_tilt)
+          try container.encodeIfPresent(video_duration_seconds, forKey: .video_duration_seconds)
           
           // Encode physics_insights based on internal format
           switch _physics_insights {

@@ -7,6 +7,20 @@ import Foundation
       @StateObject private var apiService = APIService.shared
       @State private var isLoading = false
 
+      private var buttonBackgroundGradient: some View {
+          let isDisabled = messageText.isEmpty || isLoading
+          let colors = isDisabled 
+              ? [Color.gray.opacity(0.5), Color.gray.opacity(0.3)]
+              : [Color.green, Color.mint]
+          
+          return Circle()
+              .fill(LinearGradient(
+                  colors: colors, 
+                  startPoint: .topLeading, 
+                  endPoint: .bottomTrailing
+              ))
+      }
+
       var body: some View {
           NavigationView {
               ZStack {
@@ -46,15 +60,8 @@ import Foundation
                                   }
                                   .foregroundColor(.white)
                                   .frame(width: 44, height: 44)
-                                  .background(
-                                      Circle()
-                                          .fill(
-                                              (messageText.isEmpty || isLoading)
-                                              ? LinearGradient(colors: [.gray.opacity(0.5), .gray.opacity(0.3)], startPoint: .topLeading, endPoint: .bottomTrailing)
-                                              : LinearGradient(colors: [.green, .mint], startPoint: .topLeading, endPoint: .bottomTrailing)
-                                          )
-                                  )
-                                  .shadow(color: .black.opacity(0.1), radius: 4, x: 0, y: 2)
+                                  .background(buttonBackgroundGradient)
+                                  .shadow(color: Color.black.opacity(0.1), radius: 4, x: 0, y: 2)
                               }
                               .disabled(messageText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || isLoading)
                           }

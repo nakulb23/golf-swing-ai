@@ -204,8 +204,8 @@ struct LoginView: View {
     private func signIn() {
         Task {
             await authManager.signIn(email: credentials.email, password: credentials.password)
-            if authManager.isAuthenticated {
-                await MainActor.run {
+            await MainActor.run {
+                if authManager.isAuthenticated {
                     dismiss()
                 }
             }
@@ -386,8 +386,10 @@ struct RegistrationView: View {
     private func signUp() {
         Task {
             await authManager.signUp(registrationData: registrationData)
-            if authManager.isAuthenticated {
-                dismiss()
+            await MainActor.run {
+                if authManager.isAuthenticated {
+                    dismiss()
+                }
             }
         }
     }
@@ -512,8 +514,10 @@ struct ForgotPasswordView: View {
     private func sendResetEmail() {
         Task {
             await authManager.resetPassword(email: email)
-            if authManager.errorMessage == nil {
-                emailSent = true
+            await MainActor.run {
+                if authManager.errorMessage == nil {
+                    emailSent = true
+                }
             }
         }
     }

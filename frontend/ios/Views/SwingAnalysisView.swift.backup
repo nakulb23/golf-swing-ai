@@ -15,10 +15,7 @@ struct VideoSelectionView: View {
     @Binding var errorMessage: String?
     @Binding var analysisResult: SwingAnalysisResponse?
     
-    let onShowHistory: () -> Void
-    
     @StateObject private var apiService = APIService.shared
-    @StateObject private var historyManager = AnalysisHistoryManager.shared
     
     var body: some View {
         VStack(spacing: 40) {
@@ -80,28 +77,6 @@ struct VideoSelectionView: View {
                             RoundedRectangle(cornerRadius: 12)
                                 .stroke(Color.white.opacity(0.3), lineWidth: 1)
                         )
-                    }
-                    
-                    // History Button
-                    if !historyManager.analysisHistory.isEmpty {
-                        Button(action: onShowHistory) {
-                            HStack(spacing: 12) {
-                                Image(systemName: "clock.arrow.circlepath")
-                                    .font(.title2)
-                                Text("Analysis History (\(historyManager.analysisHistory.count))")
-                                    .font(.headline)
-                                    .fontWeight(.semibold)
-                            }
-                            .foregroundColor(.white.opacity(0.8))
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 16)
-                            .background(Color.clear)
-                            .clipShape(RoundedRectangle(cornerRadius: 12))
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 12)
-                                    .stroke(Color.white.opacity(0.2), lineWidth: 1)
-                            )
-                        }
                     }
                 } else {
                     // Analysis Button
@@ -183,9 +158,6 @@ struct VideoSelectionView: View {
                     analysisResult = result
                     isAnalyzing = false
                     print("✅ AI analysis completed: \(result.predicted_label)")
-                    
-                    // Save analysis to history with video data
-                    historyManager.addAnalysis(result, videoData: videoData)
                 }
             } catch {
                 await MainActor.run {
@@ -201,7 +173,6 @@ struct VideoSelectionView: View {
 struct SwingAnalysisView: View {
     @StateObject private var premiumManager = PremiumManager.shared
     @StateObject private var apiService = APIService.shared
-    @StateObject private var historyManager = AnalysisHistoryManager.shared
     @State private var selectedVideo: PhotosPickerItem?
     @State private var videoData: Data?
     @State private var isAnalyzing = false
@@ -212,7 +183,6 @@ struct SwingAnalysisView: View {
     @State private var showingSourceSelection = false
     @State private var showingPhotoPicker = false
     @State private var showingPremiumPaywall = false
-    @State private var showingAnalysisHistory = false
     
     // Multi-angle enhancement states
     @State private var isDetectingAngle = false
@@ -243,8 +213,7 @@ struct SwingAnalysisView: View {
                         isAnalyzing: $isAnalyzing,
                         showingCamera: $showingCamera,
                         errorMessage: $errorMessage,
-                        analysisResult: $analysisResult,
-                        onShowHistory: { showingAnalysisHistory = true }
+                        analysisResult: $analysisResult
                     )
                 }
             }
@@ -257,10 +226,6 @@ struct SwingAnalysisView: View {
         .sheet(isPresented: $showingPremiumPaywall) {
             SwingAnalysisPremiumView()
                 .environmentObject(premiumManager)
-        }
-        .sheet(isPresented: $showingAnalysisHistory) {
-            AnalysisHistoryView()
-                .environmentObject(historyManager)
         }
         .onChange(of: selectedVideo) { _, newValue in
                 if let newValue = newValue {
@@ -432,11 +397,8 @@ struct SwingAnalysisView: View {
                     cameraManager.checkPermission()
                     
                     // Debug session status after a short delay
-                    Task {
-                        try? await Task.sleep(nanoseconds: 1_000_000_000)
-                        await MainActor.run {
-                            cameraManager.debugSessionStatus()
-                        }
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                        cameraManager.debugSessionStatus()
                     }
                 }
                 .navigationBarHidden(true)
@@ -1273,7 +1235,7 @@ struct SwingAnalysisView: View {
                         )
                 }
                 .opacity(isPlaying ? 0.3 : 1.0)
-                .animation(Animation.easeInOut(duration: 0.3), value: isPlaying)
+                .animation(.easeInOut(duration: 0.3), value: isPlaying)
                 
                 // Time scrubber
                 VStack {
@@ -1359,9 +1321,7 @@ struct SwingAnalysisView: View {
             // Setup time observer
             let interval = CMTime(seconds: 0.1, preferredTimescale: CMTimeScale(NSEC_PER_SEC))
             player.addPeriodicTimeObserver(forInterval: interval, queue: .main) { time in
-                Task { @MainActor in
-                    currentTime = CMTimeGetSeconds(time)
-                }
+                currentTime = CMTimeGetSeconds(time)
             }
             
             // Get duration using modern iOS 16+ API
@@ -1625,7 +1585,7 @@ struct SwingAnalysisView: View {
                         .fill(getDeviationColor(point.deviation))
                         .frame(width: 8, height: 8)
                         .position(point.position)
-                        .animation(Animation.easeInOut(duration: 0.3), value: currentTime)
+                        .animation(.easeInOut(duration: 0.3), value: currentTime)
                 }
             }
         }
@@ -1756,8 +1716,8 @@ struct SwingAnalysisView: View {
                         .fill(Color.white)
                         .frame(width: 10, height: 10)
                         .position(currentPosition)
-                        .shadow(color: Color.blue, radius: 4)
-                        .animation(Animation.easeInOut(duration: 0.1), value: currentTime)
+                        .shadow(color: .blue, radius: 4)
+                        .animation(.easeInOut(duration: 0.1), value: currentTime)
                 }
             }
         }
@@ -2017,7 +1977,7 @@ struct SwingAnalysisView: View {
                             .fill(issueColor.opacity(0.3))
                             .frame(width: 20, height: 20)
                             .scaleEffect(1.5)
-                            .animation(Animation.easeInOut(duration: 1.0).repeatForever(autoreverses: true), value: UUID())
+                            .animation(.easeInOut(duration: 1.0).repeatForever(autoreverses: true), value: UUID())
                         
                         Circle()
                             .fill(issueColor)
@@ -2352,7 +2312,7 @@ struct SwingAnalysisView: View {
                                 .stroke(Color.orange, lineWidth: 2)
                         )
                         .position(ballPosition)
-                        .animation(Animation.easeInOut(duration: 0.1), value: ballPosition)
+                        .animation(.easeInOut(duration: 0.1), value: ballPosition)
                     
                     // Dynamic Club Head Tracking
                     if let clubPath = getClubHeadPath(for: geometry.size) {
@@ -2918,12 +2878,8 @@ struct SwingAnalysisView: View {
         @State private var currentTime: Double = 0
         @State private var isPlaying = false
         @State private var videoDuration: Double = 1.0
+        @State private var isRightHanded = true
         @State private var showControls = true
-        @State private var showFeedbackPrompt = false
-        @StateObject private var localAnalyzer = LocalSwingAnalyzer()
-        
-        // Fixed default - no longer user-configurable
-        private let isRightHanded = true
         
         var body: some View {
             VStack(spacing: 0) {
@@ -2965,33 +2921,6 @@ struct SwingAnalysisView: View {
                         .allowsHitTesting(true)
                         .zIndex(1)
                     
-                    // Centered Play Button - Shows when paused, hides when playing
-                    if !isPlaying {
-                        VStack {
-                            Spacer()
-                            HStack {
-                                Spacer()
-                                
-                                Button(action: {
-                                    withAnimation(.easeInOut(duration: 0.2)) {
-                                        isPlaying = true
-                                    }
-                                }) {
-                                    Image(systemName: "play.circle.fill")
-                                        .font(.system(size: 64))
-                                        .foregroundColor(.white)
-                                        .background(Color.black.opacity(0.3))
-                                        .clipShape(Circle())
-                                }
-                                
-                                Spacer()
-                            }
-                            Spacer()
-                        }
-                        .zIndex(2)
-                        .transition(.opacity.animation(.easeInOut(duration: 0.3)))
-                    }
-                    
                     // Minimal Controls
                     VStack {
                         Spacer()
@@ -3010,11 +2939,35 @@ struct SwingAnalysisView: View {
                                 
                                 Spacer()
                                 
+                                // Handedness Toggle
+                                HStack(spacing: 0) {
+                                    Button(action: { isRightHanded = true }) {
+                                        Text("R")
+                                            .font(.caption.weight(.semibold))
+                                            .foregroundColor(isRightHanded ? .black : .white)
+                                            .frame(width: 32, height: 32)
+                                            .background(isRightHanded ? Color.white : Color.white.opacity(0.2))
+                                    }
+                                    
+                                    Button(action: { isRightHanded = false }) {
+                                        Text("L")
+                                            .font(.caption.weight(.semibold))
+                                            .foregroundColor(!isRightHanded ? .black : .white)
+                                            .frame(width: 32, height: 32)
+                                            .background(!isRightHanded ? Color.white : Color.white.opacity(0.2))
+                                    }
+                                }
+                                .clipShape(RoundedRectangle(cornerRadius: 16))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 16)
+                                        .stroke(Color.white.opacity(0.3), lineWidth: 1)
+                                )
+                                
+                                Spacer()
+                                
                                 // Play/Pause
                                 Button(action: {
-                                    withAnimation(.easeInOut(duration: 0.2)) {
-                                        isPlaying.toggle()
-                                    }
+                                    isPlaying.toggle()
                                 }) {
                                     Image(systemName: isPlaying ? "pause.fill" : "play.fill")
                                         .font(.system(size: 18, weight: .medium))
@@ -3053,50 +3006,6 @@ struct SwingAnalysisView: View {
             }
             .onAppear {
                 setupVideo()
-                checkForFeedbackPrompt()
-            }
-            .sheet(isPresented: $showFeedbackPrompt) {
-                FeedbackModalView(
-                    prediction: analysisResult.predicted_label,
-                    confidence: analysisResult.confidence
-                ) { feedback in
-                    if let feedback = feedback {
-                        // Get real features from the local analyzer's stored prediction
-                        let features = localAnalyzer.getCurrentPredictionForFeedback()?.features ?? []
-                        
-                        // Store feedback with BOTH local and centralized collectors
-                        Task { @MainActor in
-                            let metadata = SwingMetadata(
-                                videoDuration: videoDuration,
-                                deviceModel: UIDevice.current.model,
-                                appVersion: "1.0.0",
-                                analysisDate: Date(),
-                                userSkillLevel: nil,
-                                clubType: nil,
-                                practiceOrRound: nil
-                            )
-                            
-                            // Send to centralized system (benefits all users)
-                            CentralizedModelImprovement.shared.collectPredictionData(
-                                features: features, // ✅ Real physics features from pose analysis
-                                modelPrediction: analysisResult.predicted_label,
-                                modelConfidence: analysisResult.confidence,
-                                userFeedback: feedback, // ✅ User corrections and ratings
-                                swingMetadata: metadata,
-                                isFromLocalModel: true
-                            )
-                            
-                            // Also store locally (backwards compatibility)
-                            ModelFeedbackCollector.shared.collectAnalysisData(
-                                features: features,
-                                modelPrediction: analysisResult.predicted_label,
-                                modelConfidence: analysisResult.confidence,
-                                userFeedback: feedback,
-                                swingMetadata: metadata
-                            )
-                        }
-                    }
-                }
             }
         }
         
@@ -3106,21 +3015,6 @@ struct SwingAnalysisView: View {
             
             do {
                 try videoData.write(to: tempURL)
-                videoURL = tempURL
-            } catch {
-                print("Failed to write video data: \(error)")
-            }
-        }
-        
-        func checkForFeedbackPrompt() {
-            // Check if we should prompt for feedback based on confidence
-            if analysisResult.confidence < 0.8 || (analysisResult.confidence < 0.9 && Bool.random()) {
-                // Delay the prompt slightly to allow the UI to settle
-                DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-                    showFeedbackPrompt = true
-                }
-            }
-        }
                 videoURL = tempURL
             } catch {
                 print("Failed to write video data: \(error)")
@@ -3150,8 +3044,8 @@ struct SwingAnalysisView: View {
                                 .frame(width: 24, height: 24)
                         )
                         .position(ballPosition)
-                        .shadow(color: Color.black.opacity(0.3), radius: 2)
-                        .animation(Animation.easeInOut(duration: 0.1), value: ballPosition)
+                        .shadow(color: .black.opacity(0.3), radius: 2)
+                        .animation(.easeInOut(duration: 0.1), value: ballPosition)
                 }
                 
                 // Dynamic Pose-Based Swing Planes
@@ -3553,7 +3447,7 @@ struct SwingAnalysisView: View {
                                 .frame(width: 24, height: 24)
                         )
                         .position(ballPosition)
-                        .shadow(color: Color.black.opacity(0.3), radius: 2)
+                        .shadow(color: .black.opacity(0.3), radius: 2)
                 }
                 
                 // Club Position Analysis (like reference image)
@@ -4044,7 +3938,7 @@ struct SwingAnalysisView: View {
                             .trim(from: 0, to: enhanced.scoreBreakdown.overallScore / 100)
                             .stroke(
                                 LinearGradient(
-                                    colors: [scoreColor(for: enhanced.scoreBreakdown.overallScore),
+                                    colors: [scoreColor(for: enhanced.scoreBreakdown.overallScore), 
                                             scoreColor(for: enhanced.scoreBreakdown.overallScore).opacity(0.7)],
                                     startPoint: .topLeading,
                                     endPoint: .bottomTrailing
@@ -4111,7 +4005,7 @@ struct SwingAnalysisView: View {
         private func scoreColor(for score: Double) -> Color {
             switch score {
             case 80...100: return .green
-            case 60..<80: return .yellow
+            case 60..<80: return .yellow  
             case 40..<60: return .orange
             default: return .red
             }
@@ -4325,7 +4219,7 @@ struct SwingAnalysisView: View {
             switch score {
             case 80...100: return .green
             case 60..<80: return .yellow
-            case 40..<60: return .orange
+            case 40..<60: return .orange  
             default: return .red
             }
         }
@@ -4567,7 +4461,7 @@ struct SwingAnalysisView: View {
                         .fill(isSelected ? Color.white : Color.clear)
                         .frame(width: 4, height: 4)
                         .scaleEffect(isSelected ? 1.0 : 0.5)
-                        .animation(Animation.easeInOut(duration: 0.2), value: isSelected)
+                        .animation(.easeInOut(duration: 0.2), value: isSelected)
                 }
                 .frame(minWidth: 60, maxWidth: .infinity)
                 .padding(.horizontal, 12)
@@ -4575,12 +4469,12 @@ struct SwingAnalysisView: View {
                 .background(
                     RoundedRectangle(cornerRadius: 12)
                         .fill(
-                            isSelected ?
+                            isSelected ? 
                             LinearGradient(
                                 colors: [Color.white.opacity(0.15), Color.white.opacity(0.08)],
                                 startPoint: .top,
                                 endPoint: .bottom
-                            ) :
+                            ) : 
                             LinearGradient(
                                 colors: [Color.clear],
                                 startPoint: .top,
@@ -4596,7 +4490,7 @@ struct SwingAnalysisView: View {
                         )
                 )
                 .scaleEffect(isSelected ? 1.02 : 1.0)
-                .animation(Animation.easeInOut(duration: 0.2), value: isSelected)
+                .animation(.easeInOut(duration: 0.2), value: isSelected)
             }
             .buttonStyle(PlainButtonStyle())
         }
@@ -4751,7 +4645,7 @@ struct ImprovementSuggestion {
 }
 
 extension EnhancedSwingAnalysisResult {
-    static func from(_ response: SwingAnalysisResponse,
+    static func from(_ response: SwingAnalysisResponse, 
                      videoURL: URL? = nil,
                      videoDuration: Double? = nil) -> EnhancedSwingAnalysisResult {
         
@@ -4859,11 +4753,11 @@ extension EnhancedSwingAnalysisResult {
     }
     
     private func generatePlaneImprovement() -> ImprovementSuggestion {
-        let issue = predictedLabel == "too_steep" ? "Swing plane is too steep" :
-                   predictedLabel == "too_flat" ? "Swing plane is too flat" :
+        let issue = predictedLabel == "too_steep" ? "Swing plane is too steep" : 
+                   predictedLabel == "too_flat" ? "Swing plane is too flat" : 
                    "Swing plane consistency"
         
-        let drill = predictedLabel == "too_steep" ?
+        let drill = predictedLabel == "too_steep" ? 
             "Place a headcover outside the ball, practice missing it on takeaway" :
             "Practice swings with club shaft against a wall behind you"
         
@@ -4911,426 +4805,6 @@ extension EnhancedSwingAnalysisResult {
 struct EnhancedBodyKinematicsData {}
 struct EnhancedDetailedSwingTempoData {}
 struct EnhancedSwingPhases {}
-
-// MARK: - Analysis History View
-
-struct AnalysisHistoryView: View {
-    @EnvironmentObject var historyManager: AnalysisHistoryManager
-    @StateObject private var exportManager = AnalysisExportManager.shared
-    @Environment(\.dismiss) private var dismiss
-    @State private var selectedEntry: AnalysisHistoryEntry?
-    @State private var showingExportOptions = false
-    @State private var showingDeleteAlert = false
-    @State private var entryToDelete: AnalysisHistoryEntry?
-    @State private var showingShareSheet = false
-    @State private var shareItems: [Any] = []
-    
-    var body: some View {
-        NavigationView {
-            ZStack {
-                Color.black.ignoresSafeArea()
-                
-                if historyManager.analysisHistory.isEmpty {
-                    // Empty state
-                    VStack(spacing: 24) {
-                        Image(systemName: "clock.arrow.circlepath")
-                            .font(.system(size: 60, weight: .light))
-                            .foregroundColor(.white.opacity(0.6))
-                        
-                        Text("No Analysis History")
-                            .font(.title2)
-                            .fontWeight(.semibold)
-                            .foregroundColor(.white)
-                        
-                        Text("Your recent swing analyses will appear here")
-                            .font(.body)
-                            .foregroundColor(.white.opacity(0.7))
-                            .multilineTextAlignment(.center)
-                    }
-                } else {
-                    ScrollView {
-                        LazyVStack(spacing: 16) {
-                            ForEach(historyManager.analysisHistory) { entry in
-                                AnalysisHistoryCard(
-                                    entry: entry,
-                                    onTap: { selectedEntry = entry },
-                                    onDelete: { 
-                                        entryToDelete = entry
-                                        showingDeleteAlert = true
-                                    },
-                                    onExport: { 
-                                        selectedEntry = entry
-                                        showingExportOptions = true
-                                    },
-                                    onSavePermanently: {
-                                        historyManager.markAsPermanentlySaved(id: entry.id)
-                                    }
-                                )
-                            }
-                        }
-                        .padding()
-                    }
-                }
-            }
-            .navigationTitle("Analysis History")
-            .navigationBarTitleDisplayMode(.large)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Done") { dismiss() }
-                        .foregroundColor(.white)
-                }
-                
-                if !historyManager.analysisHistory.isEmpty {
-                    ToolbarItem(placement: .navigationBarLeading) {
-                        Button("Clear All") {
-                            historyManager.clearHistory()
-                        }
-                        .foregroundColor(.red)
-                    }
-                }
-            }
-        }
-        .sheet(item: $selectedEntry) { entry in
-            AnalysisDetailView(entry: entry)
-        }
-        .actionSheet(isPresented: $showingExportOptions) {
-            ActionSheet(
-                title: Text("Export Analysis"),
-                message: Text("Choose export format"),
-                buttons: [
-                    .default(Text("Export as PDF")) {
-                        if let entry = selectedEntry {
-                            exportAnalysisAsPDF(entry)
-                        }
-                    },
-                    .default(Text("Export Video with Stats")) {
-                        if let entry = selectedEntry {
-                            exportVideoWithOverlay(entry)
-                        }
-                    },
-                    .default(Text("Share Analysis")) {
-                        if let entry = selectedEntry {
-                            shareAnalysis(entry)
-                        }
-                    },
-                    .cancel()
-                ]
-            )
-        }
-        .alert("Delete Analysis", isPresented: $showingDeleteAlert) {
-            Button("Delete", role: .destructive) {
-                if let entry = entryToDelete {
-                    historyManager.removeAnalysis(withId: entry.id)
-                }
-            }
-            Button("Cancel", role: .cancel) { }
-        } message: {
-            Text("Are you sure you want to delete this analysis? This action cannot be undone.")
-        }
-        .sheet(isPresented: $showingShareSheet) {
-            if !shareItems.isEmpty {
-                ShareSheet(activityItems: shareItems)
-            }
-        }
-    }
-    
-    private func exportAnalysisAsPDF(_ entry: AnalysisHistoryEntry) {
-        if let pdfURL = exportManager.exportAnalysisAsPDF(entry) {
-            shareItems = [pdfURL]
-            showingShareSheet = true
-        }
-    }
-    
-    private func shareAnalysis(_ entry: AnalysisHistoryEntry) {
-        shareItems = exportManager.shareAnalysis(entry)
-        showingShareSheet = true
-    }
-    
-    private func exportVideoWithOverlay(_ entry: AnalysisHistoryEntry) {
-        Task {
-            if let videoURL = await exportManager.exportVideoWithOverlay(entry) {
-                await MainActor.run {
-                    shareItems = [videoURL]
-                    showingShareSheet = true
-                }
-            }
-        }
-    }
-}
-
-// MARK: - Analysis History Card
-
-struct AnalysisHistoryCard: View {
-    let entry: AnalysisHistoryEntry
-    let onTap: () -> Void
-    let onDelete: () -> Void
-    let onExport: () -> Void
-    let onSavePermanently: () -> Void
-    
-    var body: some View {
-        Button(action: onTap) {
-            HStack(spacing: 16) {
-                // Video thumbnail or analysis indicator
-                VStack {
-                    if let videoURL = entry.videoURL {
-                        VideoThumbnailView(videoURL: videoURL)
-                            .frame(width: 60, height: 60)
-                            .clipShape(RoundedRectangle(cornerRadius: 8))
-                    } else {
-                        Circle()
-                            .fill(predictionColor)
-                            .frame(width: 12, height: 12)
-                    }
-                    
-                    Spacer()
-                }
-                
-                VStack(alignment: .leading, spacing: 6) {
-                    HStack {
-                        Text(entry.analysisResult.predicted_label.replacingOccurrences(of: "_", with: " ").capitalized)
-                            .font(.headline)
-                            .foregroundColor(.white)
-                        
-                        Spacer()
-                        
-                        Text(entry.relativeDateString)
-                            .font(.caption)
-                            .foregroundColor(.white.opacity(0.6))
-                    }
-                    
-                    HStack {
-                        Text("Confidence: \(Int(entry.analysisResult.confidence * 100))%")
-                            .font(.subheadline)
-                            .foregroundColor(.white.opacity(0.8))
-                        
-                        Spacer()
-                        
-                        // Action buttons
-                        HStack(spacing: 8) {
-                            if !entry.isPermanentlySaved {
-                                Button(action: onSavePermanently) {
-                                    Image(systemName: "bookmark")
-                                        .font(.caption)
-                                        .foregroundColor(.green)
-                                }
-                            } else {
-                                Image(systemName: "bookmark.fill")
-                                    .font(.caption)
-                                    .foregroundColor(.green)
-                            }
-                            
-                            Button(action: onExport) {
-                                Image(systemName: "square.and.arrow.up")
-                                    .font(.caption)
-                                    .foregroundColor(.blue)
-                            }
-                            
-                            Button(action: onDelete) {
-                                Image(systemName: "trash")
-                                    .font(.caption)
-                                    .foregroundColor(.red)
-                            }
-                        }
-                    }
-                }
-            }
-            .padding()
-            .background(Color.white.opacity(0.1))
-            .clipShape(RoundedRectangle(cornerRadius: 12))
-            .overlay(
-                RoundedRectangle(cornerRadius: 12)
-                    .stroke(Color.white.opacity(0.2), lineWidth: 1)
-            )
-        }
-        .buttonStyle(PlainButtonStyle())
-    }
-    
-    private var predictionColor: Color {
-        switch entry.analysisResult.predicted_label {
-        case "good_swing":
-            return .green
-        case "too_steep":
-            return .orange
-        case "too_flat":
-            return .red
-        default:
-            return .gray
-        }
-    }
-}
-
-// MARK: - Analysis Detail View
-
-struct AnalysisDetailView: View {
-    let entry: AnalysisHistoryEntry
-    @Environment(\.dismiss) private var dismiss
-    
-    var body: some View {
-        NavigationView {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 20) {
-                    // Video player if available
-                    if let videoURL = entry.videoURL {
-                        VideoPlayer(player: AVPlayer(url: videoURL))
-                            .frame(height: 200)
-                            .clipShape(RoundedRectangle(cornerRadius: 12))
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 12)
-                                    .stroke(Color.white.opacity(0.2), lineWidth: 1)
-                            )
-                    }
-                    
-                    // Header
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text(entry.analysisResult.predicted_label.replacingOccurrences(of: "_", with: " ").capitalized)
-                            .font(.largeTitle)
-                            .fontWeight(.bold)
-                            .foregroundColor(.white)
-                        
-                        Text(entry.formattedDate)
-                            .font(.subheadline)
-                            .foregroundColor(.white.opacity(0.7))
-                    }
-                    
-                    // Confidence and metrics
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text("Analysis Results")
-                            .font(.headline)
-                            .foregroundColor(.white)
-                        
-                        HStack {
-                            VStack(alignment: .leading) {
-                                Text("Confidence")
-                                    .font(.caption)
-                                    .foregroundColor(.white.opacity(0.7))
-                                Text("\(Int(entry.analysisResult.confidence * 100))%")
-                                    .font(.title2)
-                                    .fontWeight(.semibold)
-                                    .foregroundColor(.white)
-                            }
-                            
-                            Spacer()
-                            
-                            if let planeAngle = entry.analysisResult.plane_angle {
-                                VStack(alignment: .trailing) {
-                                    Text("Plane Angle")
-                                        .font(.caption)
-                                        .foregroundColor(.white.opacity(0.7))
-                                    Text("\(Int(planeAngle))°")
-                                        .font(.title2)
-                                        .fontWeight(.semibold)
-                                        .foregroundColor(.white)
-                                }
-                            }
-                        }
-                        .padding()
-                        .background(Color.white.opacity(0.1))
-                        .clipShape(RoundedRectangle(cornerRadius: 12))
-                    }
-                    
-                    // Physics insights
-                    if !entry.analysisResult.physics_insights.plane_analysis.isEmpty {
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text("Analysis Notes")
-                                .font(.headline)
-                                .foregroundColor(.white)
-                            
-                            Text(entry.analysisResult.physics_insights.plane_analysis)
-                                .font(.body)
-                                .foregroundColor(.white.opacity(0.8))
-                                .padding()
-                                .background(Color.white.opacity(0.1))
-                                .clipShape(RoundedRectangle(cornerRadius: 12))
-                        }
-                    }
-                    
-                    Spacer()
-                }
-                .padding()
-            }
-            .background(Color.black.ignoresSafeArea())
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Done") { dismiss() }
-                        .foregroundColor(.white)
-                }
-            }
-        }
-    }
-}
-
-// MARK: - Share Sheet
-
-struct ShareSheet: UIViewControllerRepresentable {
-    let activityItems: [Any]
-    
-    func makeUIViewController(context: Context) -> UIActivityViewController {
-        let controller = UIActivityViewController(activityItems: activityItems, applicationActivities: nil)
-        return controller
-    }
-    
-    func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
-}
-
-// MARK: - Video Thumbnail View
-
-struct VideoThumbnailView: View {
-    let videoURL: URL
-    @State private var thumbnailImage: UIImage?
-    
-    var body: some View {
-        ZStack {
-            if let thumbnailImage = thumbnailImage {
-                Image(uiImage: thumbnailImage)
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-                    .clipped()
-            } else {
-                RoundedRectangle(cornerRadius: 8)
-                    .fill(Color.gray.opacity(0.3))
-                    .overlay(
-                        Image(systemName: "video.fill")
-                            .foregroundColor(.white.opacity(0.6))
-                    )
-            }
-            
-            // Play button overlay
-            Circle()
-                .fill(Color.black.opacity(0.6))
-                .frame(width: 20, height: 20)
-                .overlay(
-                    Image(systemName: "play.fill")
-                        .font(.system(size: 8))
-                        .foregroundColor(.white)
-                )
-        }
-        .onAppear {
-            generateThumbnail()
-        }
-    }
-    
-    private func generateThumbnail() {
-        let asset = AVURLAsset(url: videoURL)
-        let imageGenerator = AVAssetImageGenerator(asset: asset)
-        imageGenerator.appliesPreferredTrackTransform = true
-        
-        let time = CMTimeMake(value: 1, timescale: 1)
-        
-        Task {
-            do {
-                let cgImage = try await imageGenerator.image(at: time).image
-                let thumbnail = UIImage(cgImage: cgImage)
-                
-                await MainActor.run {
-                    self.thumbnailImage = thumbnail
-                }
-            } catch {
-                print("❌ Failed to generate thumbnail: \(error)")
-            }
-        }
-    }
-}
 
 struct SwingAnalysisView_Previews: PreviewProvider {
     static var previews: some View {

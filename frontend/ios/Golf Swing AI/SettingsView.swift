@@ -73,6 +73,61 @@ struct SettingsView: View {
                     }
                 }
                 
+                // MARK: - AI Models Section
+                Section("AI & Analysis") {
+                    NavigationLink(destination: ModelSettingsView()) {
+                        SettingsNavigationRow(
+                            icon: "cpu",
+                            title: "Local AI Models",
+                            value: LocalAIManager.shared.isModelsLoaded ? "Ready" : "Loading..."
+                        )
+                    }
+                    
+                    NavigationLink(destination: CentralizedModelImprovementView()) {
+                        HStack {
+                            VStack(alignment: .leading, spacing: 4) {
+                                HStack {
+                                    Image(systemName: "brain.head.profile")
+                                        .foregroundColor(.blue)
+                                    Text("AI Model Improvement")
+                                        .font(.subheadline)
+                                        .fontWeight(.medium)
+                                }
+                                
+                                Text("Help improve AI for everyone")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                            
+                            Spacer()
+                            
+                            Image(systemName: "chevron.right")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                        .padding(.vertical, 4)
+                    }
+                    
+                    HStack {
+                        Image(systemName: "iphone")
+                            .foregroundColor(.green)
+                            .frame(width: 24, height: 24)
+                        
+                        VStack(alignment: .leading) {
+                            Text("Analysis Type")
+                            Text("Local AI - All data stays on your device")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                        
+                        Spacer()
+                        
+                        Image(systemName: "lock.shield")
+                            .foregroundColor(.green)
+                            .font(.title2)
+                    }
+                }
+                
                 // MARK: - Subscription Section
                 Section("Subscription") {
                     if isSubscriptionActive {

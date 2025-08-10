@@ -2,6 +2,7 @@ import Foundation
 import SwiftUI
 
 // MARK: - Data Collection Manager
+@MainActor
 class DataCollectionManager: ObservableObject {
     static let shared = DataCollectionManager()
     

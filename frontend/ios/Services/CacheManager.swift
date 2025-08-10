@@ -72,7 +72,11 @@ class CacheManager {
     // MARK: - Public Cache Methods
     
     func get<T: Codable>(_ key: String, type: T.Type) async -> T? {
-        return await withCheckedContinuation { continuation in
+        return await withCheckedContinuation { [weak self] continuation in
+            guard let self = self else {
+                continuation.resume(returning: nil)
+                return
+            }
             queue.async {
                 // Check memory cache first
                 if let memoryData = self.getFromMemory(key),
@@ -114,7 +118,11 @@ class CacheManager {
     }
     
     func set<T: Codable>(_ key: String, data: T, expiration: TimeInterval? = nil) async {
-        return await withCheckedContinuation { continuation in
+        return await withCheckedContinuation { [weak self] continuation in
+            guard let self = self else {
+                continuation.resume()
+                return
+            }
             queue.async {
                 let item = CacheItem(
                     data: data,
@@ -141,7 +149,11 @@ class CacheManager {
     }
     
     func remove(_ key: String) async {
-        return await withCheckedContinuation { continuation in
+        return await withCheckedContinuation { [weak self] continuation in
+            guard let self = self else {
+                continuation.resume()
+                return
+            }
             queue.async {
                 self.removeFromMemory(key)
                 self.removeFromDisk(key)
@@ -152,7 +164,11 @@ class CacheManager {
     }
     
     func clear() async {
-        return await withCheckedContinuation { continuation in
+        return await withCheckedContinuation { [weak self] continuation in
+            guard let self = self else {
+                continuation.resume()
+                return
+            }
             queue.async {
                 self.memoryCache.removeAllObjects()
                 
@@ -171,7 +187,11 @@ class CacheManager {
     }
     
     func getCacheSize() async -> (memory: Int, disk: Int) {
-        return await withCheckedContinuation { continuation in
+        return await withCheckedContinuation { [weak self] continuation in
+            guard let self = self else {
+                continuation.resume(returning: (memory: 0, disk: 0))
+                return
+            }
             queue.async {
                 let diskSize = self.calculateDiskCacheSize()
                 // Memory size is managed by NSCache automatically
@@ -181,7 +201,11 @@ class CacheManager {
     }
     
     func getCacheStatistics() async -> CacheStatistics {
-        return await withCheckedContinuation { continuation in
+        return await withCheckedContinuation { [weak self] continuation in
+            guard let self = self else {
+                continuation.resume(returning: CacheStatistics(hitCount: 0, missCount: 0, hitRate: 0.0, memorySize: 0, diskSize: 0, itemCount: 0))
+                return
+            }
             queue.async {
                 let diskSize = self.calculateDiskCacheSize()
                 let stats = CacheStatistics(
@@ -272,7 +296,8 @@ class CacheManager {
     }
     
     private func startCleanupTimer() {
-        cleanupTimer = Timer.scheduledTimer(withTimeInterval: configuration.cleanupInterval, repeats: true) { _ in
+        cleanupTimer = Timer.scheduledTimer(withTimeInterval: configuration.cleanupInterval, repeats: true) { [weak self] _ in
+            guard let self = self else { return }
             Task {
                 await self.performCleanup()
             }
@@ -280,7 +305,11 @@ class CacheManager {
     }
     
     private func performCleanup() async {
-        return await withCheckedContinuation { continuation in
+        return await withCheckedContinuation { [weak self] continuation in
+            guard let self = self else {
+                continuation.resume()
+                return
+            }
             queue.async {
                 self.cleanupExpiredItems()
                 self.enforceStorageLimits()

@@ -12,7 +12,7 @@ struct ProgressIndicator: View {
                     .fill(step <= currentStep ? Color.accentDynamic : Color.secondaryTextDynamic.opacity(0.3))
                     .frame(width: 12, height: 12)
                     .scaleEffect(step == currentStep ? 1.2 : 1.0)
-                    .animation(.easeInOut, value: currentStep)
+                    .animation(Animation.easeInOut, value: currentStep)
             }
         }
     }

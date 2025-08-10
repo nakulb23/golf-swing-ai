@@ -1,0 +1,30 @@
+// swift-tools-version:6.0
+import PackageDescription
+
+let package = Package(
+    name: "GolfSwingAI",
+    platforms: [
+        .iOS(.v18)
+    ],
+    products: [
+        .library(
+            name: "GolfSwingAI",
+            targets: ["GolfSwingAI"]
+        ),
+    ],
+    dependencies: [
+        // MediaPipe iOS framework - Updated for iOS 26 compatibility
+        .package(
+            url: "https://github.com/google-ai-edge/MediaPipe-iOS.git",
+            from: "0.10.9"
+        ),
+    ],
+    targets: [
+        .target(
+            name: "GolfSwingAI",
+            dependencies: [
+                .product(name: "MediaPipeTasksVision", package: "MediaPipe-iOS")
+            ]
+        ),
+    ]
+)

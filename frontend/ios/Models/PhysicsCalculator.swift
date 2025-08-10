@@ -80,6 +80,7 @@ struct EnergyAnalysis {
 
 // MARK: - Physics Calculator
 
+@MainActor
 class PhysicsCalculator: ObservableObject {
     @Published var currentAnalysis: SwingPhysicsData?
     @Published var forceVectors: [ForceVector] = []

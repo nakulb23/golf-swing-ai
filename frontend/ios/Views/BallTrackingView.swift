@@ -39,20 +39,21 @@ struct BallTrackingView: View {
                         
                         // Video Selection
                         VStack(spacing: 16) {
+                            let hasVideo = videoData != nil
                             PhotosPicker(
                                 selection: $selectedVideo,
                                 matching: .videos,
                                 photoLibrary: .shared()
                             ) {
                                 VStack(spacing: 12) {
-                                    Image(systemName: videoData != nil ? "checkmark.circle.fill" : "plus.circle.fill")
+                                    Image(systemName: hasVideo ? "checkmark.circle.fill" : "plus.circle.fill")
                                         .font(.system(size: 40))
-                                        .foregroundColor(videoData != nil ? .green : .orange)
+                                        .foregroundColor(hasVideo ? .green : .orange)
                                     
-                                    Text(videoData != nil ? "Video Selected" : "Select Golf Ball Video")
+                                    Text(hasVideo ? "Video Selected" : "Select Golf Ball Video")
                                         .font(.headline)
                                     
-                                    Text(videoData != nil ? "Tap to change video" : "Choose a video showing ball flight")
+                                    Text(hasVideo ? "Tap to change video" : "Choose a video showing ball flight")
                                         .font(.caption)
                                         .foregroundColor(.secondary)
                                 }
@@ -62,7 +63,7 @@ struct BallTrackingView: View {
                                 .cornerRadius(12)
                                 .overlay(
                                     RoundedRectangle(cornerRadius: 12)
-                                        .stroke(videoData != nil ? Color.green.opacity(0.5) : Color.orange.opacity(0.3), lineWidth: 2)
+                                        .stroke(hasVideo ? Color.green.opacity(0.5) : Color.orange.opacity(0.3), lineWidth: 2)
                                 )
                             }
                             
@@ -137,9 +138,11 @@ struct BallTrackingView: View {
         .onChange(of: selectedVideo) { oldValue, newItem in
             Task {
                 if let data = try? await newItem?.loadTransferable(type: Data.self) {
-                    videoData = data
-                    trackingResult = nil
-                    errorMessage = nil
+                    await MainActor.run {
+                        videoData = data
+                        trackingResult = nil
+                        errorMessage = nil
+                    }
                 }
             }
         }
@@ -734,20 +737,24 @@ struct BallTrackingVideoOverlayView: View {
     private func startPlaybackSimulation() {
         guard isPlaying else { return }
         
-        Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { timer in
-            if !isPlaying || playbackProgress >= 1.0 {
-                timer.invalidate()
-                if playbackProgress >= 1.0 {
-                    isPlaying = false
-                    playbackProgress = 0
-                    currentTime = 0
+        let timer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { _ in
+            Task { @MainActor in
+                if !isPlaying || playbackProgress >= 1.0 {
+                    if playbackProgress >= 1.0 {
+                        isPlaying = false
+                        playbackProgress = 0
+                        currentTime = 0
+                    }
+                    return
                 }
-                return
+                
+                playbackProgress += 0.02 // Adjust speed as needed
+                currentTime = playbackProgress * result.trajectory_data.flight_time
             }
-            
-            playbackProgress += 0.02 // Adjust speed as needed
-            currentTime = playbackProgress * result.trajectory_data.flight_time
         }
+        
+        // Store the timer to invalidate it when needed
+        RunLoop.current.add(timer, forMode: .common)
     }
     
     private func formatTime(_ time: Double) -> String {
@@ -784,7 +791,7 @@ struct BallTrajectoryOverlay: View {
                 
                 // Ball detection points
                 if showDetectionPoints {
-                    ForEach(0..<result.detection_summary.trajectory_points, id: \.self) { index in
+                    ForEach(Array(0..<result.detection_summary.trajectory_points), id: \.self) { index in
                         let progress = Double(index) / Double(result.detection_summary.trajectory_points - 1)
                         if progress <= playbackProgress {
                             let point = getTrajectoryPoint(progress: progress, in: geometry.size)
@@ -792,7 +799,7 @@ struct BallTrajectoryOverlay: View {
                                 .fill(Color.warning)
                                 .frame(width: 6, height: 6)
                                 .position(point)
-                                .animation(.easeInOut(duration: 0.2), value: playbackProgress)
+                                .animation(Animation.easeInOut(duration: 0.2), value: playbackProgress)
                         }
                     }
                 }
@@ -805,7 +812,7 @@ struct BallTrajectoryOverlay: View {
                         .frame(width: 12, height: 12)
                         .position(currentPoint)
                         .shadow(color: Color.ballTracking, radius: 4)
-                        .animation(.easeInOut(duration: 0.1), value: playbackProgress)
+                        .animation(Animation.easeInOut(duration: 0.1), value: playbackProgress)
                 }
             }
         }
@@ -1132,7 +1139,7 @@ struct BallPositionWithTrail: View {
     var body: some View {
         ZStack {
             // Ball trail effect
-            ForEach(0..<10, id: \.self) { index in
+            ForEach(Array(0..<10), id: \.self) { index in
                 let trailProgress = max(0, playbackProgress - Double(index) * 0.05)
                 if trailProgress > 0 {
                     let position = calculateTrajectoryPoint(progress: trailProgress)
@@ -1178,11 +1185,11 @@ struct BallPositionWithTrail: View {
                         Circle()
                             .stroke(Color.yellow.opacity(speedAlpha), lineWidth: 2)
                             .frame(width: 16, height: 16)
-                            .animation(.easeInOut(duration: 0.5).repeatForever(autoreverses: true), value: playbackProgress)
+                            .animation(Animation.easeInOut(duration: 0.5).repeatForever(autoreverses: true), value: playbackProgress)
                     }
                 }
                 .position(currentPosition)
-                .animation(.easeInOut(duration: 0.1), value: playbackProgress)
+                .animation(Animation.easeInOut(duration: 0.1), value: playbackProgress)
             }
         }
     }
@@ -1331,7 +1338,7 @@ struct TrajectoryCallout: View {
         .position(CGPoint(x: position.x, y: position.y - 30))
         .scaleEffect(isActive ? 1.1 : 0.9)
         .opacity(isActive ? 1.0 : 0.7)
-        .animation(.easeInOut(duration: 0.3), value: isActive)
+        .animation(Animation.easeInOut(duration: 0.3), value: isActive)
     }
 }
 
@@ -1352,7 +1359,7 @@ struct DetectionConfidenceIndicators: View {
     let size: CGSize
     
     var body: some View {
-        ForEach(0..<result.detection_summary.trajectory_points, id: \.self) { index in
+        ForEach(Array(0..<result.detection_summary.trajectory_points), id: \.self) { index in
             let progress = Double(index) / Double(result.detection_summary.trajectory_points - 1)
             
             if progress <= playbackProgress {

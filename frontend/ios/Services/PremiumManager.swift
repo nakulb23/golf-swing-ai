@@ -160,6 +160,8 @@ class PremiumManager: ObservableObject {
                     print("❌ Not available in current storefront")
                 case .notEntitled:
                     print("❌ Not entitled")
+                case .unsupported:
+                    print("❌ StoreKit operation not supported")
                 case .unknown:
                     print("❌ Unknown StoreKit error")
                 @unknown default:

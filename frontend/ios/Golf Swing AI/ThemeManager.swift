@@ -22,6 +22,7 @@ enum AppearanceMode: String, CaseIterable {
     }
 }
 
+@MainActor
 class ThemeManager: ObservableObject {
     @Published var appearanceMode: AppearanceMode = .system
     @Published var effectiveColorScheme: ColorScheme? = nil
