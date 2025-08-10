@@ -1008,22 +1008,3 @@ enum LocalAnalysisError: Error, LocalizedError {
     }
 }
 
-// MARK: - Core ML Model Input
-class SwingAnalysisModelInput: MLFeatureProvider {
-    let physics_features: MLMultiArray
-    
-    var featureNames: Set<String> {
-        return ["physics_features"]
-    }
-    
-    func featureValue(for featureName: String) -> MLFeatureValue? {
-        if featureName == "physics_features" {
-            return MLFeatureValue(multiArray: physics_features)
-        }
-        return nil
-    }
-    
-    init(physics_features: MLMultiArray) {
-        self.physics_features = physics_features
-    }
-}
