@@ -426,7 +426,6 @@ struct SimpleCameraView: View {
                     }
                     .padding(.top, 20)
                 }
-                }
             .onAppear {
                 print("📹 SimpleCameraView appeared - checking permission")
                 cameraManager.checkPermission()
@@ -440,7 +439,6 @@ struct SimpleCameraView: View {
                 }
             }
             .navigationBarHidden(true)
-            }
             .alert("Camera Permission Required", isPresented: $showingPermissionAlert) {
                 Button("Cancel", role: .cancel) {
                     dismiss()
