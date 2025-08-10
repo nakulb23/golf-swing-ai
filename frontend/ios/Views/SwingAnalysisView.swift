@@ -282,164 +282,164 @@ struct SwingAnalysisView: View {
 }
 
 // MARK: - Supporting Views
+
+struct SimpleCameraView: View {
+    @Binding var videoData: Data?
+    @Environment(\.dismiss) private var dismiss
+    @StateObject private var cameraManager = CameraManager()
+    @State private var showingPermissionAlert = false
     
-    struct SimpleCameraView: View {
-        @Binding var videoData: Data?
-        @Environment(\.dismiss) private var dismiss
-        @StateObject private var cameraManager = CameraManager()
-        @State private var showingPermissionAlert = false
-        
-        var body: some View {
-            NavigationView {
-                ZStack {
-                    Color.black.ignoresSafeArea()
-                    
-                    if cameraManager.hasPermission {
-                        // Camera Preview
-                        CameraPreview(session: cameraManager.captureSession)
-                            .onDisappear {
-                                print("📹 Camera preview disappeared - stopping session")
-                                cameraManager.stopSession()
-                            }
-                    } else {
-                        // Permission request or denied view
-                        VStack(spacing: 24) {
-                            Image(systemName: "video.slash")
-                                .font(.system(size: 80, weight: .light))
-                                .foregroundColor(.white.opacity(0.7))
-                            
-                            VStack(spacing: 12) {
-                                Text("Camera Access Required")
-                                    .font(.title2)
-                                    .fontWeight(.semibold)
-                                    .foregroundColor(.white)
-                                
-                                Text("Golf Swing AI needs camera access to record your swing videos for analysis.")
-                                    .font(.body)
-                                    .foregroundColor(.white.opacity(0.8))
-                                    .multilineTextAlignment(.center)
-                                    .padding(.horizontal)
-                            }
-                            
-                            Button(action: {
-                                if cameraManager.hasPermission == false {
-                                    // Check if we should show the permission request or go to settings
-                                    let status = AVCaptureDevice.authorizationStatus(for: .video)
-                                    if status == .notDetermined {
-                                        cameraManager.checkPermission()
-                                    } else {
-                                        showingPermissionAlert = true
-                                    }
-                                }
-                            }) {
-                                Text("Grant Camera Permission")
-                                    .font(.headline)
-                                    .foregroundColor(.black)
-                                    .frame(maxWidth: .infinity)
-                                    .padding(.vertical, 16)
-                                    .background(Color.white)
-                                    .cornerRadius(12)
-                            }
-                            .padding(.horizontal)
+    var body: some View {
+        NavigationView {
+            ZStack {
+                Color.black.ignoresSafeArea()
+                
+                if cameraManager.hasPermission {
+                    // Camera Preview
+                    CameraPreview(session: cameraManager.captureSession)
+                        .onDisappear {
+                            print("📹 Camera preview disappeared - stopping session")
+                            cameraManager.stopSession()
                         }
-                    }
-                    
-                    VStack {
-                        Spacer()
+                } else {
+                    // Permission request or denied view
+                    VStack(spacing: 24) {
+                        Image(systemName: "video.slash")
+                            .font(.system(size: 80, weight: .light))
+                            .foregroundColor(.white.opacity(0.7))
                         
-                        // Recording Controls
-                        HStack(spacing: 50) {
-                            // Cancel Button
-                            Button(action: {
-                                dismiss()
-                            }) {
-                                Image(systemName: "xmark")
-                                    .font(.system(size: 20, weight: .medium))
-                                    .foregroundColor(.white)
-                                    .frame(width: 50, height: 50)
-                                    .background(Color.black.opacity(0.6))
-                                    .clipShape(Circle())
-                            }
+                        VStack(spacing: 12) {
+                            Text("Camera Access Required")
+                                .font(.title2)
+                                .fontWeight(.semibold)
+                                .foregroundColor(.white)
                             
-                            // Record Button
-                            Button(action: {
-                                if cameraManager.isRecording {
-                                    cameraManager.stopRecording { data in
-                                        videoData = data
-                                        dismiss()
-                                    }
+                            Text("Golf Swing AI needs camera access to record your swing videos for analysis.")
+                                .font(.body)
+                                .foregroundColor(.white.opacity(0.8))
+                                .multilineTextAlignment(.center)
+                                .padding(.horizontal)
+                        }
+                        
+                        Button(action: {
+                            if cameraManager.hasPermission == false {
+                                // Check if we should show the permission request or go to settings
+                                let status = AVCaptureDevice.authorizationStatus(for: .video)
+                                if status == .notDetermined {
+                                    cameraManager.checkPermission()
                                 } else {
-                                    cameraManager.startRecording()
-                                }
-                            }) {
-                                ZStack {
-                                    Circle()
-                                        .fill(cameraManager.isRecording ? Color.red : Color.white)
-                                        .frame(width: 70, height: 70)
-                                    
-                                    if cameraManager.isRecording {
-                                        RoundedRectangle(cornerRadius: 4)
-                                            .fill(Color.white)
-                                            .frame(width: 20, height: 20)
-                                    } else {
-                                        Circle()
-                                            .fill(Color.red)
-                                            .frame(width: 60, height: 60)
-                                    }
+                                    showingPermissionAlert = true
                                 }
                             }
-                            
-                            // Flip Camera Button
-                            Button(action: {
-                                cameraManager.flipCamera()
-                            }) {
-                                Image(systemName: "arrow.triangle.2.circlepath.camera")
-                                    .font(.system(size: 20, weight: .medium))
-                                    .foregroundColor(.white)
-                                    .frame(width: 50, height: 50)
-                                    .background(Color.black.opacity(0.6))
-                                    .clipShape(Circle())
-                            }
+                        }) {
+                            Text("Grant Camera Permission")
+                                .font(.headline)
+                                .foregroundColor(.black)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 16)
+                                .background(Color.white)
+                                .cornerRadius(12)
                         }
-                        .padding(.bottom, 50)
+                        .padding(.horizontal)
                     }
+                }
+                
+                VStack {
+                    Spacer()
                     
-                    // Recording Timer
-                    if cameraManager.isRecording {
-                        VStack {
-                            HStack {
+                    // Recording Controls
+                    HStack(spacing: 50) {
+                        // Cancel Button
+                        Button(action: {
+                            dismiss()
+                        }) {
+                            Image(systemName: "xmark")
+                                .font(.system(size: 20, weight: .medium))
+                                .foregroundColor(.white)
+                                .frame(width: 50, height: 50)
+                                .background(Color.black.opacity(0.6))
+                                .clipShape(Circle())
+                        }
+                        
+                        // Record Button
+                        Button(action: {
+                            if cameraManager.isRecording {
+                                cameraManager.stopRecording { data in
+                                    videoData = data
+                                    dismiss()
+                                }
+                            } else {
+                                cameraManager.startRecording()
+                            }
+                        }) {
+                            ZStack {
                                 Circle()
-                                    .fill(Color.red)
-                                    .frame(width: 10, height: 10)
-                                    .opacity(cameraManager.recordingTime.truncatingRemainder(dividingBy: 2) < 1 ? 1 : 0.3)
+                                    .fill(cameraManager.isRecording ? Color.red : Color.white)
+                                    .frame(width: 70, height: 70)
                                 
-                                Text(cameraManager.formattedRecordingTime)
-                                    .font(.system(size: 16, weight: .medium, design: .monospaced))
-                                    .foregroundColor(.white)
+                                if cameraManager.isRecording {
+                                    RoundedRectangle(cornerRadius: 4)
+                                        .fill(Color.white)
+                                        .frame(width: 20, height: 20)
+                                } else {
+                                    Circle()
+                                        .fill(Color.red)
+                                        .frame(width: 60, height: 60)
+                                }
                             }
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 6)
-                            .background(Color.black.opacity(0.6))
-                            .clipShape(Capsule())
+                        }
+                        
+                        // Flip Camera Button
+                        Button(action: {
+                            cameraManager.flipCamera()
+                        }) {
+                            Image(systemName: "arrow.triangle.2.circlepath.camera")
+                                .font(.system(size: 20, weight: .medium))
+                                .foregroundColor(.white)
+                                .frame(width: 50, height: 50)
+                                .background(Color.black.opacity(0.6))
+                                .clipShape(Circle())
+                        }
+                    }
+                    .padding(.bottom, 50)
+                }
+                
+                // Recording Timer
+                if cameraManager.isRecording {
+                    VStack {
+                        HStack {
+                            Circle()
+                                .fill(Color.red)
+                                .frame(width: 10, height: 10)
+                                .opacity(cameraManager.recordingTime.truncatingRemainder(dividingBy: 2) < 1 ? 1 : 0.3)
                             
-                            Spacer()
+                            Text(cameraManager.formattedRecordingTime)
+                                .font(.system(size: 16, weight: .medium, design: .monospaced))
+                                .foregroundColor(.white)
                         }
-                        .padding(.top, 20)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .background(Color.black.opacity(0.6))
+                        .clipShape(Capsule())
+                        
+                        Spacer()
+                    }
+                    .padding(.top, 20)
+                }
+                }
+            .onAppear {
+                print("📹 SimpleCameraView appeared - checking permission")
+                cameraManager.checkPermission()
+                
+                // Debug session status after a short delay
+                Task {
+                    try? await Task.sleep(nanoseconds: 1_000_000_000)
+                    await MainActor.run {
+                        cameraManager.debugSessionStatus()
                     }
                 }
-                .onAppear {
-                    print("📹 SimpleCameraView appeared - checking permission")
-                    cameraManager.checkPermission()
-                    
-                    // Debug session status after a short delay
-                    Task {
-                        try? await Task.sleep(nanoseconds: 1_000_000_000)
-                        await MainActor.run {
-                            cameraManager.debugSessionStatus()
-                        }
-                    }
-                }
-                .navigationBarHidden(true)
+            }
+            .navigationBarHidden(true)
             }
             .alert("Camera Permission Required", isPresented: $showingPermissionAlert) {
                 Button("Cancel", role: .cancel) {
