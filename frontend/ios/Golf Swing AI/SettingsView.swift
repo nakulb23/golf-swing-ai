@@ -83,30 +83,32 @@ struct SettingsView: View {
                         )
                     }
                     
-                    NavigationLink(destination: CentralizedModelImprovementView()) {
-                        HStack {
-                            VStack(alignment: .leading, spacing: 4) {
-                                HStack {
-                                    Image(systemName: "brain.head.profile")
-                                        .foregroundColor(.blue)
-                                    Text("AI Model Improvement")
-                                        .font(.subheadline)
-                                        .fontWeight(.medium)
-                                }
-                                
-                                Text("Help improve AI for everyone")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
+                    HStack {
+                        VStack(alignment: .leading, spacing: 4) {
+                            HStack {
+                                Image(systemName: "brain.head.profile")
+                                    .foregroundColor(.blue)
+                                Text("AI Model Improvement")
+                                    .font(.subheadline)
+                                    .fontWeight(.medium)
                             }
                             
-                            Spacer()
-                            
-                            Image(systemName: "chevron.right")
+                            Text("Available in future updates")
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }
-                        .padding(.vertical, 4)
+                        
+                        Spacer()
+                        
+                        Text("Coming Soon")
+                            .font(.caption)
+                            .foregroundColor(.orange)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 2)
+                            .background(Color.orange.opacity(0.15))
+                            .cornerRadius(4)
                     }
+                    .padding(.vertical, 4)
                     
                     HStack {
                         Image(systemName: "iphone")
@@ -314,6 +316,50 @@ struct SettingsView: View {
                                     .font(.caption)
                                     .foregroundColor(.purple)
                                 }
+                            }
+                            
+                            HStack(spacing: 16) {
+                                // Manual StoreKit refresh with aggressive retry
+                                Button(action: {
+                                    Task {
+                                        await premiumManager.manualStoreKitRefresh()
+                                    }
+                                }) {
+                                    HStack {
+                                        Image(systemName: "wrench.and.screwdriver")
+                                        Text("Manual Refresh")
+                                    }
+                                    .font(.caption)
+                                    .foregroundColor(.red)
+                                }
+                                
+                                // StoreKit availability check
+                                Button(action: {
+                                    Task {
+                                        await premiumManager.verifyStoreKitAvailability()
+                                    }
+                                }) {
+                                    HStack {
+                                        Image(systemName: "checkmark.seal")
+                                        Text("Verify Setup")
+                                    }
+                                    .font(.caption)
+                                    .foregroundColor(.blue)
+                                }
+                            }
+                            
+                            // Health check button for comprehensive StoreKit diagnosis
+                            Button(action: {
+                                Task {
+                                    await premiumManager.quickStoreKitHealthCheck()
+                                }
+                            }) {
+                                HStack {
+                                    Image(systemName: "heart.text.square")
+                                    Text("StoreKit Health Check")
+                                }
+                                .font(.caption)
+                                .foregroundColor(.red)
                             }
                         }
                         .padding(.top, 4)

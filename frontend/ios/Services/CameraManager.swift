@@ -31,6 +31,10 @@ class CameraManager: NSObject, ObservableObject {
         return String(format: "%02d:%02d", minutes, seconds)
     }
     
+    var isSessionRunning: Bool {
+        return captureSession.isRunning
+    }
+    
     override init() {
         super.init()
         // Don't setup session until we have permission
@@ -44,48 +48,39 @@ class CameraManager: NSObject, ObservableObject {
         switch status {
         case .authorized:
             print("✅ Camera permission already granted")
-            Task { @MainActor in
-                self.hasPermission = true
-                self.setupSession()
-                // Start session immediately after setup when permission is already granted
-                Task {
-                    try? await Task.sleep(nanoseconds: 200_000_000)
-                    await MainActor.run {
-                        self.startSession()
-                    }
-                }
+            hasPermission = true
+            setupSession()
+            // Start session after a brief delay to ensure setup is complete
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+                self?.startSession()
             }
+            
         case .notDetermined:
             print("❓ Requesting camera permission...")
             AVCaptureDevice.requestAccess(for: .video) { [weak self] granted in
                 guard let self = self else { return }
                 print("🎥 Permission request result: \(granted)")
-                Task { @MainActor in
+                DispatchQueue.main.async {
                     self.hasPermission = granted
                     if granted {
                         print("✅ Permission granted, setting up camera...")
                         self.setupSession()
                         // Start session after setup when permission is newly granted
-                        Task {
-                            try? await Task.sleep(nanoseconds: 200_000_000)
-                            await MainActor.run {
-                                self.startSession()
-                            }
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+                            self?.startSession()
                         }
                     } else {
                         print("❌ Camera permission denied")
                     }
                 }
             }
+            
         case .denied, .restricted:
             print("❌ Camera permission denied or restricted")
-            Task { @MainActor in
-                self.hasPermission = false
-            }
+            hasPermission = false
+            
         @unknown default:
-            Task { @MainActor in
-                self.hasPermission = false
-            }
+            hasPermission = false
         }
     }
     
@@ -216,20 +211,37 @@ class CameraManager: NSObject, ObservableObject {
         
         guard hasPermission else {
             print("⚠️ Cannot start session without camera permission")
+            checkPermission() // Try to re-check permission
             return
         }
         
         guard captureSession.inputs.count > 0 else {
-            print("⚠️ Cannot start session without camera inputs")
+            print("⚠️ Cannot start session without camera inputs - setting up session")
+            setupSession()
+            // Retry after a brief delay
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
+                self?.startSession()
+            }
             return
         }
         
         print("▶️ Starting camera session...")
+        print("📹 Session configuration:")
+        print("   - Has permission: \(hasPermission)")
+        print("   - Input count: \(captureSession.inputs.count)")
+        print("   - Output count: \(captureSession.outputs.count)")
+        
         let session = captureSession
-        Task.detached { @Sendable in
+        DispatchQueue.global(qos: .background).async { [weak self] in
             session.startRunning()
-            await MainActor.run {
-                print("✅ Camera session started successfully - isRunning: \(session.isRunning)")
+            
+            DispatchQueue.main.async { [weak self] in
+                guard let self = self else { return }
+                print("✅ Camera session started - isRunning: \(session.isRunning)")
+                if !session.isRunning {
+                    print("❌ Session failed to start - debugging...")
+                    self.debugSessionStatus()
+                }
             }
         }
     }
@@ -242,12 +254,18 @@ class CameraManager: NSObject, ObservableObject {
         
         print("⏹️ Stopping camera session...")
         let session = captureSession
-        Task.detached { @Sendable in
+        DispatchQueue.global(qos: .background).async {
             session.stopRunning()
-            await MainActor.run {
+            DispatchQueue.main.async {
                 print("✅ Camera session stopped - isRunning: \(session.isRunning)")
             }
         }
+    }
+    
+    // MARK: - Preview Layer
+    
+    func getPreviewLayer() -> AVCaptureVideoPreviewLayer {
+        return AVCaptureVideoPreviewLayer(session: captureSession)
     }
     
     func debugSessionStatus() {
@@ -281,9 +299,9 @@ class CameraManager: NSObject, ObservableObject {
         
         // Start timer
         recordingTime = 0
-        recordingTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
-            guard let self = self else { return }
-            Task { @MainActor in
+        recordingTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { @Sendable _ in
+            Task { @MainActor [weak self] in
+                guard let self = self else { return }
                 self.recordingTime += 0.1
             }
         }

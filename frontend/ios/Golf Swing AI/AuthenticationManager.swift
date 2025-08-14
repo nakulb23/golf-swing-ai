@@ -288,13 +288,19 @@ class AuthenticationManager: NSObject, ObservableObject {
             throw AuthenticationError.invalidCredentials
         }
         
-        // In a real app, this would authenticate against your backend
-        // For demo purposes, create a mock user
+        // TODO: Replace with actual backend authentication
+        // This is a basic local authentication - replace with your backend API
+        
+        // For now, store credentials locally (NOT RECOMMENDED for production)
+        // You should implement proper backend authentication
+        let username = email.components(separatedBy: "@").first ?? "user"
+        let firstName = username.capitalized
+        
         return User(
             email: email,
-            username: "demo_user",
-            firstName: "Demo",
-            lastName: "User"
+            username: username,
+            firstName: firstName,
+            lastName: "Golfer"
         )
     }
     

@@ -25,7 +25,7 @@
           "locale" : "en_US"
         }
       ],
-      "productID" : "com.golfswingai.premium_monthly",
+      "productID" : "nakulb.Golf-Swing-AI.premium_monthly",
       "referenceName" : "Premium Monthly",
       "type" : "RecurringSubscription"
     },
@@ -40,7 +40,7 @@
           "locale" : "en_US"
         }
       ],
-      "productID" : "com.golfswingai.premium_annual",
+      "productID" : "nakulb.Golf-Swing-AI.premium_annual",
       "referenceName" : "Premium Annual",
       "type" : "RecurringSubscription"
     }
@@ -127,7 +127,7 @@
               "locale" : "en_US"
             }
           ],
-          "productID" : "com.golfswingai.premium_monthly",
+          "productID" : "nakulb.Golf-Swing-AI.premium_monthly",
           "recurringSubscriptionPeriod" : "P1M",
           "referenceName" : "Premium Monthly",
           "subscriptionGroupID" : "21520033",
@@ -155,7 +155,7 @@
               "locale" : "en_US"
             }
           ],
-          "productID" : "com.golfswingai.premium_annual",
+          "productID" : "nakulb.Golf-Swing-AI.premium_annual",
           "recurringSubscriptionPeriod" : "P1Y",
           "referenceName" : "Premium Annual",
           "subscriptionGroupID" : "21520033",
