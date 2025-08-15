@@ -4,6 +4,28 @@ import CoreImage
 import Accelerate
 @preconcurrency import CoreML
 
+// MARK: - Ball Tracking Errors
+
+enum BallTrackingError: LocalizedError {
+    case noFramesExtracted
+    case frameExtractionFailed(Error)
+    case noBallDetected
+    case trajectoryAnalysisFailed(Error)
+    
+    var errorDescription: String? {
+        switch self {
+        case .noFramesExtracted:
+            return "No frames could be extracted from the video"
+        case .frameExtractionFailed(let error):
+            return "Frame extraction failed: \(error.localizedDescription)"
+        case .noBallDetected:
+            return "No golf ball could be detected in the video"
+        case .trajectoryAnalysisFailed(let error):
+            return "Trajectory analysis failed: \(error.localizedDescription)"
+        }
+    }
+}
+
 // MARK: - Local Ball Tracker
 
 @MainActor
@@ -62,37 +84,74 @@ class LocalBallTracker: ObservableObject {
     func trackBall(from videoURL: URL) async throws -> BallTrackingResponse {
         print("🏌️ Starting local ball tracking...")
         
-        self.isTracking = true
-        self.trackingProgress = 0.0
+        defer {
+            Task { @MainActor in
+                self.isTracking = false
+            }
+        }
         
-        // Extract frames
-        let frames = try await extractFrames(from: videoURL, fps: 60) // Higher FPS for ball tracking
-        print("📹 Extracted \(frames.count) frames for ball tracking")
+        await MainActor.run {
+            self.isTracking = true
+            self.trackingProgress = 0.0
+        }
         
-        // Detect ball in each frame
+        // Extract frames with error handling
+        let frames: [(image: UIImage, timestamp: Double)]
+        do {
+            frames = try await extractFrames(from: videoURL, fps: 30) // Reduced FPS for stability
+            print("📹 Extracted \(frames.count) frames for ball tracking")
+            
+            guard !frames.isEmpty else {
+                throw BallTrackingError.noFramesExtracted
+            }
+        } catch {
+            print("❌ Frame extraction failed: \(error)")
+            throw BallTrackingError.frameExtractionFailed(error)
+        }
+        
+        // Detect ball in each frame with error handling
         var ballPositions: [BallPosition] = []
         
         for (index, frame) in frames.enumerated() {
-            if let position = try await ballDetector.detectBall(in: frame.image) {
-                ballPositions.append(BallPosition(
-                    frameIndex: index,
-                    timestamp: frame.timestamp,
-                    position: position,
-                    confidence: 0.9
-                ))
+            do {
+                if let position = try await ballDetector.detectBall(in: frame.image) {
+                    ballPositions.append(BallPosition(
+                        frameIndex: index,
+                        timestamp: frame.timestamp,
+                        position: position,
+                        confidence: 0.9
+                    ))
+                }
+            } catch {
+                print("⚠️ Ball detection failed for frame \(index): \(error)")
+                // Continue with next frame rather than crashing
             }
             
-            self.trackingProgress = Double(index) / Double(frames.count)
+            await MainActor.run {
+                self.trackingProgress = Double(index) / Double(frames.count)
+            }
         }
         
-        print("⚾ Detected ball in \(ballPositions.count) frames")
+        print("⚾ Detected ball in \(ballPositions.count) frames out of \(frames.count)")
         
-        // Analyze trajectory
-        let trajectory = trajectoryAnalyzer.analyzeTrajectory(from: ballPositions)
+        // Ensure we have some ball detections
+        guard !ballPositions.isEmpty else {
+            throw BallTrackingError.noBallDetected
+        }
         
-        self.detectedTrajectory = trajectory
-        self.isTracking = false
-        self.trackingProgress = 1.0
+        // Analyze trajectory with error handling
+        let trajectory: BallTrajectory
+        do {
+            trajectory = trajectoryAnalyzer.analyzeTrajectory(from: ballPositions)
+        } catch {
+            print("❌ Trajectory analysis failed: \(error)")
+            throw BallTrackingError.trajectoryAnalysisFailed(error)
+        }
+        
+        await MainActor.run {
+            self.detectedTrajectory = trajectory
+            self.trackingProgress = 1.0
+        }
         
         // Create response
         return createTrackingResponse(trajectory: trajectory, frameCount: frames.count)
@@ -188,25 +247,32 @@ class GolfBallDetector: @unchecked Sendable {
         }
         
         do {
-            // Create model input
-            let input = BallTrackingModelInput(input_image: pixelBuffer)
+            // Create model input dictionary for generic MLModel
+            let inputDict = try MLDictionaryFeatureProvider(dictionary: [
+                "input_image": MLFeatureValue(pixelBuffer: pixelBuffer)
+            ])
             
             // Run Core ML prediction
-            let prediction = try await model.prediction(from: input)
+            let prediction = try await model.prediction(from: inputDict)
             
-            // Extract ball position from output
-            if let outputArray = prediction.featureValue(for: "var_50")?.multiArrayValue,
-               outputArray.count >= 3 {
-                let x = outputArray[0].doubleValue
-                let y = outputArray[1].doubleValue
-                let confidence = outputArray[2].doubleValue
-                
-                // Only return position if confidence is high enough
-                if confidence > 0.5 {
-                    // Convert normalized coordinates back to image coordinates
-                    let imageX = x * Double(image.size.width)
-                    let imageY = y * Double(image.size.height)
-                    return CGPoint(x: imageX, y: imageY)
+            // Try multiple output names commonly used in ball tracking models
+            let outputNames = ["output", "ball_position", "coordinates", "var_50", "Identity"]
+            
+            for outputName in outputNames {
+                if let outputArray = prediction.featureValue(for: outputName)?.multiArrayValue,
+                   outputArray.count >= 2 {
+                    let x = outputArray[0].doubleValue
+                    let y = outputArray[1].doubleValue
+                    let confidence = outputArray.count > 2 ? outputArray[2].doubleValue : 0.8
+                    
+                    // Only return position if confidence is high enough
+                    if confidence > 0.3 {
+                        // Convert normalized coordinates back to image coordinates
+                        let imageX = x * Double(image.size.width)
+                        let imageY = y * Double(image.size.height)
+                        print("✅ Ball detected at (\(imageX), \(imageY)) with confidence \(confidence)")
+                        return CGPoint(x: imageX, y: imageY)
+                    }
                 }
             }
             
