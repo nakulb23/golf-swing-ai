@@ -115,15 +115,21 @@ struct HomeView: View {
                             
                             // Profile Avatar
                             Button(action: {
-                                navigateToProfile = true
+                                if authManager.isAuthenticated {
+                                    // User is logged in - go to profile
+                                    navigateToProfile = true
+                                } else {
+                                    // User not logged in - show login screen
+                                    showingLogin = true
+                                }
                             }) {
                                 Circle()
-                                    .fill(Color.blue.opacity(0.2))
+                                    .fill(authManager.isAuthenticated ? Color.blue.opacity(0.2) : Color.gray.opacity(0.2))
                                     .frame(width: 48, height: 48)
                                     .overlay(
-                                        Image(systemName: "person.fill")
+                                        Image(systemName: authManager.isAuthenticated ? "person.fill" : "person")
                                             .font(.system(size: 20, weight: .medium))
-                                            .foregroundColor(.blue)
+                                            .foregroundColor(authManager.isAuthenticated ? .blue : .gray)
                                     )
                             }
                             .buttonStyle(PlainButtonStyle())
@@ -392,12 +398,16 @@ struct HomeView: View {
         }
         .sheet(isPresented: $showingSettings) {
             SettingsView()
+                .environmentObject(authManager)
+                .environmentObject(ThemeManager.shared)
         }
         .navigationDestination(isPresented: $navigateToProfile) {
             ProfileView()
+                .environmentObject(authManager)
         }
         .navigationDestination(isPresented: $navigateToAllTools) {
             AllToolsView()
+                .environmentObject(authManager)
         }
         .sheet(isPresented: $showingPhysicsEnginePaywall) {
             PhysicsEnginePremiumView()
