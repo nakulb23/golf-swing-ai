@@ -231,10 +231,10 @@ class CameraManager: NSObject, ObservableObject {
         print("   - Output count: \(captureSession.outputs.count)")
         
         let session = captureSession
-        DispatchQueue.global(qos: .background).async { [weak self] in
+        Task.detached { [weak self] in
             session.startRunning()
             
-            DispatchQueue.main.async { [weak self] in
+            await MainActor.run { [weak self] in
                 guard let self = self else { return }
                 print("✅ Camera session started - isRunning: \(session.isRunning)")
                 if !session.isRunning {
@@ -253,9 +253,9 @@ class CameraManager: NSObject, ObservableObject {
         
         print("⏹️ Stopping camera session...")
         let session = captureSession
-        DispatchQueue.global(qos: .background).async {
+        Task.detached {
             session.stopRunning()
-            DispatchQueue.main.async {
+            await MainActor.run {
                 print("✅ Camera session stopped - isRunning: \(session.isRunning)")
             }
         }
@@ -444,9 +444,9 @@ struct CameraPreview: UIViewRepresentable {
         if !session.isRunning && session.inputs.count > 0 {
             print("🔄 Session not running but has inputs - attempting to start")
             let captureSession = session
-            DispatchQueue.global(qos: .background).async {
+            Task.detached {
                 captureSession.startRunning()
-                Task { @MainActor in
+                await MainActor.run {
                     print("✅ Session started from preview")
                 }
             }
