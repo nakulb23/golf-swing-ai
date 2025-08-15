@@ -24,6 +24,8 @@ enum AppearanceMode: String, CaseIterable {
 
 @MainActor
 class ThemeManager: ObservableObject {
+    static let shared = ThemeManager()
+    
     @Published var appearanceMode: AppearanceMode = .system
     @Published var effectiveColorScheme: ColorScheme? = nil
     
