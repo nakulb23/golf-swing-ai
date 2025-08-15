@@ -1,6 +1,12 @@
 import Foundation
 import CoreGraphics
 
+// MARK: - Camera Angle enum for analysis adaptation
+enum CameraAngle {
+    case side    // Profile view - standard analysis
+    case back    // Behind the golfer - adapted analysis
+}
+
 // MARK: - Golf Swing Physics Calculator
 // Comprehensive biomechanical analysis for golf swing feature extraction
 
@@ -138,7 +144,15 @@ class SwingPhysicsCalculator {
         return max(0, min(90, rotation))
     }
     
-    static func calculateSwingPlaneAngle(poses: [PoseData]) -> Double {
+    static func calculateSwingPlaneAngle(poses: [PoseData], cameraAngle: CameraAngle = .side) -> Double {
+        if cameraAngle == .back {
+            return calculateSwingPlaneAngleFromBack(poses: poses)
+        } else {
+            return calculateSwingPlaneAngleFromSide(poses: poses)
+        }
+    }
+    
+    static func calculateSwingPlaneAngleFromSide(poses: [PoseData]) -> Double {
         print("📐 Starting swing plane calculation with \(poses.count) poses")
         
         guard poses.count >= 2 else { 
@@ -546,14 +560,51 @@ class SwingPhysicsCalculator {
     }
     
     static func calculateOverallTempo(poses: [PoseData]) -> Double {
-        // Overall tempo ratio (backswing:downswing)
-        let backswingLength = poses.count * 2 / 3
-        let downswingLength = poses.count - backswingLength
+        // Calculate actual tempo based on shoulder rotation velocity changes
+        guard poses.count >= 5 else { return 3.0 }
         
-        guard downswingLength > 0 else { return 3.0 }
+        var rotationVelocities: [Double] = []
+        
+        // Calculate rotation velocities throughout the swing
+        for i in 1..<poses.count {
+            let prevRotation = calculateShoulderRotation(pose: poses[i-1])
+            let currRotation = calculateShoulderRotation(pose: poses[i])
+            let velocity = abs(currRotation - prevRotation)
+            rotationVelocities.append(velocity)
+        }
+        
+        // Find the transition point (where velocity changes from decreasing to increasing)
+        var transitionIndex = poses.count * 2 / 3 // Default fallback
+        var maxVelocity = 0.0
+        var minVelocityIndex = 0
+        
+        // Find the minimum velocity point (top of backswing)
+        for (index, velocity) in rotationVelocities.enumerated() {
+            if velocity < rotationVelocities[minVelocityIndex] {
+                minVelocityIndex = index
+            }
+        }
+        
+        // Find the maximum velocity after the minimum (downswing acceleration)
+        for i in minVelocityIndex..<rotationVelocities.count {
+            if rotationVelocities[i] > maxVelocity {
+                maxVelocity = rotationVelocities[i]
+                transitionIndex = i
+            }
+        }
+        
+        // Calculate actual tempo ratio
+        let backswingLength = max(1, transitionIndex)
+        let downswingLength = max(1, poses.count - transitionIndex)
         
         let tempoRatio = Double(backswingLength) / Double(downswingLength)
-        return max(2.0, min(4.0, tempoRatio)) // Typical range 2:1 to 4:1
+        
+        // Add some variance based on actual movement patterns
+        let velocityVariance = rotationVelocities.reduce(0) { $0 + $1 } / Double(rotationVelocities.count)
+        let varianceAdjustment = (velocityVariance / 10.0) * 0.3 // Small adjustment based on movement
+        
+        let finalTempo = tempoRatio + varianceAdjustment
+        return max(1.5, min(5.0, finalTempo)) // Expanded realistic range
     }
     
     static func calculateRhythmConsistency(poses: [PoseData]) -> Double {
@@ -588,6 +639,132 @@ class SwingPhysicsCalculator {
         
         let efficiency = (1.0 - tempoScore + rhythmScore + sequenceScore) / 3.0
         return max(0.3, min(1.0, efficiency))
+    }
+    
+    // MARK: - Back-View Specific Calculations
+    
+    static func calculateSwingPlaneAngleFromBack(poses: [PoseData]) -> Double {
+        print("📐 Calculating swing plane from back view with \(poses.count) poses")
+        
+        guard poses.count >= 2 else {
+            print("❌ BackView SwingPlane: Not enough poses (\(poses.count))")
+            return 0.0
+        }
+        
+        // For back-view, use shoulder line movement to determine swing plane
+        let addressPose = poses.first!
+        let topPoseIndex = min(poses.count - 1, poses.count * 2 / 3)
+        let topPose = poses[topPoseIndex]
+        
+        print("🔍 BackView: Analyzing address pose (0) and top pose (\(topPoseIndex))")
+        
+        // Try to get the best available keypoints for back-view analysis
+        // Priority: 1) Shoulders (most reliable from back), 2) Wrists (grip position), 3) Elbows
+        
+        var addressPoint: CGPoint?
+        var topPoint: CGPoint?
+        var analysisType = "unknown"
+        
+        // Option 1: Use shoulder center (most reliable for back view)
+        if let addressLeftShoulder = addressPose.keypoints.first(where: { $0.type == .leftShoulder })?.position,
+           let addressRightShoulder = addressPose.keypoints.first(where: { $0.type == .rightShoulder })?.position,
+           let topLeftShoulder = topPose.keypoints.first(where: { $0.type == .leftShoulder })?.position,
+           let topRightShoulder = topPose.keypoints.first(where: { $0.type == .rightShoulder })?.position {
+            
+            addressPoint = CGPoint(
+                x: (addressLeftShoulder.x + addressRightShoulder.x) / 2,
+                y: (addressLeftShoulder.y + addressRightShoulder.y) / 2
+            )
+            topPoint = CGPoint(
+                x: (topLeftShoulder.x + topRightShoulder.x) / 2,
+                y: (topLeftShoulder.y + topRightShoulder.y) / 2
+            )
+            analysisType = "shoulder_center"
+            
+        // Option 2: Use wrist positions (hands/grip position)
+        } else if let addressLeftWrist = addressPose.keypoints.first(where: { $0.type == .leftWrist })?.position,
+                  let addressRightWrist = addressPose.keypoints.first(where: { $0.type == .rightWrist })?.position,
+                  let topLeftWrist = topPose.keypoints.first(where: { $0.type == .leftWrist })?.position,
+                  let topRightWrist = topPose.keypoints.first(where: { $0.type == .rightWrist })?.position {
+            
+            // Use grip center (hands close together in golf grip)
+            addressPoint = CGPoint(
+                x: (addressLeftWrist.x + addressRightWrist.x) / 2,
+                y: (addressLeftWrist.y + addressRightWrist.y) / 2
+            )
+            topPoint = CGPoint(
+                x: (topLeftWrist.x + topRightWrist.x) / 2,
+                y: (topLeftWrist.y + topRightWrist.y) / 2
+            )
+            analysisType = "grip_center"
+            
+        } else {
+            print("❌ BackView: Missing critical keypoints for back-view analysis")
+            return 0.0
+        }
+        
+        print("🔍 BackView: Using \(analysisType) for swing plane calculation")
+        
+        guard let addressPos = addressPoint, let topPos = topPoint else {
+            print("❌ BackView: Failed to establish reference points")
+            return 0.0
+        }
+        
+        // Calculate movement vectors from the selected reference points
+        let deltaX = topPos.x - addressPos.x
+        let deltaY = topPos.y - addressPos.y
+        let totalMovement = sqrt(deltaX * deltaX + deltaY * deltaY)
+        
+        print("🔍 BackView movement analysis:")
+        print("   Address position: (\(String(format: "%.3f", addressPos.x)), \(String(format: "%.3f", addressPos.y)))")
+        print("   Top position: (\(String(format: "%.3f", topPos.x)), \(String(format: "%.3f", topPos.y)))")
+        print("   Total movement: \(String(format: "%.3f", totalMovement))")
+        
+        guard totalMovement > 0.02 else { // Minimum movement threshold
+            print("❌ BackView: Insufficient movement detected for swing analysis")
+            return 0.0
+        }
+        
+        // Calculate vertical and horizontal movement components
+        let verticalMovement = abs(deltaY)
+        let horizontalMovement = abs(deltaX)
+        
+        // For back view, calculate swing plane based on movement pattern
+        // In back view, lateral movement indicates turn/rotation while vertical shows arc
+        let movementAngle = horizontalMovement > 0.001 ? 
+            atan2(verticalMovement, horizontalMovement) * 180 / .pi : 45.0
+        
+        // Add shoulder rotation analysis if available (for additional context)
+        var shoulderRotationComponent: Double = 0.0
+        if analysisType == "shoulder_center",
+           let addressLeftShoulder = addressPose.keypoints.first(where: { $0.type == .leftShoulder })?.position,
+           let addressRightShoulder = addressPose.keypoints.first(where: { $0.type == .rightShoulder })?.position,
+           let topLeftShoulder = topPose.keypoints.first(where: { $0.type == .leftShoulder })?.position,
+           let topRightShoulder = topPose.keypoints.first(where: { $0.type == .rightShoulder })?.position {
+            
+            let addressShoulderAngle = atan2(addressRightShoulder.y - addressLeftShoulder.y, 
+                                            addressRightShoulder.x - addressLeftShoulder.x)
+            let topShoulderAngle = atan2(topRightShoulder.y - topLeftShoulder.y,
+                                        topRightShoulder.x - topLeftShoulder.x)
+            shoulderRotationComponent = abs(topShoulderAngle - addressShoulderAngle) * 180 / .pi
+        }
+        
+        // Combine movement angle with shoulder rotation for more accurate plane estimation
+        let swingPlaneAngle = shoulderRotationComponent > 0 ? 
+            (movementAngle * 0.6) + (shoulderRotationComponent * 0.4) : movementAngle
+        
+        print("🔍 BackView calculations:")
+        print("   Movement angle: \(String(format: "%.1f", movementAngle))°")
+        print("   Shoulder rotation: \(String(format: "%.1f", shoulderRotationComponent))°")
+        print("   Combined swing plane: \(String(format: "%.1f", swingPlaneAngle))°")
+        print("   Analysis method: \(analysisType)")
+        
+        // Ensure reasonable golf swing plane angle for back view
+        // Back view typically shows slightly different angles than side view
+        let clampedAngle = max(20, min(80, swingPlaneAngle))
+        
+        print("🔍 Final back-view swing plane: \(String(format: "%.2f", clampedAngle))°")
+        return clampedAngle
     }
     
     // MARK: - Utility Functions

@@ -1,6 +1,135 @@
 import Foundation
 
-  // MARK: - Chat Models
+// MARK: - Local Golf AI Models
+
+/// Golf AI analysis result that includes all golf-specific data
+struct LocalGolfAnalysisResult: Codable {
+    let predicted_label: String
+    let confidence: Double
+    let swing_phases: [GolfSwingPhase]
+    let biomechanics: GolfBiomechanicsData
+    let club_analysis: GolfClubAnalysisData
+    let recommendations: [GolfRecommendation]
+    let overall_score: Double
+    let analysis_type: String // Always "golf_ai_local"
+    let model_version: String
+    
+    // Compatibility with existing SwingAnalysisResponse
+    var asSwingAnalysisResponse: SwingAnalysisResponse {
+        return SwingAnalysisResponse(
+            predicted_label: predicted_label,
+            confidence: confidence,
+            confidence_gap: 0.8 - confidence,
+            all_probabilities: generateProbabilities(),
+            camera_angle: biomechanics.camera_angle,
+            angle_confidence: Double(biomechanics.angle_confidence),
+            feature_reliability: biomechanics.feature_reliability,
+            club_face_analysis: club_analysis.club_face_analysis,
+            club_speed_analysis: club_analysis.club_speed_analysis,
+            premium_features_available: true, // Golf AI always provides premium features
+            physics_insights: biomechanics.physics_summary,
+            angle_insights: biomechanics.posture_insights,
+            recommendations: recommendations.map { $0.description },
+            extraction_status: "success",
+            analysis_type: analysis_type,
+            model_version: model_version,
+            plane_angle: biomechanics.swing_plane_angle,
+            tempo_ratio: biomechanics.tempo_ratio,
+            shoulder_tilt: biomechanics.shoulder_rotation,
+            video_duration_seconds: biomechanics.video_duration
+        )
+    }
+    
+    private func generateProbabilities() -> [String: Double] {
+        var probs: [String: Double] = [:]
+        probs[predicted_label] = confidence
+        
+        let otherLabels = ["perfect", "too_steep", "too_flat", "over_the_top", "inside_out"]
+        let remainingProb = 1.0 - confidence
+        let otherProb = remainingProb / Double(otherLabels.count - 1)
+        
+        for label in otherLabels where label != predicted_label {
+            probs[label] = otherProb
+        }
+        
+        return probs
+    }
+}
+
+struct GolfSwingPhase: Codable {
+    let phase: String // address, backswing, etc.
+    let start_time: Double
+    let end_time: Double
+    let duration: Double
+    let quality_score: Double
+    let keypoints_detected: Int
+}
+
+struct GolfBiomechanicsData: Codable {
+    let spine_angle: Double
+    let hip_rotation: Double
+    let shoulder_rotation: Double
+    let weight_transfer: GolfWeightTransfer
+    let posture_rating: String
+    let tempo_ratio: Double
+    let swing_plane_angle: Double
+    let balance_score: Double
+    
+    // Analysis metadata
+    let camera_angle: String
+    let angle_confidence: Float
+    let feature_reliability: [String: Double]
+    let physics_summary: String
+    let posture_insights: String
+    let video_duration: Double
+}
+
+struct GolfWeightTransfer: Codable {
+    let left_percentage: Double
+    let right_percentage: Double
+    let transfer_quality: String // "excellent", "good", "needs_work"
+    let center_of_gravity_path: [GolfPoint]
+}
+
+struct GolfPoint: Codable {
+    let x: Double
+    let y: Double
+    let timestamp: Double
+}
+
+struct GolfClubAnalysisData: Codable {
+    let club_detected: Bool
+    let club_type: String
+    let shaft_angle_at_impact: Double
+    let club_face_angle: Double
+    let club_path: [GolfPoint]
+    let grip_analysis: GolfGripAnalysis
+    
+    // Premium club analysis features
+    let club_face_analysis: ClubFaceAnalysis?
+    let club_speed_analysis: ClubSpeedAnalysis?
+}
+
+struct GolfGripAnalysis: Codable {
+    let grip_strength: String // "weak", "neutral", "strong"
+    let grip_position: String // "correct", "too_high", "too_low"
+    let grip_consistency: Double
+    let hand_separation: Double
+}
+
+struct GolfRecommendation: Codable {
+    let category: String // "posture", "grip", "swing_plane", etc.
+    let priority: Int // 1 = highest priority
+    let title: String
+    let description: String
+    let drill_suggestion: String?
+    
+    var displayText: String {
+        return "\(title): \(description)"
+    }
+}
+
+// MARK: - Chat Models
   struct ChatRequest: Codable {
       let question: String
   }

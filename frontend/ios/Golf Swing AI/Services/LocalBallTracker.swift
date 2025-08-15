@@ -1,8 +1,8 @@
 import Foundation
-import Vision
 import CoreImage
 @preconcurrency import AVFoundation
 import Accelerate
+@preconcurrency import CoreML
 
 // MARK: - Local Ball Tracker
 
@@ -22,22 +22,40 @@ class LocalBallTracker: ObservableObject {
     }
     
     private func loadBallTrackingModel() {
-        guard let modelPath = Bundle.main.path(forResource: "BallTrackingModel", ofType: "mlmodel") else {
-            print("❌ BallTrackingModel.mlmodel not found in bundle")
-            print("❌ Ensure model is added to Xcode project with proper target membership")
-            return
-        }
-        
-        let url = URL(fileURLWithPath: modelPath)
-        print("✅ Loading BallTrackingModel from bundle: \(modelPath)")
-        
         do {
-            ballTrackingModel = try MLModel(contentsOf: url)
+            // Try to load compiled model first (.mlmodelc)
+            if let compiledModelURL = Bundle.main.url(forResource: "BallTrackingModel", withExtension: "mlmodelc") {
+                ballTrackingModel = try MLModel(contentsOf: compiledModelURL)
+                print("✅ Ball tracking model loaded from compiled model (.mlmodelc)")
+            }
+            // Try to load uncompiled model (.mlmodel)
+            else if let modelURL = Bundle.main.url(forResource: "BallTrackingModel", withExtension: "mlmodel") {
+                ballTrackingModel = try MLModel(contentsOf: modelURL)
+                print("✅ Ball tracking model loaded from uncompiled model (.mlmodel)")
+            }
+            // Try to load package model (.mlpackage)
+            else if let packageURL = Bundle.main.url(forResource: "BallTrackingModel", withExtension: "mlpackage") {
+                ballTrackingModel = try MLModel(contentsOf: packageURL)
+                print("✅ Ball tracking model loaded from package (.mlpackage)")
+            }
+            else {
+                print("❌ BallTrackingModel not found in any format")
+                print("❌ Ensure model is added to Xcode project with proper target membership")
+                ballTrackingModel = nil
+            }
+            
             // Reinitialize detector with the loaded model
             ballDetector = GolfBallDetector(ballTrackingModel: ballTrackingModel)
-            print("✅ LocalBallTracker: Core ML model loaded")
+            
+            if ballTrackingModel != nil {
+                print("✅ LocalBallTracker: Core ML model loaded successfully")
+            } else {
+                print("⚠️ LocalBallTracker: Using fallback computer vision algorithms")
+            }
         } catch {
-            print("❌ Failed to load BallTrackingModel in LocalBallTracker: \(error)")
+            print("❌ Failed to load BallTrackingModel: \(error)")
+            ballTrackingModel = nil
+            ballDetector = GolfBallDetector(ballTrackingModel: nil)
         }
     }
     

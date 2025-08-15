@@ -473,10 +473,152 @@ class SwingAnalysisViewModel: ObservableObject {
             */
             
         } catch {
-            errorMessage = "Analysis failed: \(error.localizedDescription)"
+            errorMessage = createDetailedErrorMessage(from: error)
         }
         
         isAnalyzing = false
+    }
+    
+    private func createDetailedErrorMessage(from error: Error) -> String {
+        // Check if it's our specific LocalAnalysisError
+        if let localError = error as? LocalAnalysisError {
+            switch localError {
+            case .noPosesDetected(let message):
+                return message
+            case .poorPoseQuality(let message):
+                return message
+            case .visionFrameworkUnavailable(let message):
+                return message
+            case .insufficientPoseData:
+                return """
+                Unable to detect your body pose clearly enough for analysis.
+                
+                📹 To fix this:
+                • Ensure your full body is visible in the frame
+                • Record in good lighting conditions
+                • Stand at least 8 feet from the camera
+                • Avoid busy backgrounds that might interfere with pose detection
+                """
+                
+            case .noValidSwingMotionDetected:
+                return """
+                No golf swing motion was detected in your video.
+                
+                ⛳ To fix this:
+                • Make sure you're performing a complete golf swing
+                • Record from the side view (profile angle works best)
+                • Ensure the swing motion is clearly visible
+                • Try recording a practice swing if the ball is causing interference
+                """
+                
+            case .poorVideoQuality:
+                return """
+                Video quality is too poor for accurate analysis.
+                
+                🎥 To fix this:
+                • Record in better lighting (avoid backlighting)
+                • Clean your camera lens
+                • Record at higher resolution if possible
+                • Avoid recording during golden hour or low light
+                """
+                
+            case .incorrectCameraAngle:
+                return """
+                Camera angle needs adjustment for optimal analysis.
+                
+                📐 For best results:
+                
+                ✅ SIDE VIEW (Recommended):
+                • Position camera to your LEFT or RIGHT side (profile view)
+                • Your face should be visible to the camera
+                • Place phone horizontally at chest height
+                
+                ✅ BACK VIEW (Supported):
+                • Position camera directly behind you
+                • Ensure your full body and swing arc are visible
+                • Stand far enough that shoulders are clearly visible
+                
+                📱 General tips:
+                • Stand 8-12 feet away from the camera
+                • Record in good lighting conditions
+                • Keep the camera steady during recording
+                """
+                
+            case .modelNotLoaded:
+                return """
+                AI analysis model failed to load.
+                
+                🔄 To fix this:
+                • Force close and restart the app
+                • Ensure you have enough storage space
+                • If problem persists, contact support
+                """
+                
+            case .featureExtractionFailed:
+                return """
+                Unable to extract swing features from the video.
+                
+                📊 This usually means:
+                • The video is too short (needs at least 2 seconds)
+                • Motion is too fast or blurry
+                • Body parts are obscured during the swing
+                
+                Try recording a slower, more deliberate practice swing.
+                """
+                
+            default:
+                return "Analysis failed: \(localError.localizedDescription)"
+            }
+        }
+        
+        // Handle other types of errors
+        let errorDescription = error.localizedDescription
+        
+        if errorDescription.contains("memory") || errorDescription.contains("Memory") {
+            return """
+            Analysis failed due to memory constraints.
+            
+            📱 To fix this:
+            • Close other apps before recording
+            • Record shorter videos (15-30 seconds max)
+            • Restart the app and try again
+            """
+        }
+        
+        if errorDescription.contains("file") || errorDescription.contains("File") {
+            return """
+            Video file could not be processed.
+            
+            📁 To fix this:
+            • Ensure you have enough storage space
+            • Try recording a new video
+            • Check that your camera is working properly
+            """
+        }
+        
+        if errorDescription.contains("network") || errorDescription.contains("Network") {
+            return """
+            Network connection issue during analysis.
+            
+            📶 To fix this:
+            • Check your internet connection
+            • Try again when you have better signal
+            • This analysis runs locally, so network shouldn't be required
+            """
+        }
+        
+        // Generic fallback with actionable advice
+        return """
+        Analysis encountered an unexpected error.
+        
+        🔄 Try these steps:
+        • Record a new video with clear lighting
+        • Ensure your full body is visible during the swing
+        • Keep the camera steady and at a good distance
+        • Contact support if the problem continues
+        
+        Error details: \(errorDescription)
+        """
     }
     
     private func performLocalAnalysis(_ data: Data) async throws -> SwingAnalysisResponse {
@@ -546,10 +688,13 @@ class SwingAnalysisViewModel: ObservableObject {
             try? FileManager.default.removeItem(at: tempURL)
             
             print("❌ Real analysis failed: \(error)")
-            print("🔄 Falling back to enhanced mock analysis based on video data")
+            print("❌ Error type: \(type(of: error))")
+            if let localError = error as? LocalAnalysisError {
+                print("❌ Local analysis error: \(localError)")
+            }
             
-            // Enhanced fallback with some randomization to show different results
-            return createEnhancedMockAnalysis(data: data)
+            // Don't use fallback data - let the error bubble up to show proper error UI
+            throw error
         }
     }
     
@@ -623,107 +768,7 @@ class SwingAnalysisViewModel: ObservableObject {
         return outputURL
     }
     
-    private func createEnhancedMockAnalysis(data: Data) -> SwingAnalysisResponse {
-        print("🎭 Creating enhanced mock analysis")
-        
-        // Use video data characteristics to vary the results
-        let videoSize = data.count
-        let seed = Double(videoSize % 1000) / 1000.0 // Use video size as a seed for variation
-        
-        // Vary results based on video characteristics
-        let weights: [Double] = [0.6, 0.25, 0.15] // Weighted towards good_swing
-        
-        // Select prediction based on seed
-        let prediction: String
-        let confidence: Double
-        let planeAngle: Double
-        
-        if seed < weights[0] {
-            prediction = "good_swing"
-            confidence = 0.75 + seed * 0.2 // 75-95%
-            planeAngle = 32.0 + seed * 8.0 // 32-40°
-        } else if seed < weights[0] + weights[1] {
-            prediction = "too_steep"
-            confidence = 0.65 + seed * 0.25 // 65-90%
-            planeAngle = 50.0 + seed * 15.0 // 50-65°
-        } else {
-            prediction = "too_flat"
-            confidence = 0.70 + seed * 0.2 // 70-90%
-            planeAngle = 20.0 + seed * 12.0 // 20-32°
-        }
-        
-        let physicsInsights: String
-        let stanceGuidance: String
-        let recommendations: [String]
-        
-        // Generate stance analysis based on video characteristics
-        let spineAngle = 25.0 + seed * 10.0 // Varies from 25-35°
-        let stanceWidth = 0.4 + seed * 0.3  // Varies from 0.4-0.7
-        
-        switch prediction {
-        case "too_steep":
-            physicsInsights = "Swing plane analysis: Your swing is \(Int(planeAngle))° (too steep). The ideal range is 35-45°. This can cause pulls, slices, and inconsistent contact."
-            stanceGuidance = spineAngle < 27 ? 
-                "Setup analysis: Consider slightly more forward bend from hips. Your posture affects swing plane." :
-                "Setup analysis: Good posture detected. Focus on maintaining this throughout swing."
-            recommendations = [
-                "Practice shallowing the club in transition",
-                "Work on taking the club back more around your body",
-                "Focus on maintaining posture throughout the swing",
-                "🔒 Get detailed biomechanics analysis with Premium"
-            ]
-        case "too_flat":
-            physicsInsights = "Swing plane analysis: Your swing is \(Int(planeAngle))° (too flat). The ideal range is 35-45°. This can cause hooks, thin shots, and loss of distance."
-            stanceGuidance = stanceWidth > 0.6 ? 
-                "Setup analysis: Consider narrowing your stance slightly for better rotation." :
-                "Setup analysis: Good stance width. Focus on more upright shoulder turn."
-            recommendations = [
-                "Work on a more upright backswing plane",
-                "Focus on lifting the club more vertically in takeaway", 
-                "Practice steeper shoulder turn",
-                "🔒 Unlock detailed posture analysis with Premium"
-            ]
-        default:
-            physicsInsights = "Swing plane analysis: Good swing plane at \(Int(planeAngle))°. This is within the ideal range of 35-45°. Continue maintaining this consistent path."
-            stanceGuidance = "Setup analysis: Good fundamentals detected. Your posture and stance support your swing plane well."
-            recommendations = [
-                "Maintain your current swing plane consistency",
-                "Continue working on setup routine for consistency",
-                "Focus on tempo and timing refinement",
-                "🔒 Unlock club speed and face angle analysis"
-            ]
-        }
-        
-        let probabilities = [
-            prediction: confidence,
-            "other": 1.0 - confidence
-        ]
-        
-        print("🎭 Mock analysis result: \(prediction) (\(String(format: "%.1f", confidence * 100))%), plane: \(String(format: "%.1f", planeAngle))°")
-        
-        return SwingAnalysisResponse(
-            predicted_label: prediction,
-            confidence: confidence,
-            confidence_gap: confidence - 0.5,
-            all_probabilities: probabilities,
-            camera_angle: "mobile_portrait",
-            angle_confidence: 0.8,
-            feature_reliability: nil,
-            club_face_analysis: nil,
-            club_speed_analysis: nil,
-            premium_features_available: true, // Show premium features are available
-            physics_insights: physicsInsights, // Pass as String
-            angle_insights: stanceGuidance,
-            recommendations: recommendations,
-            extraction_status: "success",
-            analysis_type: "enhanced_mock",
-            model_version: "fallback_v1.0",
-            plane_angle: planeAngle,
-            tempo_ratio: 1.2 + seed * 0.6,
-            shoulder_tilt: nil,
-            video_duration_seconds: nil
-        )
-    }
+    // Removed createEnhancedMockAnalysis - no more fallback dummy data
     
     func exportAnalysis(format: ExportFormat) async {
         guard let result = analysisResult else { return }

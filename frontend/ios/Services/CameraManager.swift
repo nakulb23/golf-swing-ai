@@ -1,7 +1,6 @@
 import Foundation
 @preconcurrency import AVFoundation
 import SwiftUI
-import Vision
 
 @MainActor
 class CameraManager: NSObject, ObservableObject {
@@ -299,8 +298,8 @@ class CameraManager: NSObject, ObservableObject {
         
         // Start timer
         recordingTime = 0
-        recordingTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { @Sendable _ in
-            Task { @MainActor [weak self] in
+        recordingTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
+            Task { @MainActor in
                 guard let self = self else { return }
                 self.recordingTime += 0.1
             }

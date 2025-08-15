@@ -251,23 +251,9 @@ struct UncertainSample: Codable {
     let swingMetadata: SwingMetadata?
 }
 
-struct UserFeedback: Codable {
-    let isCorrect: Bool
-    let correctedLabel: String?
-    let confidence: Int // 1-5 scale
-    let comments: String?
-    let submissionDate: Date
-}
+// UserFeedback is defined in Models/APIModels.swift
 
-struct SwingMetadata: Codable {
-    let videoDuration: TimeInterval?
-    let deviceModel: String?
-    let appVersion: String
-    let analysisDate: Date
-    let userSkillLevel: String? // "beginner", "intermediate", "advanced", "pro"
-    let clubType: String? // "driver", "iron", "wedge", etc.
-    let practiceOrRound: String? // "practice", "course"
-}
+// SwingMetadata is defined in Models/SupportingTypes.swift
 
 struct TrainingDataExport: Codable {
     let exportDate: Date

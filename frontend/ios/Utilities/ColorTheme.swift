@@ -16,7 +16,7 @@ extension Color {
     static let cardBackground = Color.white
     static let primaryText = Color.black
     static let secondaryText = Color.black.opacity(0.7)
-    static let accent = Color.forestGreen
+    static let accentPrimary = Color.forestGreen
     static let accentSecondary = Color.indigo
     static let success = Color.forestGreen
     static let warning = Color.orange
@@ -105,7 +105,7 @@ struct SecondaryButtonStyle: ButtonStyle {
         configuration.label
             .font(.headline)
             .fontWeight(.medium)
-            .foregroundColor(.accent)
+            .foregroundColor(.accentPrimary)
             .padding(.vertical, 14)
             .padding(.horizontal, 28)
             .background(
@@ -113,7 +113,7 @@ struct SecondaryButtonStyle: ButtonStyle {
                     .fill(Color.cardBackground)
                     .overlay(
                         RoundedRectangle(cornerRadius: 12)
-                            .stroke(Color.accent, lineWidth: 2)
+                            .stroke(Color.accentPrimary, lineWidth: 2)
                     )
             )
             .scaleEffect(configuration.isPressed ? 0.95 : 1.0)

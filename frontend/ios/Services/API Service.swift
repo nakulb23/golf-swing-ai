@@ -30,16 +30,12 @@ class APIService: ObservableObject {
             try? FileManager.default.removeItem(at: tempURL)
         }
         
-        return try await MainActor.run {
-            try await localSwingAnalyzer.analyzeSwing(from: tempURL)
-        }
+        return try await localSwingAnalyzer.analyzeSwing(from: tempURL)
     }
     
     func analyzeSwingFromURL(_ videoURL: URL) async throws -> SwingAnalysisResponse {
         print("🏌️ Analyzing swing from URL locally...")
-        return try await MainActor.run {
-            try await localSwingAnalyzer.analyzeSwing(from: videoURL)
-        }
+        return try await localSwingAnalyzer.analyzeSwing(from: videoURL)
     }
     
     // MARK: - Ball Tracking (Local Only)
@@ -103,69 +99,6 @@ enum APIError: LocalizedError {
     }
 }
 
-// MARK: - Local Ball Tracker
-@MainActor
-class LocalBallTracker: ObservableObject {
-    private let visionProcessor = VisionBallTracker()
-    
-    func trackBall(from videoURL: URL) async throws -> BallTrackingResponse {
-        print("🎾 Starting local ball tracking...")
-        
-        let asset = AVURLAsset(url: videoURL)
-        let duration = try await asset.load(.duration)
-        let frameRate = try await asset.load(.tracks).first?.nominalFrameRate ?? 30.0
-        
-        let generator = AVAssetImageGenerator(asset: asset)
-        generator.appliesPreferredTrackTransform = true
-        generator.requestedTimeToleranceBefore = .zero
-        generator.requestedTimeToleranceAfter = .zero
-        
-        var ballPositions: [[Double]] = []
-        var confidenceScores: [Double] = []
-        let totalFrames = Int(CMTimeGetSeconds(duration) * Double(frameRate))
-        
-        for frameIndex in 0..<totalFrames {
-            let time = CMTime(seconds: Double(frameIndex) / Double(frameRate), preferredTimescale: 600)
-            
-            do {
-                let result = try await generator.image(at: time)
-                let image = UIImage(cgImage: result.image)
-                
-                // Use Vision framework to detect ball
-                if let ballPosition = await visionProcessor.detectBall(in: image) {
-                    ballPositions.append([ballPosition.x, ballPosition.y])
-                    confidenceScores.append(ballPosition.confidence)
-                }
-            } catch {
-                // Frame extraction failed, skip this frame
-                continue
-            }
-        }
-        
-        return BallTrackingResponse(
-            ball_positions: ballPositions,
-            confidence_scores: confidenceScores,
-            frame_count: ballPositions.count,
-            fps: Float(frameRate),
-            tracking_quality: ballPositions.isEmpty ? "No ball detected" : "Good",
-            ball_visible_frames: ballPositions.count,
-            total_frames: totalFrames
-        )
-    }
-}
-
-// MARK: - Vision Ball Tracker
-class VisionBallTracker {
-    func detectBall(in image: UIImage) async -> (x: Double, y: Double, confidence: Double)? {
-        // Use Vision framework for circle detection
-        // This is a simplified implementation
-        // In production, use a trained Core ML model for golf ball detection
-        
-        // For now, return nil (no ball detected)
-        // A real implementation would use VNDetectContoursRequest or custom Core ML
-        return nil
-    }
-}
 
 // MARK: - Analysis History Manager
 @MainActor
@@ -242,7 +175,7 @@ class AnalysisHistoryManager: ObservableObject {
         try? FileManager.default.removeItem(at: videoURL)
     }
     
-    static func saveVideoToDocuments(videoData: Data, fileName: String) -> Bool {
+    nonisolated static func saveVideoToDocuments(videoData: Data, fileName: String) -> Bool {
         let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
         let fileURL = documentsPath.appendingPathComponent(fileName)
         
@@ -311,9 +244,3 @@ struct AnalysisHistoryEntry: Identifiable, Codable {
     }
 }
 
-// MARK: - Constants
-struct Constants {
-    // No server URLs needed for local-only operation
-    static let appVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
-    static let buildNumber = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "1"
-}

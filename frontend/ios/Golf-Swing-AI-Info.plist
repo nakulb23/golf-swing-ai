@@ -31,6 +31,10 @@
 	</dict>
 	<key>UIUserInterfaceStyle</key>
 	<string>Automatic</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Golf Swing AI needs camera access to record and analyze your golf swing videos.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Golf Swing AI may use the microphone to record audio with your golf swing videos for better analysis.</string>
 	<key>UISupportsDocumentBrowser</key>
 	<false/>
 	<key>LSSupportsOpeningDocumentsInPlace</key>

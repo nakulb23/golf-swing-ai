@@ -4,7 +4,6 @@ import Accelerate
 
 // MARK: - Core ML Model Input
 /// Input features for the swing analysis model
-@available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
 class SwingAnalysisModelInput: MLFeatureProvider {
     /// 35 physics-based features extracted from pose data
     var physics_features: MLMultiArray
@@ -43,7 +42,6 @@ class SwingAnalysisModelInput: MLFeatureProvider {
 
 // MARK: - Core ML Model Output
 /// Output from the swing analysis model
-@available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
 class SwingAnalysisModelOutput: MLFeatureProvider {
     /// Predicted swing classification
     let classLabel: String
@@ -85,8 +83,7 @@ class SwingAnalysisModelOutput: MLFeatureProvider {
 }
 
 // MARK: - Swing Analysis Model Wrapper
-@available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
-class SwingAnalysisModel {
+class SwingAnalysisModelWrapper {
     private let model: MLModel
     
     /// Feature normalization parameters
@@ -112,40 +109,87 @@ class SwingAnalysisModel {
     }
     
     /// Load model from bundle
-    static func loadFromBundle() throws -> SwingAnalysisModel {
-        guard let modelURL = Bundle.main.url(forResource: "SwingAnalysisModel", withExtension: "mlmodelc") else {
-            throw SwingAnalysisError.modelNotFound
+    static func loadFromBundle() throws -> SwingAnalysisModelWrapper {
+        var model: MLModel?
+        
+        // Try to load compiled model first (.mlmodelc)
+        if let compiledModelURL = Bundle.main.url(forResource: "SwingAnalysisModel", withExtension: "mlmodelc") {
+            do {
+                model = try MLModel(contentsOf: compiledModelURL)
+                print("✅ SwingAnalysisModel: Loaded compiled model (.mlmodelc)")
+            } catch {
+                print("⚠️ Failed to load compiled model: \(error)")
+            }
         }
         
-        let model = try MLModel(contentsOf: modelURL)
+        // Try to load uncompiled model (.mlmodel)
+        if model == nil, let modelURL = Bundle.main.url(forResource: "SwingAnalysisModel", withExtension: "mlmodel") {
+            do {
+                model = try MLModel(contentsOf: modelURL)
+                print("✅ SwingAnalysisModel: Loaded uncompiled model (.mlmodel)")
+            } catch {
+                print("⚠️ Failed to load uncompiled model: \(error)")
+            }
+        }
+        
+        // Try package model (.mlpackage)
+        if model == nil, let packageURL = Bundle.main.url(forResource: "SwingAnalysisModel", withExtension: "mlpackage") {
+            do {
+                model = try MLModel(contentsOf: packageURL)
+                print("✅ SwingAnalysisModel: Loaded package model (.mlpackage)")
+            } catch {
+                print("⚠️ Failed to load package model: \(error)")
+            }
+        }
+        
+        guard let loadedModel = model else {
+            print("❌ SwingAnalysisModel not found in any format (.mlmodelc, .mlmodel, .mlpackage)")
+            throw SwingAnalysisError.modelNotFound
+        }
         
         // Load scaler if available
         let scalerPath = Bundle.main.path(forResource: "scaler_metadata", ofType: "json")
         
-        return SwingAnalysisModel(model: model, scalerPath: scalerPath)
+        return SwingAnalysisModelWrapper(model: loadedModel, scalerPath: scalerPath)
     }
     
     /// Predict swing type from features
-    func predict(features: [Double]) throws -> SwingAnalysisModelOutput {
+    func predict(features: [Double]) async throws -> SwingAnalysisModelOutput {
+        print("🔍 SwingAnalysisModel.predict called with \(features.count) features")
+        
         // Normalize features
         let normalizedFeatures = featureScaler.normalize(features)
+        print("🔍 Features normalized successfully")
         
         // Create input
-        let input = try SwingAnalysisModelInput(features: normalizedFeatures)
-        
-        // Run prediction
-        let output = try model.prediction(from: input)
-        
-        // Parse output
-        return try SwingAnalysisModelOutput(features: output)
+        do {
+            let input = try SwingAnalysisModelInput(features: normalizedFeatures)
+            print("🔍 Model input created successfully")
+            
+            // Run prediction
+            let output = try await model.prediction(from: input)
+            print("🔍 Model prediction completed successfully")
+            
+            // Parse output
+            let result = try SwingAnalysisModelOutput(features: output)
+            print("🔍 Model output parsed successfully: \(result.classLabel)")
+            return result
+            
+        } catch let error as SwingAnalysisError {
+            print("❌ SwingAnalysisError in prediction: \(error.errorDescription ?? error.localizedDescription)")
+            throw error
+        } catch {
+            print("❌ Unexpected error in prediction: \(error)")
+            throw SwingAnalysisError.predictionFailed
+        }
     }
     
     /// Batch prediction for multiple swings
-    func predict(batchFeatures: [[Double]]) throws -> [SwingAnalysisModelOutput] {
+    func predict(batchFeatures: [[Double]]) async throws -> [SwingAnalysisModelOutput] {
         var results: [SwingAnalysisModelOutput] = []
         
         for features in batchFeatures {
-            let result = try predict(features: features)
+            let result = try await predict(features: features)
             results.append(result)
         }
         

@@ -3,7 +3,6 @@ import Foundation
 import PhotosUI
 import AVFoundation
 import StoreKit
-import Vision
 import CoreML
 import simd
 
@@ -39,53 +38,72 @@ class VideoManager: ObservableObject {
     @Published var errorMessage: String?
     
     init() {
-        // Add mock videos for development
-        loadMockVideos()
+        loadUserVideos()
     }
     
-    private func loadMockVideos() {
+    private func loadUserVideos() {
+        // Load actual user videos from documents directory
+        // Start with empty array - videos will be added when user records them
+        userVideos = []
+        loadExistingVideos()
+    }
+    
+    private func loadExistingVideos() {
         let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
         
-        userVideos = [
-            UserVideo(
-                name: "Driver Swing - Range Session",
-                url: documentsPath.appendingPathComponent("mock_driver.mov"),
-                duration: 3.2,
-                createdAt: Calendar.current.date(byAdding: .day, value: -1, to: Date()) ?? Date(),
-                fileSize: 15_000_000
-            ),
-            UserVideo(
-                name: "Iron Shot - Practice",
-                url: documentsPath.appendingPathComponent("mock_iron.mov"),
-                duration: 2.8,
-                createdAt: Calendar.current.date(byAdding: .day, value: -3, to: Date()) ?? Date(),
-                fileSize: 12_000_000
-            ),
-            UserVideo(
-                name: "Wedge Swing - Short Game",
-                url: documentsPath.appendingPathComponent("mock_wedge.mov"),
-                duration: 2.1,
-                createdAt: Calendar.current.date(byAdding: .weekOfYear, value: -1, to: Date()) ?? Date(),
-                fileSize: 8_500_000
-            )
-        ]
+        do {
+            let fileURLs = try FileManager.default.contentsOfDirectory(at: documentsPath, includingPropertiesForKeys: [.fileSizeKey, .contentModificationDateKey], options: .skipsHiddenFiles)
+            
+            for fileURL in fileURLs {
+                if fileURL.pathExtension.lowercased() == "mov" || fileURL.pathExtension.lowercased() == "mp4" {
+                    let resourceValues = try fileURL.resourceValues(forKeys: [.fileSizeKey, .contentModificationDateKey])
+                    
+                    let video = UserVideo(
+                        name: fileURL.deletingPathExtension().lastPathComponent,
+                        url: fileURL,
+                        duration: 0, // Will be calculated when needed
+                        createdAt: resourceValues.contentModificationDate ?? Date(),
+                        fileSize: Int64(resourceValues.fileSize ?? 0)
+                    )
+                    userVideos.append(video)
+                }
+            }
+            
+            // Sort by creation date, newest first
+            userVideos.sort { $0.createdAt > $1.createdAt }
+            
+        } catch {
+            print("Error loading existing videos: \(error)")
+        }
     }
     
     func addVideo(from url: URL) async {
         isLoading = true
         
-        // Simulate processing time
-        try? await Task.sleep(nanoseconds: 2_000_000_000)
+        do {
+            // Get actual video properties
+            let asset = AVURLAsset(url: url)
+            let duration = try await asset.load(.duration)
+            let durationSeconds = CMTimeGetSeconds(duration)
+            
+            // Get file size
+            let resourceValues = try url.resourceValues(forKeys: [.fileSizeKey])
+            let fileSize = Int64(resourceValues.fileSize ?? 0)
+            
+            let newVideo = UserVideo(
+                name: "Golf Swing \(DateFormatter.localizedString(from: Date(), dateStyle: .short, timeStyle: .short))",
+                url: url,
+                duration: durationSeconds,
+                createdAt: Date(),
+                fileSize: fileSize
+            )
+            
+            userVideos.insert(newVideo, at: 0)
+        } catch {
+            print("Error processing video: \(error)")
+            errorMessage = "Failed to process video"
+        }
         
-        let newVideo = UserVideo(
-            name: "New Golf Swing",
-            url: url,
-            duration: 3.0,
-            createdAt: Date(),
-            fileSize: 14_000_000
-        )
-        
-        userVideos.insert(newVideo, at: 0)
         isLoading = false
     }
     
