@@ -187,23 +187,23 @@ struct BallTrackingView: View {
         )
         
         let trajectoryData = TrajectoryData(
-            has_valid_trajectory: true,
-            confidence_score: 0.89,
-            smoothness_score: 0.92
+            flight_time: 3.2,
+            has_valid_trajectory: true
         )
         
         let flightAnalysis = FlightAnalysis(
             launch_speed_ms: 28.5,
             launch_angle_degrees: 12.8,
+            trajectory_type: "Mid-height drive with slight draw",
             estimated_max_height: 15.2,
-            estimated_range: 165.0,
-            trajectory_type: "Mid-height drive with slight draw"
+            estimated_range: 165.0
         )
         
         trackingResult = BallTrackingResponse(
             detection_summary: detectionSummary,
+            flight_analysis: flightAnalysis,
             trajectory_data: trajectoryData,
-            flight_analysis: flightAnalysis
+            visualization_created: true
         )
         
         errorMessage = nil
@@ -1654,11 +1654,14 @@ struct RealVideoPlayerWithOverlay: View {
             
             // Setup time observation for progress tracking
             let interval = CMTime(seconds: 0.1, preferredTimescale: CMTimeScale(NSEC_PER_SEC))
+            let currentPlayer = self.player
             player?.addPeriodicTimeObserver(forInterval: interval, queue: .main) { time in
-                if let duration = player?.currentItem?.duration {
-                    let progress = time.seconds / duration.seconds
-                    if !progress.isNaN && !progress.isInfinite {
-                        playbackProgress = min(max(progress, 0), 1)
+                Task { @MainActor in
+                    if let duration = currentPlayer?.currentItem?.duration {
+                        let progress = time.seconds / duration.seconds
+                        if !progress.isNaN && !progress.isInfinite {
+                            playbackProgress = min(max(progress, 0), 1)
+                        }
                     }
                 }
             }
