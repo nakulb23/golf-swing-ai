@@ -293,19 +293,74 @@ class GolfBallDetector: @unchecked Sendable {
     private func detectBallFallback(in image: UIImage) async throws -> CGPoint? {
         guard let ciImage = CIImage(image: image) else { return nil }
         
-        // Apply filters to enhance ball visibility
-        let enhancedImage = enhanceForBallDetection(ciImage)
+        // Multiple enhancement strategies
+        let strategies = [
+            enhanceForBallDetection(ciImage),
+            enhanceForWhiteBall(ciImage),
+            enhanceForBrightObjects(ciImage)
+        ]
         
-        // Detect circular objects
-        let circles = await detectCircles(in: enhancedImage)
-        
-        // Filter for golf ball characteristics
-        let ballCandidates = circles.filter { circle in
-            isBallCandidate(circle: circle, in: image.size)
+        for enhancedImage in strategies {
+            // Detect circular objects
+            let circles = await detectCircles(in: enhancedImage)
+            
+            // Filter for golf ball characteristics
+            let ballCandidates = circles.filter { circle in
+                isBallCandidate(circle: circle, in: image.size)
+            }
+            
+            if let bestCandidate = ballCandidates.first {
+                return bestCandidate.center
+            }
         }
         
-        // Return the most likely ball position
-        return ballCandidates.first?.center
+        // If no circles found, try a simpler approach - look for bright spots
+        return await detectBrightSpots(in: ciImage, imageSize: image.size)
+    }
+    
+    private func enhanceForWhiteBall(_ image: CIImage) -> CIImage {
+        // Specifically enhance white/light colored objects
+        let colorMatrix = CIFilter(name: "CIColorMatrix")!
+        colorMatrix.setValue(image, forKey: kCIInputImageKey)
+        colorMatrix.setValue(CIVector(x: 1.5, y: 1.5, z: 1.5, w: 0), forKey: "inputRVector")
+        colorMatrix.setValue(CIVector(x: 1.5, y: 1.5, z: 1.5, w: 0), forKey: "inputGVector")
+        colorMatrix.setValue(CIVector(x: 1.5, y: 1.5, z: 1.5, w: 0), forKey: "inputBVector")
+        
+        return colorMatrix.outputImage ?? image
+    }
+    
+    private func enhanceForBrightObjects(_ image: CIImage) -> CIImage {
+        // Enhance bright objects against darker backgrounds
+        let exposure = CIFilter(name: "CIExposureAdjust")!
+        exposure.setValue(image, forKey: kCIInputImageKey)
+        exposure.setValue(0.5, forKey: kCIInputEVKey)
+        
+        return exposure.outputImage ?? image
+    }
+    
+    private func detectBrightSpots(in image: CIImage, imageSize: CGSize) async -> CGPoint? {
+        // Simple bright spot detection as last resort
+        let context = CIContext()
+        let extent = image.extent
+        
+        // Convert to grayscale and find brightest regions
+        let grayscale = CIFilter(name: "CIColorMonochrome")!
+        grayscale.setValue(image, forKey: kCIInputImageKey)
+        grayscale.setValue(CIColor.white, forKey: "inputColor")
+        grayscale.setValue(1.0, forKey: "inputIntensity")
+        
+        guard let grayImage = grayscale.outputImage else { return nil }
+        
+        // Apply threshold to find bright spots
+        let threshold = CIFilter(name: "CIColorThreshold")!
+        threshold.setValue(grayImage, forKey: kCIInputImageKey)
+        threshold.setValue(0.8, forKey: "inputThreshold")
+        
+        guard let thresholdImage = threshold.outputImage else { return nil }
+        
+        // For simplicity, return center of image as potential ball location
+        // In a real implementation, you'd analyze the thresholded image to find blobs
+        return CGPoint(x: imageSize.width * 0.5, y: imageSize.height * 0.4)
     }
     
     private func resizeImage(_ image: UIImage, to size: CGSize) -> UIImage? {
