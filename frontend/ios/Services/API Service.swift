@@ -14,6 +14,9 @@ class APIService: ObservableObject {
     private let localBallTracker = LocalBallTracker()
     private let localCaddieChat = LocalCaddieChat()
     
+    // Enhanced golf chat (Claude-style responses)
+    private let enhancedGolfChat = EnhancedGolfChat.shared
+    
     private init() {
         print("📱 Local-only API Service initialized")
         print("📱 All analysis runs on-device for privacy and performance")
@@ -56,10 +59,12 @@ class APIService: ObservableObject {
         return try await localBallTracker.trackBall(from: videoURL)
     }
     
-    // MARK: - Caddie Chat (Local Only)
+    // MARK: - Caddie Chat (Enhanced Local Chat with Claude-Style Responses)
     func sendChatMessage(_ message: String) async throws -> ChatResponse {
-        print("💬 Processing chat message locally...")
-        return try await localCaddieChat.sendChatMessage(message)
+        print("💬 Processing chat message with enhanced golf AI...")
+        
+        // Use enhanced local chat with Claude-style conversational responses
+        return try await enhancedGolfChat.sendChatMessage(message)
     }
     
     // MARK: - Helper Methods

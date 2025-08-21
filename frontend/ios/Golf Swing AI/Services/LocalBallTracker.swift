@@ -88,7 +88,7 @@ class LocalBallTracker: ObservableObject {
     }
     
     func trackBall(from videoURL: URL) async throws -> BallTrackingResponse {
-        print("🏌️ Starting local ball tracking...")
+        print("🏌️ Starting optimized ball tracking...")
         
         defer {
             Task { @MainActor in
@@ -101,58 +101,56 @@ class LocalBallTracker: ObservableObject {
             self.trackingProgress = 0.0
         }
         
-        // Extract frames with error handling
-        let frames: [(image: UIImage, timestamp: Double)]
-        do {
-            frames = try await extractFrames(from: videoURL, fps: 30) // Reduced FPS for stability
-            print("📹 Extracted \(frames.count) frames for ball tracking")
-            
-            guard !frames.isEmpty else {
-                throw BallTrackingError.noFramesExtracted
-            }
-        } catch {
-            print("❌ Frame extraction failed: \(error)")
-            throw BallTrackingError.frameExtractionFailed(error)
+        // Step 1: Compress and optimize video for ball tracking
+        await MainActor.run { self.trackingProgress = 0.1 }
+        let optimizedVideoURL = try await compressVideoForBallTracking(videoURL)
+        print("✅ Video compressed for ball tracking")
+        
+        // Step 2: Extract frames optimally (lower resolution, lower FPS)
+        await MainActor.run { self.trackingProgress = 0.2 }
+        let frames = try await extractFramesOptimized(from: optimizedVideoURL, targetFPS: 10) // Much lower FPS
+        print("📹 Extracted \(frames.count) optimized frames")
+        
+        guard !frames.isEmpty else {
+            throw BallTrackingError.noFramesExtracted
         }
         
-        // Detect ball in each frame with error handling
-        var ballPositions: [BallPosition] = []
+        // Step 3: Batch process frames for faster detection
+        await MainActor.run { self.trackingProgress = 0.3 }
+        let ballPositions = try await detectBallInBatches(frames: frames)
         
-        for (index, frame) in frames.enumerated() {
-            do {
-                if let position = try await ballDetector.detectBall(in: frame.image) {
-                    ballPositions.append(BallPosition(
-                        frameIndex: index,
-                        timestamp: frame.timestamp,
-                        position: position,
-                        confidence: 0.9
-                    ))
-                }
-            } catch {
-                print("⚠️ Ball detection failed for frame \(index): \(error)")
-                // Continue with next frame rather than crashing
-            }
-            
-            await MainActor.run {
-                self.trackingProgress = Double(index) / Double(frames.count)
-            }
-        }
+        await MainActor.run { self.trackingProgress = 0.9 }
+        print("⚾ Detected ball in \(ballPositions.count) frames out of \(frames.count)")
+        
+        // Clean up optimized video
+        try? FileManager.default.removeItem(at: optimizedVideoURL)
         
         print("⚾ Detected ball in \(ballPositions.count) frames out of \(frames.count)")
         
-        // Ensure we have some ball detections
-        guard !ballPositions.isEmpty else {
-            throw BallTrackingError.noBallDetected
+        // If no ball detections found, we'll need manual selection
+        if ballPositions.isEmpty {
+            print("🎯 No automatic ball detections found - manual selection needed")
+            // Return a special response indicating manual selection is required
+            return BallTrackingResponse(
+                detection_summary: DetectionSummary(
+                    total_frames: frames.count,
+                    ball_detected_frames: 0,
+                    detection_rate: 0.0,
+                    trajectory_points: 0
+                ),
+                flight_analysis: nil,
+                trajectory_data: TrajectoryData(
+                    flight_time: 0.0,
+                    has_valid_trajectory: false
+                ),
+                visualization_created: false,
+                requires_manual_selection: true,
+                extracted_frames: frames // Include frames for manual selection
+            )
         }
         
-        // Analyze trajectory with error handling
-        let trajectory: BallTrajectory
-        do {
-            trajectory = trajectoryAnalyzer.analyzeTrajectory(from: ballPositions)
-        } catch {
-            print("❌ Trajectory analysis failed: \(error)")
-            throw BallTrackingError.trajectoryAnalysisFailed(error)
-        }
+        // Analyze trajectory
+        let trajectory = trajectoryAnalyzer.analyzeTrajectory(from: ballPositions)
         
         await MainActor.run {
             self.detectedTrajectory = trajectory
@@ -163,38 +161,203 @@ class LocalBallTracker: ObservableObject {
         return createTrackingResponse(trajectory: trajectory, frameCount: frames.count)
     }
     
-    nonisolated private func extractFrames(from videoURL: URL, fps: Double) async throws -> [(image: UIImage, timestamp: Double)] {
+    // MARK: - Manual Ball Selection
+    
+    func processManualSelections(
+        from selections: [ManualBallSelection], 
+        videoFrames: [(image: UIImage, timestamp: Double)]
+    ) async throws -> BallTrackingResponse {
+        print("🎯 Processing \(selections.count) manual ball selections...")
+        
+        // Convert manual selections to ball positions
+        let ballPositions = selections.map { selection in
+            BallPosition(
+                frameIndex: selection.frameIndex,
+                timestamp: selection.timestamp,
+                position: selection.position,
+                confidence: 1.0 // Manual selections have 100% confidence
+            )
+        }
+        
+        // Ensure we have enough positions for trajectory analysis
+        guard ballPositions.count >= 3 else {
+            throw BallTrackingError.trajectoryAnalysisFailed(NSError(
+                domain: "ManualSelection", 
+                code: -1, 
+                userInfo: [NSLocalizedDescriptionKey: "Need at least 3 manual ball selections for trajectory analysis"]
+            ))
+        }
+        
+        print("🎯 Manual selections converted to \(ballPositions.count) ball positions")
+        
+        // Analyze trajectory from manual selections
+        let trajectory = trajectoryAnalyzer.analyzeTrajectory(from: ballPositions)
+        
+        print("📊 Trajectory analysis from manual selections complete")
+        print("   Launch speed: \(trajectory.flightMetrics?.launchSpeed ?? 0) m/s")
+        print("   Launch angle: \(trajectory.flightMetrics?.launchAngle ?? 0)°")
+        print("   Max height: \(trajectory.flightMetrics?.maxHeight ?? 0) m")
+        print("   Range: \(trajectory.flightMetrics?.estimatedDistance ?? 0) m")
+        
+        await MainActor.run {
+            self.detectedTrajectory = trajectory
+        }
+        
+        // Create response with manual selection data
+        return createTrackingResponse(trajectory: trajectory, frameCount: videoFrames.count, isManualSelection: true)
+    }
+    
+    // MARK: - Video Compression for Ball Tracking
+    
+    private func compressVideoForBallTracking(_ inputURL: URL) async throws -> URL {
+        let outputURL = FileManager.default.temporaryDirectory.appendingPathComponent("compressed_ball_tracking_\(UUID().uuidString).mp4")
+        
+        let asset = AVURLAsset(url: inputURL)
+        
+        guard let exportSession = AVAssetExportSession(asset: asset, presetName: AVAssetExportPresetMediumQuality) else {
+            throw BallTrackingError.frameExtractionFailed(NSError(domain: "BallTracking", code: -1, userInfo: [NSLocalizedDescriptionKey: "Failed to create export session"]))
+        }
+        
+        exportSession.outputURL = outputURL
+        exportSession.outputFileType = .mp4
+        
+        // Optimize for ball tracking - lower resolution, maintain aspect ratio
+        exportSession.videoComposition = await createBallTrackingVideoComposition(for: asset)
+        
+        try await exportSession.export(to: outputURL, as: .mp4)
+        
+        return outputURL
+    }
+    
+    private func createBallTrackingVideoComposition(for asset: AVURLAsset) async -> AVVideoComposition? {
+        do {
+            let videoTracks = try await asset.loadTracks(withMediaType: .video)
+            guard let videoTrack = videoTracks.first else { return nil }
+            
+            let videoComposition = AVMutableVideoComposition()
+            videoComposition.frameDuration = CMTime(value: 1, timescale: 10) // 10 FPS
+            
+            // Reduce resolution for faster processing (max 720p)
+            let naturalSize = try await videoTrack.load(.naturalSize)
+            let maxDimension: CGFloat = 720
+            let scale = min(maxDimension / naturalSize.width, maxDimension / naturalSize.height)
+            videoComposition.renderSize = CGSize(
+                width: naturalSize.width * scale,
+                height: naturalSize.height * scale
+            )
+            
+            let instruction = AVMutableVideoCompositionInstruction()
+            let duration = try await asset.load(.duration)
+            instruction.timeRange = CMTimeRange(start: .zero, duration: duration)
+            
+            let transformer = AVMutableVideoCompositionLayerInstruction(assetTrack: videoTrack)
+            let preferredTransform = try await videoTrack.load(.preferredTransform)
+            transformer.setTransform(preferredTransform, at: .zero)
+            
+            instruction.layerInstructions = [transformer]
+            videoComposition.instructions = [instruction]
+            
+            return videoComposition
+        } catch {
+            print("❌ Failed to create video composition: \(error)")
+            return nil
+        }
+    }
+    
+    // MARK: - Optimized Frame Extraction
+    
+    private func extractFramesOptimized(from videoURL: URL, targetFPS: Double) async throws -> [(image: UIImage, timestamp: Double)] {
         let asset = AVURLAsset(url: videoURL)
         let duration = try await asset.load(.duration)
         
-        var frames: [(image: UIImage, timestamp: Double)] = []
         let generator = AVAssetImageGenerator(asset: asset)
         generator.appliesPreferredTrackTransform = true
-        generator.requestedTimeToleranceBefore = CMTime(value: 1, timescale: 600)
-        generator.requestedTimeToleranceAfter = CMTime(value: 1, timescale: 600)
+        generator.requestedTimeToleranceBefore = .zero
+        generator.requestedTimeToleranceAfter = .zero
         
-        let totalSeconds = CMTimeGetSeconds(duration)
-        let frameInterval = 1.0 / fps
-        let frameCount = Int(totalSeconds * fps)
+        // Set maximum image size for faster processing
+        generator.maximumSize = CGSize(width: 640, height: 360) // Much smaller for speed
         
-        for i in 0..<frameCount {
-            let timestamp = Double(i) * frameInterval
-            let time = CMTime(seconds: timestamp, preferredTimescale: 600)
-            
-            do {
-                let cgImage = try await generator.image(at: time).image
-                let image = UIImage(cgImage: cgImage)
-                frames.append((image: image, timestamp: timestamp))
-            } catch {
-                // Skip frames that fail to extract
-                continue
+        let frameInterval = 1.0 / targetFPS
+        let totalFrames = Int(duration.seconds * targetFPS)
+        
+        // Use concurrent processing for frame extraction
+        return try await withThrowingTaskGroup(of: (UIImage, Double).self) { group in
+            for i in 0..<totalFrames {
+                let timestamp = Double(i) * frameInterval
+                let time = CMTime(seconds: timestamp, preferredTimescale: 600)
+                
+                group.addTask(priority: .medium) {
+                    let cgImage = try await generator.image(at: time).image
+                    let image = UIImage(cgImage: cgImage)
+                    return (image, timestamp)
+                }
             }
+            
+            var extractedFrames: [(image: UIImage, timestamp: Double)] = []
+            for try await frame in group {
+                extractedFrames.append((image: frame.0, timestamp: frame.1))
+            }
+            
+            // Sort by timestamp
+            return extractedFrames.sorted { $0.timestamp < $1.timestamp }
         }
-        
-        return frames
     }
     
-    private func createTrackingResponse(trajectory: BallTrajectory, frameCount: Int) -> BallTrackingResponse {
+    // MARK: - Batch Ball Detection
+    
+    private func detectBallInBatches(frames: [(image: UIImage, timestamp: Double)]) async throws -> [BallPosition] {
+        let batchSize = 5 // Process 5 frames at a time
+        var allBallPositions: [BallPosition] = []
+        
+        let batches = frames.chunked(into: batchSize)
+        
+        for (batchIndex, batch) in batches.enumerated() {
+            let batchPositions = try await processBatch(batch, batchIndex: batchIndex)
+            allBallPositions.append(contentsOf: batchPositions)
+            
+            // Update progress
+            let progress = 0.3 + (0.6 * Double(batchIndex) / Double(batches.count))
+            await MainActor.run { self.trackingProgress = progress }
+        }
+        
+        return allBallPositions
+    }
+    
+    private func processBatch(_ batch: [(image: UIImage, timestamp: Double)], batchIndex: Int) async throws -> [BallPosition] {
+        return try await withThrowingTaskGroup(of: BallPosition?.self) { group in
+            for (frameIndex, frame) in batch.enumerated() {
+                group.addTask(priority: .medium) { [weak self] in
+                    guard let self = self else { return nil }
+                    
+                    do {
+                        if let position = try await self.ballDetector.detectBall(in: frame.image) {
+                            return BallPosition(
+                                frameIndex: batchIndex * 5 + frameIndex,
+                                timestamp: frame.timestamp,
+                                position: position,
+                                confidence: 0.9
+                            )
+                        }
+                    } catch {
+                        print("⚠️ Ball detection failed for frame \(frameIndex): \(error)")
+                    }
+                    return nil
+                }
+            }
+            
+            var positions: [BallPosition] = []
+            for try await position in group {
+                if let position = position {
+                    positions.append(position)
+                }
+            }
+            return positions
+        }
+    }
+    
+    
+    private func createTrackingResponse(trajectory: BallTrajectory, frameCount: Int, isManualSelection: Bool = false) -> BallTrackingResponse {
         let detectionRate = Double(trajectory.positions.count) / Double(frameCount)
         
         let summary = DetectionSummary(
@@ -223,7 +386,9 @@ class LocalBallTracker: ObservableObject {
             detection_summary: summary,
             flight_analysis: flightAnalysis,
             trajectory_data: trajectoryData,
-            visualization_created: true
+            visualization_created: true,
+            requires_manual_selection: false,
+            extracted_frames: nil
         )
     }
 }
@@ -340,9 +505,6 @@ class GolfBallDetector: @unchecked Sendable {
     
     private func detectBrightSpots(in image: CIImage, imageSize: CGSize) async -> CGPoint? {
         // Simple bright spot detection as last resort
-        let context = CIContext()
-        let extent = image.extent
-        
         // Convert to grayscale and find brightest regions
         let grayscale = CIFilter(name: "CIColorMonochrome")!
         grayscale.setValue(image, forKey: kCIInputImageKey)
@@ -356,7 +518,7 @@ class GolfBallDetector: @unchecked Sendable {
         threshold.setValue(grayImage, forKey: kCIInputImageKey)
         threshold.setValue(0.8, forKey: "inputThreshold")
         
-        guard let thresholdImage = threshold.outputImage else { return nil }
+        guard threshold.outputImage != nil else { return nil }
         
         // For simplicity, return center of image as potential ball location
         // In a real implementation, you'd analyze the thresholded image to find blobs
@@ -653,6 +815,13 @@ struct BallPosition {
     let confidence: Float
 }
 
+struct ManualBallSelection {
+    let frameIndex: Int
+    let timestamp: Double
+    let position: CGPoint
+    let selectionDate: Date
+}
+
 struct BallTrajectory {
     let positions: [BallPosition]
     let isValid: Bool
@@ -725,6 +894,16 @@ class BallTrackingVisualizer {
 }
 
 // MARK: - Core ML Support
+
+// MARK: - Array Extension for Batching
+
+extension Array {
+    func chunked(into size: Int) -> [[Element]] {
+        return stride(from: 0, to: count, by: size).map {
+            Array(self[$0..<Swift.min($0 + size, count)])
+        }
+    }
+}
 
 extension UIImage {
     func pixelBuffer() -> CVPixelBuffer? {

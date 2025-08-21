@@ -12,8 +12,10 @@ struct BallTrackingView: View {
     @State private var showPhysicsInfo = false
     @State private var errorMessage: String?
     @State private var showManualSelection = false
+    @State private var showManualSelectionView = false
     @State private var manualBallPositions: [CGPoint] = []
     @State private var currentVideoURL: URL?
+    @State private var extractedFrames: [(image: UIImage, timestamp: Double)] = []
     
     var body: some View {
         NavigationView {
@@ -157,6 +159,19 @@ struct BallTrackingView: View {
                 }
             }
         }
+        .sheet(isPresented: $showManualSelectionView) {
+            if !extractedFrames.isEmpty {
+                ManualBallSelectionView(
+                    videoFrames: extractedFrames,
+                    onComplete: { selections in
+                        handleManualSelections(selections)
+                    },
+                    onCancel: {
+                        showManualSelectionView = false
+                    }
+                )
+            }
+        }
         .onChange(of: selectedVideo) { oldValue, newItem in
             Task {
                 if let data = try? await newItem?.loadTransferable(type: Data.self) {
@@ -171,10 +186,35 @@ struct BallTrackingView: View {
     }
     
     private func openManualSelection(videoURL: URL) {
-        // TODO: Implement manual ball selection view
         print("🎯 Opening manual ball selection for video: \(videoURL)")
-        // For now, create a mock result with better metrics
-        createImprovedMockResult()
+        showManualSelectionView = true
+    }
+    
+    private func handleManualSelections(_ selections: [ManualBallSelection]) {
+        showManualSelectionView = false
+        isTracking = true
+        errorMessage = nil
+        
+        Task {
+            do {
+                let result = try await LocalBallTracker().processManualSelections(
+                    from: selections,
+                    videoFrames: extractedFrames
+                )
+                
+                await MainActor.run {
+                    self.trackingResult = result
+                    self.isTracking = false
+                    self.showManualSelection = false
+                    print("✅ Manual ball tracking complete: \(selections.count) selections processed")
+                }
+            } catch {
+                await MainActor.run {
+                    self.errorMessage = "Manual ball tracking failed: \(error.localizedDescription)"
+                    self.isTracking = false
+                }
+            }
+        }
     }
     
     private func createImprovedMockResult() {
@@ -227,13 +267,19 @@ struct BallTrackingView: View {
                 let result = try await apiService.trackBall(videoData: data)
                 
                 await MainActor.run {
-                    // Check if tracking was successful
-                    if result.detection_summary.ball_detected_frames < 5 || result.detection_summary.detection_rate < 0.1 {
-                        // Poor detection - offer manual selection
-                        self.errorMessage = "Automatic ball detection found only \(result.detection_summary.ball_detected_frames) frames. Would you like to manually select the ball?"
+                    // Check if manual selection is required
+                    if result.requires_manual_selection == true {
+                        self.errorMessage = "Automatic ball detection was unable to find the golf ball in your video. Tap 'Manual Ball Selection' to select the ball manually in key frames."
                         self.showManualSelection = true
+                        self.extractedFrames = result.extracted_frames ?? []
+                    } else if result.detection_summary.ball_detected_frames < 5 || result.detection_summary.detection_rate < 0.1 {
+                        // Poor detection - offer manual selection
+                        self.errorMessage = "Automatic ball detection found only \(result.detection_summary.ball_detected_frames) frames (\(String(format: "%.1f", result.detection_summary.detection_rate * 100))% success rate). Would you like to manually select the ball for better accuracy?"
+                        self.showManualSelection = true
+                        self.extractedFrames = result.extracted_frames ?? []
                     } else {
                         self.trackingResult = result
+                        print("✅ Ball tracking successful: \(result.detection_summary.ball_detected_frames) detections")
                     }
                     self.isTracking = false
                 }
@@ -1684,6 +1730,217 @@ struct RealVideoPlayerWithOverlay: View {
         player?.pause()
         if let url = videoURL {
             try? FileManager.default.removeItem(at: url)
+        }
+    }
+}
+
+// MARK: - Manual Ball Selection Views
+
+struct ManualBallSelectionView: View {
+    let videoFrames: [(image: UIImage, timestamp: Double)]
+    let onComplete: ([ManualBallSelection]) -> Void
+    let onCancel: () -> Void
+    
+    @State private var currentFrameIndex = 0
+    @State private var ballSelections: [ManualBallSelection] = []
+    @State private var selectedPoints: [CGPoint] = []
+    @State private var frameSize: CGSize = .zero
+    
+    private let minimumSelections = 3
+    
+    var body: some View {
+        NavigationView {
+            VStack(spacing: 20) {
+                // Instructions
+                VStack(spacing: 12) {
+                    Text("Manual Ball Selection")
+                        .font(.title2)
+                        .fontWeight(.bold)
+                    
+                    Text("Tap on the golf ball in each frame. You need at least \(minimumSelections) selections for trajectory analysis.")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal)
+                }
+                
+                // Progress
+                VStack(spacing: 8) {
+                    HStack {
+                        Text("Frame \(currentFrameIndex + 1) of \(videoFrames.count)")
+                            .font(.headline)
+                        
+                        Spacer()
+                        
+                        Text("Selected: \(ballSelections.count)")
+                            .font(.subheadline)
+                            .foregroundColor(ballSelections.count >= minimumSelections ? .green : .orange)
+                    }
+                    
+                    ProgressView(value: Double(currentFrameIndex), total: Double(videoFrames.count - 1))
+                        .progressViewStyle(LinearProgressViewStyle(tint: .orange))
+                }
+                .padding(.horizontal)
+                
+                // Frame Display with Ball Selection
+                if currentFrameIndex < videoFrames.count {
+                    BallSelectionFrameView(
+                        frame: videoFrames[currentFrameIndex],
+                        frameIndex: currentFrameIndex,
+                        onBallSelected: { point in
+                            addBallSelection(at: point)
+                        },
+                        selectedPoint: selectedPoints.count > currentFrameIndex ? selectedPoints[currentFrameIndex] : nil
+                    )
+                    .frame(maxHeight: 400)
+                }
+                
+                // Navigation Controls
+                HStack(spacing: 20) {
+                    Button("Previous") {
+                        if currentFrameIndex > 0 {
+                            currentFrameIndex -= 1
+                        }
+                    }
+                    .disabled(currentFrameIndex == 0)
+                    
+                    Button("Skip Frame") {
+                        nextFrame()
+                    }
+                    
+                    Button("Next") {
+                        nextFrame()
+                    }
+                    .disabled(currentFrameIndex >= videoFrames.count - 1)
+                }
+                .buttonStyle(.bordered)
+                
+                Spacer()
+                
+                // Action Buttons
+                VStack(spacing: 12) {
+                    Button("Complete Analysis") {
+                        onComplete(ballSelections)
+                    }
+                    .disabled(ballSelections.count < minimumSelections)
+                    .font(.headline)
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(ballSelections.count >= minimumSelections ? Color.green : Color.gray)
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                    
+                    Button("Cancel") {
+                        onCancel()
+                    }
+                    .font(.subheadline)
+                    .foregroundColor(.red)
+                }
+                .padding(.horizontal)
+            }
+            .padding()
+            .navigationBarHidden(true)
+        }
+    }
+    
+    private func addBallSelection(at point: CGPoint) {
+        let selection = ManualBallSelection(
+            frameIndex: currentFrameIndex,
+            timestamp: videoFrames[currentFrameIndex].timestamp,
+            position: point,
+            selectionDate: Date()
+        )
+        
+        // Remove any existing selection for this frame
+        ballSelections.removeAll { $0.frameIndex == currentFrameIndex }
+        ballSelections.append(selection)
+        
+        // Update selected points array
+        while selectedPoints.count <= currentFrameIndex {
+            selectedPoints.append(.zero)
+        }
+        selectedPoints[currentFrameIndex] = point
+        
+        // Auto-advance to next frame
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            nextFrame()
+        }
+    }
+    
+    private func nextFrame() {
+        if currentFrameIndex < videoFrames.count - 1 {
+            currentFrameIndex += 1
+        }
+    }
+}
+
+struct BallSelectionFrameView: View {
+    let frame: (image: UIImage, timestamp: Double)
+    let frameIndex: Int
+    let onBallSelected: (CGPoint) -> Void
+    let selectedPoint: CGPoint?
+    
+    @State private var imageSize: CGSize = .zero
+    
+    var body: some View {
+        ZStack {
+            Image(uiImage: frame.image)
+                .resizable()
+                .aspectRatio(contentMode: .fit)
+                .overlay(
+                    GeometryReader { geometry in
+                        Color.clear
+                            .onAppear {
+                                imageSize = geometry.size
+                            }
+                            .onTapGesture { location in
+                                onBallSelected(location)
+                            }
+                    }
+                )
+                .overlay(
+                    // Show selected ball position
+                    Group {
+                        if let point = selectedPoint, point != .zero {
+                            Circle()
+                                .fill(Color.red)
+                                .frame(width: 20, height: 20)
+                                .position(point)
+                                .overlay(
+                                    Circle()
+                                        .stroke(Color.white, lineWidth: 2)
+                                        .frame(width: 20, height: 20)
+                                        .position(point)
+                                )
+                        }
+                    }
+                )
+                .clipShape(RoundedRectangle(cornerRadius: 12))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(Color.orange, lineWidth: 2)
+                )
+            
+            // Frame info overlay
+            VStack {
+                HStack {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Frame \(frameIndex + 1)")
+                            .font(.caption)
+                            .fontWeight(.semibold)
+                        Text("\(String(format: "%.2f", frame.timestamp))s")
+                            .font(.caption2)
+                    }
+                    .padding(8)
+                    .background(Color.black.opacity(0.7))
+                    .foregroundColor(.white)
+                    .clipShape(RoundedRectangle(cornerRadius: 6))
+                    
+                    Spacer()
+                }
+                Spacer()
+            }
+            .padding(8)
         }
     }
 }

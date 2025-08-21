@@ -135,8 +135,16 @@ struct GolfRecommendation: Codable {
   }
 
   struct ChatResponse: Codable {
-      let answer: String
-      let is_golf_related: Bool
+      let id: String
+      let message: String
+      let isUser: Bool
+      let timestamp: Date
+      let intent: String
+      let confidence: Double
+      
+      // Legacy support
+      var answer: String { return message }
+      let is_golf_related: Bool = true
   }
 
   // MARK: - API Health

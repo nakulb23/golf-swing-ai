@@ -4,7 +4,7 @@ import Foundation
   struct CaddieChatView: View {
       @State private var messageText = ""
       @State private var messages: [ChatMessage] = []
-      @StateObject private var apiService = APIService.shared
+      @StateObject private var dynamicAI = DynamicGolfAI.shared
       @State private var isLoading = false
 
       private var buttonBackgroundGradient: some View {
@@ -74,14 +74,21 @@ import Foundation
               .navigationBarTitleDisplayMode(.inline)
               .toolbar {
                   ToolbarItem(placement: .principal) {
-                      HStack(spacing: 8) {
-                          Image(systemName: "figure.golf")
-                              .font(.system(size: 16, weight: .medium))
-                              .foregroundColor(.green)
+                      VStack(spacing: 2) {
+                          HStack(spacing: 8) {
+                              Image(systemName: "figure.golf")
+                                  .font(.system(size: 16, weight: .medium))
+                                  .foregroundColor(.green)
+                              
+                              Text("CaddieChat Pro")
+                                  .font(.headline)
+                                  .fontWeight(.semibold)
+                          }
                           
-                          Text("CaddieChat Pro")
-                              .font(.headline)
-                              .fontWeight(.semibold)
+                          Text("Enhanced Local Golf Expert")
+                              .font(.caption2)
+                              .foregroundColor(.secondary)
+                              .opacity(0.8)
                       }
                   }
               }
@@ -107,7 +114,7 @@ import Foundation
       private func addWelcomeMessage() {
           if messages.isEmpty {
               let welcome = ChatMessage(
-                  text: "I'm your AI golf expert. Ask me anything about your game.",
+                  text: "Welcome to CaddieChat Pro! 🏌️\n\nI'm your AI golf expert with dynamic conversational abilities and memory. I can help with any golf question - from 'What is a chip shot?' to complex course strategy.\n\nI remember our conversation, learn your preferences, and provide personalized guidance. Everything runs locally on your device for instant responses.\n\nWhat would you like to know about golf?",
                   isUser: false,
                   timestamp: Date()
               )
@@ -128,31 +135,33 @@ import Foundation
           messageText = ""
           isLoading = true
 
-          // Send message to custom API
+          // Use new Dynamic Golf AI system
           Task {
               do {
-                  print("🔄 Sending chat message: \(userMessage)")
-                  let response = try await apiService.sendChatMessage(userMessage)
-                  print("✅ Received chat response: \(response.answer)")
+                  print("🤖 Processing with Dynamic Golf AI: \(userMessage)")
+                  let response = try await dynamicAI.sendMessage(userMessage)
+                  print("✅ Dynamic AI response: \(response.message)")
                   
                   await MainActor.run {
                       let botMsg = ChatMessage(
-                          text: response.answer,
+                          text: response.message,
                           isUser: false,
                           timestamp: Date()
                       )
                       messages.append(botMsg)
                       isLoading = false
                       
-                      SimpleAnalytics.shared.trackEvent("chat_message_sent", properties: [
-                          "message_length": userMessage.count
+                      SimpleAnalytics.shared.trackEvent("dynamic_ai_chat", properties: [
+                          "message_length": userMessage.count,
+                          "intent": response.intent,
+                          "confidence": response.confidence
                       ])
                   }
               } catch {
-                  print("❌ Chat error: \(error)")
+                  print("❌ Dynamic AI error: \(error)")
                   await MainActor.run {
                       let errorMsg = ChatMessage(
-                          text: "Sorry, I'm having trouble connecting right now. Please try again later.\n\nError: \(error.localizedDescription)",
+                          text: "I'm here to help with your golf questions! It looks like I had a brief technical hiccup. Please try asking again, and I'll provide you with expert golf guidance.",
                           isUser: false,
                           timestamp: Date()
                       )

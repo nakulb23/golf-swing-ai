@@ -1,0 +1,20 @@
+{
+  "version": "1.0.0",
+  "type": "production_simple",
+  "classes": [
+    "perfect",
+    "good_swing",
+    "too_steep",
+    "too_flat",
+    "needs_improvement"
+  ],
+  "num_features": 35,
+  "key_features": {
+    "swing_plane_angle": 8,
+    "spine_angle": 0,
+    "max_shoulder_turn": 5,
+    "hip_turn_at_top": 6,
+    "overall_tempo": 32
+  },
+  "description": "Simple production model for golf swing analysis"
+}
