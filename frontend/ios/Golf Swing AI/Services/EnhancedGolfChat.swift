@@ -129,7 +129,10 @@ class EnhancedGolfChat: ObservableObject {
     
     private func determineIntent(_ message: String) -> ChatIntent {
         if message.contains("how") || message.contains("what") || message.contains("why") {
-            if message.contains("swing") { return .swingAdvice }
+            // Swing and shot-related keywords
+            let swingKeywords = ["swing", "chip", "putt", "drive", "pitch", "flop", "bump", "run", "shot", "stroke", "stance", "grip", "backswing", "downswing", "follow", "through"]
+            if swingKeywords.contains(where: { message.contains($0) }) { return .swingAdvice }
+            
             if message.contains("club") || message.contains("equipment") { return .equipment }
             if message.contains("course") || message.contains("strategy") { return .courseStrategy }
             if message.contains("rule") { return .rules }
@@ -261,7 +264,39 @@ class GolfExpertSystem {
     }
     
     private func generateSwingAdvice(_ analysis: MessageAnalysis) -> ExpertResponse {
+        let message = analysis.originalMessage.lowercased()
         let concepts = analysis.concepts.joined(separator: " ")
+        
+        // Handle specific shot questions
+        if message.contains("chip") && (message.contains("what") || message.contains("how")) {
+            return ExpertResponse(
+                mainContent: """
+                A chip shot is a short, low-flying shot played around the green to get your ball close to the pin!
+                
+                **What is a chip shot:**
+                • Short shot from just off the green (usually 10-30 yards)
+                • Low trajectory - mostly rolls after landing
+                • Used when you have a clear path to the pin
+                • Typically played with wedges or short irons
+                
+                **How to hit a chip shot:**
+                1. **Setup**: Narrow stance, weight slightly forward (60% on front foot)
+                2. **Ball position**: Slightly back of center in your stance
+                3. **Hands**: Ahead of the ball at address and impact
+                4. **Motion**: Small backswing, accelerate through with quiet hands
+                5. **Contact**: Hit ball first, then turf (minimal divot)
+                
+                **Club selection:**
+                • **Pitching wedge**: More roll, less air time
+                • **Sand wedge**: Higher flight, less roll
+                • **9-iron**: Lots of roll for longer chips
+                
+                **Golden rule**: Pick a landing spot 1/3 of the way to the pin, let it roll the rest!
+                """,
+                type: .instruction,
+                confidence: 0.95
+            )
+        }
         
         if concepts.contains("slice") {
             return ExpertResponse(
