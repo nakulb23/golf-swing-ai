@@ -29,8 +29,12 @@ class LocalCaddieChat: ObservableObject {
         
         if !isGolfRelated {
             return ChatResponse(
-                answer: "I'm your golf caddie! I'm here to help with golf-related questions like swing tips, course strategy, equipment advice, and rules. How can I assist with your golf game?",
-                is_golf_related: false
+                id: UUID().uuidString,
+                message: "I'm your golf caddie! I'm here to help with golf-related questions like swing tips, course strategy, equipment advice, and rules. How can I assist with your golf game?",
+                isUser: false,
+                timestamp: Date(),
+                intent: "greeting",
+                confidence: 1.0
             )
         }
         
@@ -38,8 +42,12 @@ class LocalCaddieChat: ObservableObject {
         let answer = generateResponse(intent: intent, keywords: keywords, originalMessage: message)
         
         return ChatResponse(
-            answer: answer,
-            is_golf_related: true
+            id: UUID().uuidString,
+            message: answer,
+            isUser: false,
+            timestamp: Date(),
+            intent: "response",
+            confidence: 0.8
         )
     }
     

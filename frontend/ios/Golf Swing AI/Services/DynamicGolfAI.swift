@@ -175,7 +175,7 @@ class ContextualAnalyzer {
         )
         
         // Analyze sentiment
-        let sentiment = analyzeSentiment(message)
+        let sentiment = analyzeSentiment(message: message)
         
         // Check for references to previous conversation
         let references = findConversationReferences(message, in: conversationHistory)
@@ -296,7 +296,7 @@ class ContextualAnalyzer {
            lowerMessage.contains("you mentioned") || lowerMessage.contains("you said") {
             
             // Find what they might be referring to
-            if let lastExchange = history.last {
+            if history.last != nil {
                 references.append("previous_response")
             }
         }

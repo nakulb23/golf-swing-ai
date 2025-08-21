@@ -145,6 +145,15 @@ struct GolfRecommendation: Codable {
       // Legacy support
       var answer: String { return message }
       let is_golf_related: Bool = true
+      
+      init(id: String, message: String, isUser: Bool, timestamp: Date, intent: String, confidence: Double) {
+          self.id = id
+          self.message = message
+          self.isUser = isUser
+          self.timestamp = timestamp
+          self.intent = intent
+          self.confidence = confidence
+      }
   }
 
   // MARK: - API Health

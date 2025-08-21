@@ -265,7 +265,7 @@ class DynamicResponseGenerator {
         // Remove excessive formatting and make more natural
         return content
             .replacingOccurrences(of: "**", with: "")
-            .replacingOccurrences(of: "•", with "-")
+            .replacingOccurrences(of: "•", with: "-")
             .trimmingCharacters(in: .whitespacesAndNewlines)
     }
     
@@ -352,12 +352,9 @@ struct GeneratedResponse {
     let content: String
     let confidence: Double
     let usedKnowledge: [String]
-    let responseType: ResponseType
+    let responseType: EnhancedGolfChat.ResponseType
 }
 
-enum ResponseType {
-    case information, followUp, clarification, problemSolving, recommendation, general
-}
 
 enum FormattingStyle {
     case conversational, detailed, informative, diagnostic, stepByStep, recommendation

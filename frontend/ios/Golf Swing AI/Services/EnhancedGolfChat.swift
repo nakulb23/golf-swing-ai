@@ -51,8 +51,12 @@ class EnhancedGolfChat: ObservableObject {
         }
         
         return ChatResponse(
-            answer: formattedResponse,
-            is_golf_related: analysis.isGolfRelated
+            id: UUID().uuidString,
+            message: formattedResponse,
+            isUser: false,
+            timestamp: Date(),
+            intent: analysis.intent.rawValue,
+            confidence: response.confidence
         )
     }
     
