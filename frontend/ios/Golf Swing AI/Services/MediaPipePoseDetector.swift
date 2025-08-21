@@ -1,8 +1,9 @@
 import Foundation
 import UIKit
-import AVFoundation
+@preconcurrency import AVFoundation
 import CoreImage
 import CoreML
+import Vision
 
 // Note: MediaPipe iOS framework would be imported here when available
 // import MediaPipeTasksVision
@@ -154,70 +155,22 @@ class MediaPipePoseDetector: ObservableObject {
     }
     
     func detectPoseSequence(from videoURL: URL) async throws -> [MediaPipePoseResult] {
-        print("🎬 Starting MediaPipe pose sequence detection...")
+        print("🎬 Starting real Vision framework pose detection...")
         
-        let asset = AVURLAsset(url: videoURL)
-        let duration = try await asset.load(.duration)
-        let generator = AVAssetImageGenerator(asset: asset)
-        generator.appliesPreferredTrackTransform = true
-        generator.requestedTimeToleranceBefore = .zero
-        generator.requestedTimeToleranceAfter = .zero
+        // Use the real Vision framework implementation
+        let visionDetector = await VisionPoseDetector()
         
-        var poseResults: [MediaPipePoseResult] = []
-        let totalSeconds = CMTimeGetSeconds(duration)
-        
-        // Adaptive frame rate based on video length - more frames for shorter videos
-        let frameRate: Double
-        let frameCount: Int
-        
-        if totalSeconds <= 3.0 {
-            // High frame rate for very short videos
-            frameRate = 30.0
-            frameCount = min(Int(totalSeconds * frameRate), 90)
-        } else if totalSeconds <= 5.0 {
-            // Medium frame rate for short videos
-            frameRate = 20.0
-            frameCount = min(Int(totalSeconds * frameRate), 100)
-        } else {
-            // Standard frame rate for longer videos
-            frameRate = 15.0
-            frameCount = min(Int(totalSeconds * frameRate), 150)
-        }
-        
-        print("📊 Processing \(frameCount) frames at \(String(format: "%.1f", frameRate))fps for \(String(format: "%.1f", totalSeconds))s video")
-        
-        for i in 0..<frameCount {
-            let timestamp = Double(i) / frameRate
-            let time = CMTime(seconds: timestamp, preferredTimescale: 600)
-            
-            do {
-                let cgImage = try await generator.image(at: time).image
-                let image = UIImage(cgImage: cgImage)
-                
-                if let poseResult = try await detectPose(in: image, timestamp: timestamp) {
-                    poseResults.append(poseResult)
-                }
-            } catch {
-                print("⚠️ Failed to process frame \(i): \(error)")
-                continue
-            }
-            
-            // Update progress every 10 frames and yield control
-            if i % 10 == 0 {
-                let progress = Double(i) / Double(frameCount)
-                print("📊 Pose detection progress: \(Int(progress * 100))%")
-                await Task.yield()
-            }
-        }
-        
-        print("✅ Detected poses in \(poseResults.count) frames")
-        
-        // Ensure we have at least some poses for analysis
-        if poseResults.isEmpty {
+        do {
+            let results = try await visionDetector.detectPoseSequence(from: videoURL)
+            print("✅ Vision framework detected \(results.count) poses")
+            return results
+        } catch let error as VisionPoseError {
+            print("❌ Vision pose detection failed: \(error.localizedDescription)")
             throw MediaPipeError.noPosesDetected
+        } catch {
+            print("❌ Unexpected error in pose detection: \(error)")
+            throw MediaPipeError.processingFailed
         }
-        
-        return poseResults
     }
     
     // MARK: - Fallback Implementation (Enhanced Computer Vision)

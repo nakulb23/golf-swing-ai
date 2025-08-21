@@ -378,6 +378,9 @@ struct SwingAnalysisView: View {
         .sheet(isPresented: $viewModel.showHistory) {
             AnalysisHistoryView()
         }
+        .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("OpenPhotoPicker"))) { _ in
+            viewModel.showPhotoPicker = true
+        }
     }
 }
 
@@ -992,10 +995,10 @@ struct TipsCard: View {
             }
             
             VStack(alignment: .leading, spacing: 4) {
-                Text("• Any angle works - AI detects automatically")
+                Text("• Down the Line Camera Angle works - AI detects automatically")
                 Text("• Keep entire swing in frame")
                 Text("• Ensure good lighting")
-                Text("• 3-5 second videos work best")
+                Text("• 5-10 second videos work best")
             }
             .font(.caption2)
             .foregroundColor(Color(UIColor.secondaryLabel))
@@ -1158,7 +1161,7 @@ struct SimpleCameraView: View {
                 HStack(spacing: 50) {
                     // Flip camera button
                     Button(action: {
-                        // TODO: Implement camera flip
+                        cameraManager.flipCamera()
                     }) {
                         Image(systemName: "camera.rotate")
                             .font(.title2)
@@ -1197,7 +1200,11 @@ struct SimpleCameraView: View {
                     
                     // Gallery button
                     Button(action: {
-                        // TODO: Open photo picker as alternative
+                        dismiss()
+                        // Trigger photo picker from parent view
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                            NotificationCenter.default.post(name: NSNotification.Name("OpenPhotoPicker"), object: nil)
+                        }
                     }) {
                         Image(systemName: "photo")
                             .font(.title2)
@@ -1397,17 +1404,19 @@ struct ResultsHeader: View {
     
     var body: some View {
         VStack(spacing: 12) {
-            // Score Circle
+            // Swing Rating Circle
             ZStack {
                 Circle()
                     .stroke(Color.white.opacity(0.2), lineWidth: 8)
                     .frame(width: 120, height: 120)
                 
+                // Convert swing plane angle to progress (normalize 0-45 degrees to 0-1)
+                let swingRating = calculateSwingRating(from: result)
                 Circle()
-                    .trim(from: 0, to: result.confidence)
+                    .trim(from: 0, to: swingRating.progress)
                     .stroke(
                         LinearGradient(
-                            colors: [.forestGreen, .sage],
+                            colors: swingRating.colors,
                             startPoint: .topLeading,
                             endPoint: .bottomTrailing
                         ),
@@ -1415,11 +1424,17 @@ struct ResultsHeader: View {
                     )
                     .frame(width: 120, height: 120)
                     .rotationEffect(.degrees(-90))
-                    .animation(.easeInOut(duration: 1), value: result.confidence)
+                    .animation(.easeInOut(duration: 1), value: swingRating.progress)
                 
-                Text("\(Int(result.confidence * 100))")
-                    .font(.system(size: 36, weight: .bold, design: .rounded))
-                    .foregroundColor(Color(UIColor.label))
+                VStack(spacing: 2) {
+                    Text("\(swingRating.score)")
+                        .font(.system(size: 36, weight: .bold, design: .rounded))
+                        .foregroundColor(Color(UIColor.label))
+                    
+                    Text(swingRating.label)
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundColor(swingRating.textColor)
+                }
             }
             
             Text(result.predicted_label.replacingOccurrences(of: "_", with: " ").capitalized)
@@ -1427,10 +1442,68 @@ struct ResultsHeader: View {
                 .fontWeight(.bold)
                 .foregroundColor(getPredictionColor(for: result.predicted_label))
             
-            Text("Confidence Score")
+            Text("Swing Plane Analysis")
                 .font(.caption)
                 .foregroundColor(Color(UIColor.secondaryLabel))
         }
+    }
+    
+    private func calculateSwingRating(from result: SwingAnalysisResponse) -> (score: Int, label: String, progress: Double, colors: [Color], textColor: Color) {
+        // Extract plane angle from available properties
+        var planeAngle: Double = 45.0 // Default neutral value
+        var swingScore: Int = 75
+        var label = "On Plane"
+        var colors: [Color] = [.forestGreen, .sage]
+        var textColor: Color = .forestGreen
+        
+        // Use actual plane angle if available
+        if let actualPlaneAngle = result.plane_angle {
+            planeAngle = actualPlaneAngle
+        }
+        
+        // Calculate swing score based on plane angle and tempo
+        if let tempoRatio = result.tempo_ratio {
+            // Combine plane angle and tempo for overall score
+            let idealAngle = 45.0
+            let planeDeviation = abs(planeAngle - idealAngle)
+            let planeScore = max(0, 100 - (planeDeviation * 2))
+            let tempoScore = max(0, min(100, tempoRatio * 100))
+            swingScore = Int((planeScore + tempoScore) / 2)
+        } else {
+            // Calculate score based on plane angle only (ideal is around 45 degrees)
+            let idealAngle = 45.0
+            let deviation = abs(planeAngle - idealAngle)
+            swingScore = Int(max(0, min(100, 100 - (deviation * 2))))
+        }
+        
+        // Use the predicted label if it contains plane information
+        let labelLower = result.predicted_label.lowercased()
+        if labelLower.contains("flat") {
+            label = "Too Flat"
+            colors = [.orange, .red]
+            textColor = .orange
+        } else if labelLower.contains("steep") {
+            label = "Too Steep"
+            colors = [.red, .orange]
+            textColor = .red
+        } else if planeAngle < 35 {
+            label = "Too Flat"
+            colors = [.orange, .red]
+            textColor = .orange
+        } else if planeAngle > 55 {
+            label = "Too Steep"
+            colors = [.red, .orange]
+            textColor = .red
+        } else {
+            label = "On Plane"
+            colors = [.forestGreen, .sage]
+            textColor = .forestGreen
+        }
+        
+        // Convert score to progress (0-1)
+        let progress = Double(swingScore) / 100.0
+        
+        return (score: swingScore, label: label, progress: progress, colors: colors, textColor: textColor)
     }
     
     private func getPredictionColor(for label: String) -> Color {
@@ -1591,82 +1664,159 @@ struct VideoPlayerView: View {
     let onDismiss: () -> Void
     
     @State private var player: AVPlayer?
+    @State private var isPlaying = true
+    @State private var showControls = true
     
     var body: some View {
         ZStack {
             Color.black.ignoresSafeArea()
             
+            // Video Player
             if let player = player {
-                VideoPlayer(player: player)
-                    .ignoresSafeArea()
-            }
-            
-            // Close button overlay - always visible
-            VStack {
-                HStack {
-                    Spacer()
-                    Button(action: onDismiss) {
-                        ZStack {
-                            Circle()
-                                .fill(Color.black.opacity(0.8))
-                                .frame(width: 44, height: 44)
-                            
-                            Image(systemName: "xmark")
-                                .font(.title2)
-                                .fontWeight(.bold)
-                                .foregroundColor(.white)
-                        }
-                    }
-                    .buttonStyle(PlainButtonStyle())
+                VideoPlayer(player: player) {
+                    // Custom overlay controls
+                    Color.clear
                 }
-                .padding(.top, 20)
-                .padding(.trailing, 20)
-                
-                Spacer()
-                
-                // Tap to dismiss hint
-                Text("Tap × to close")
-                    .font(.caption)
-                    .foregroundColor(.white.opacity(0.8))
-                    .padding(.bottom, 50)
-            }
-        }
-        .onTapGesture {
-            onDismiss()
-        }
-        .onAppear {
-            print("🎬 VideoPlayerView appeared with URL: \(videoURL)")
-            
-            // Check if file exists
-            if FileManager.default.fileExists(atPath: videoURL.path) {
-                print("✅ Video file exists at path")
-                
-                let asset = AVURLAsset(url: videoURL)
-                
-                // Check asset loadable
-                Task {
-                    do {
-                        let duration = try await asset.load(.duration)
-                        print("🎬 Video duration: \(duration.seconds) seconds")
-                        
-                        await MainActor.run {
-                            let playerItem = AVPlayerItem(asset: asset)
-                            player = AVPlayer(playerItem: playerItem)
-                            player?.play()
-                            print("▶️ Started video playback")
-                        }
-                    } catch {
-                        print("❌ Failed to load video asset: \(error)")
-                    }
+                .ignoresSafeArea()
+                .onTapGesture {
+                    showControls.toggle()
                 }
             } else {
-                print("❌ Video file does not exist at path: \(videoURL.path)")
+                // Loading state
+                VStack(spacing: 20) {
+                    ProgressView()
+                        .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                        .scaleEffect(1.5)
+                    
+                    Text("Loading video...")
+                        .foregroundColor(.white)
+                        .font(.headline)
+                }
+            }
+            
+            // Control Overlay
+            if showControls {
+                VStack {
+                    // Top bar with back button
+                    HStack {
+                        Button(action: onDismiss) {
+                            HStack(spacing: 8) {
+                                Image(systemName: "chevron.left")
+                                    .font(.system(size: 20, weight: .medium))
+                                Text("Back")
+                                    .font(.system(size: 18, weight: .medium))
+                            }
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 10)
+                            .background(Color.black.opacity(0.7))
+                            .cornerRadius(25)
+                        }
+                        
+                        Spacer()
+                    }
+                    .padding()
+                    .background(
+                        LinearGradient(
+                            colors: [Color.black.opacity(0.8), Color.clear],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                        .frame(height: 100)
+                        .ignoresSafeArea()
+                    )
+                    
+                    Spacer()
+                    
+                    // Bottom play/pause control
+                    HStack {
+                        Button(action: {
+                            if isPlaying {
+                                player?.pause()
+                            } else {
+                                player?.play()
+                            }
+                            isPlaying.toggle()
+                        }) {
+                            Image(systemName: isPlaying ? "pause.circle.fill" : "play.circle.fill")
+                                .font(.system(size: 70))
+                                .foregroundColor(.white)
+                                .background(
+                                    Circle()
+                                        .fill(Color.black.opacity(0.5))
+                                        .frame(width: 80, height: 80)
+                                )
+                        }
+                    }
+                    .padding(.bottom, 50)
+                }
+                .transition(.opacity)
+                .animation(.easeInOut(duration: 0.3), value: showControls)
             }
         }
-        .onDisappear {
-            player?.pause()
-            player = nil
+        .onAppear {
+            setupPlayer()
         }
+        .onDisappear {
+            cleanupPlayer()
+        }
+    }
+    
+    private func setupPlayer() {
+        print("🎬 Setting up video player with URL: \(videoURL)")
+        
+        // Configure audio session for video playback
+        do {
+            try AVAudioSession.sharedInstance().setCategory(.playback, mode: .moviePlayback)
+            try AVAudioSession.sharedInstance().setActive(true)
+        } catch {
+            print("⚠️ Failed to set audio session: \(error)")
+        }
+        
+        // Check if file exists
+        guard FileManager.default.fileExists(atPath: videoURL.path) else {
+            print("❌ Video file does not exist at path: \(videoURL.path)")
+            return
+        }
+        
+        print("✅ Video file exists, creating player...")
+        
+        // Create player with the URL directly
+        DispatchQueue.main.async {
+            let playerItem = AVPlayerItem(url: videoURL)
+            let newPlayer = AVPlayer(playerItem: playerItem)
+            
+            // Set player properties
+            newPlayer.automaticallyWaitsToMinimizeStalling = true
+            newPlayer.volume = 1.0
+            
+            // Assign and play
+            self.player = newPlayer
+            newPlayer.play()
+            self.isPlaying = true
+            
+            print("▶️ Video should be playing now")
+            
+            // Add notification observer for when video ends
+            NotificationCenter.default.addObserver(
+                forName: .AVPlayerItemDidPlayToEndTime,
+                object: playerItem,
+                queue: .main
+            ) { _ in
+                // Loop the video
+                newPlayer.seek(to: .zero)
+                newPlayer.play()
+            }
+        }
+    }
+    
+    private func cleanupPlayer() {
+        player?.pause()
+        player = nil
+        NotificationCenter.default.removeObserver(self)
+        
+        // Reset audio session
+        try? AVAudioSession.sharedInstance().setActive(false)
     }
 }
 

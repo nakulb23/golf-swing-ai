@@ -79,6 +79,19 @@ class LocalCaddieChat: ObservableObject {
             return .training
         }
         
+        // Recommendation patterns
+        if lowercaseMessage.contains("recommend") || lowercaseMessage.contains("suggest") ||
+           lowercaseMessage.contains("should") || lowercaseMessage.contains("best") {
+            return .recommendation
+        }
+        
+        // Problem solving patterns
+        if lowercaseMessage.contains("problem") || lowercaseMessage.contains("issue") ||
+           lowercaseMessage.contains("wrong") || lowercaseMessage.contains("fix") ||
+           lowercaseMessage.contains("help") || lowercaseMessage.contains("trouble") {
+            return .problemSolving
+        }
+        
         return .general
     }
     
@@ -136,22 +149,22 @@ class LocalCaddieChat: ObservableObject {
             return responseGenerator.generateRulesAdvice(keywords: keywords)
         case .training:
             return responseGenerator.generateTrainingAdvice(keywords: keywords)
+        case .recommendation:
+            return responseGenerator.generateRecommendationAdvice(keywords: keywords)
+        case .problemSolving:
+            return responseGenerator.generateProblemSolvingAdvice(keywords: keywords)
         case .general:
+            return responseGenerator.generateGeneralAdvice(keywords: keywords, message: originalMessage)
+        case .followUp:
+            return responseGenerator.generateGeneralAdvice(keywords: keywords, message: originalMessage)
+        case .clarification:
             return responseGenerator.generateGeneralAdvice(keywords: keywords, message: originalMessage)
         }
     }
 }
 
-// MARK: - Chat Intent
-
-enum ChatIntent {
-    case swingAdvice
-    case equipment
-    case courseStrategy
-    case rules
-    case training
-    case general
-}
+// MARK: - Chat Intent (using enum from EnhancedGolfChat)
+// ChatIntent enum is defined in EnhancedGolfChat.swift to avoid conflicts
 
 // MARK: - Golf Knowledge Base
 
@@ -297,6 +310,38 @@ class CaddieResponseGenerator {
         let randomDrill = knowledgeBase.trainingDrills.randomElement() ?? "Practice with purpose, not just volume"
         response += "💪 Practice tip: \(randomDrill)"
         
+        return response
+    }
+    
+    func generateRecommendationAdvice(keywords: [String]) -> String {
+        var response = "Here are my recommendations:\n\n"
+        
+        if keywords.contains("beginner") || keywords.contains("start") {
+            response += "🔰 For beginners:\n• Start with lessons from a PGA professional\n• Focus on short game fundamentals\n• Practice regularly but don't overdo it\n• Play shorter courses initially\n\n"
+        } else if keywords.contains("equipment") {
+            response += "🛠️ Equipment recommendations:\n• Get a basic club fitting\n• Start with game improvement clubs\n• Don't buy too many clubs initially\n• Invest in good instruction before expensive equipment\n\n"
+        } else {
+            response += "🎯 General recommendations:\n• Focus on fundamentals\n• Practice with purpose\n• Play within your abilities\n• Enjoy the journey of improvement\n\n"
+        }
+        
+        response += "💡 Remember: Consistent practice beats perfect technique!"
+        return response
+    }
+    
+    func generateProblemSolvingAdvice(keywords: [String]) -> String {
+        var response = "Let's solve this golf challenge:\n\n"
+        
+        if keywords.contains("slice") || keywords.contains("hook") {
+            response += "🎯 Ball flight issues:\n• Check your grip first\n• Work on swing path\n• Consider professional lessons\n• Practice with alignment aids\n\n"
+        } else if keywords.contains("distance") {
+            response += "📏 Distance problems:\n• Focus on solid contact first\n• Work on flexibility and fitness\n• Check your equipment specifications\n• Consider swing tempo adjustments\n\n"
+        } else if keywords.contains("consistency") {
+            response += "🎯 Consistency issues:\n• Develop a pre-shot routine\n• Focus on fundamentals\n• Practice more frequently\n• Work on mental game\n\n"
+        } else {
+            response += "🔧 Problem-solving approach:\n• Identify the root cause\n• Work on one thing at a time\n• Practice with specific drills\n• Be patient with progress\n\n"
+        }
+        
+        response += "💪 Stay positive - every golfer faces challenges!"
         return response
     }
     

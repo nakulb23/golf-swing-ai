@@ -39,6 +39,44 @@ class CameraManager: NSObject, ObservableObject {
         // Don't setup session until we have permission
     }
     
+    func flipCamera() {
+        print("🔄 Flipping camera...")
+        
+        captureSession.beginConfiguration()
+        
+        // Remove current input
+        if let currentInput = currentVideoInput {
+            captureSession.removeInput(currentInput)
+        }
+        
+        // Determine new camera position
+        let currentPosition = currentVideoInput?.device.position ?? .back
+        let newPosition: AVCaptureDevice.Position = currentPosition == .back ? .front : .back
+        
+        // Get new camera device
+        guard let newDevice = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: newPosition),
+              let newInput = try? AVCaptureDeviceInput(device: newDevice) else {
+            print("❌ Failed to get new camera device")
+            captureSession.commitConfiguration()
+            return
+        }
+        
+        // Add new input
+        if captureSession.canAddInput(newInput) {
+            captureSession.addInput(newInput)
+            currentVideoInput = newInput
+            print("✅ Camera flipped to \(newPosition == .front ? "front" : "back")")
+        } else {
+            print("❌ Cannot add new camera input")
+            // Re-add the old input if we can't add the new one
+            if let currentInput = currentVideoInput, captureSession.canAddInput(currentInput) {
+                captureSession.addInput(currentInput)
+            }
+        }
+        
+        captureSession.commitConfiguration()
+    }
+    
     func checkPermission() {
         print("🎥 Checking camera permission...")
         let status = AVCaptureDevice.authorizationStatus(for: .video)
@@ -50,13 +88,14 @@ class CameraManager: NSObject, ObservableObject {
             hasPermission = true
             setupSession()
             // Start session after a brief delay to ensure setup is complete
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+            Task { @MainActor [weak self] in
+                try? await Task.sleep(nanoseconds: 500_000_000)
                 self?.startSession()
             }
             
         case .notDetermined:
             print("❓ Requesting camera permission...")
-            AVCaptureDevice.requestAccess(for: .video) { [weak self] granted in
+            AVCaptureDevice.requestAccess(for: .video) { @Sendable [weak self] granted in
                 guard let self = self else { return }
                 print("🎥 Permission request result: \(granted)")
                 DispatchQueue.main.async {
@@ -65,7 +104,8 @@ class CameraManager: NSObject, ObservableObject {
                         print("✅ Permission granted, setting up camera...")
                         self.setupSession()
                         // Start session after setup when permission is newly granted
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+                        Task { @MainActor [weak self] in
+                            try? await Task.sleep(nanoseconds: 500_000_000)
                             self?.startSession()
                         }
                     } else {
@@ -218,7 +258,8 @@ class CameraManager: NSObject, ObservableObject {
             print("⚠️ Cannot start session without camera inputs - setting up session")
             setupSession()
             // Retry after a brief delay
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
+            Task { @MainActor [weak self] in
+                try? await Task.sleep(nanoseconds: 300_000_000)
                 self?.startSession()
             }
             return
@@ -298,8 +339,8 @@ class CameraManager: NSObject, ObservableObject {
         
         // Start timer
         recordingTime = 0
-        recordingTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
-            Task { @MainActor in
+        recordingTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { @Sendable _ in
+            Task { @MainActor [weak self] in
                 guard let self = self else { return }
                 self.recordingTime += 0.1
             }
@@ -326,28 +367,6 @@ class CameraManager: NSObject, ObservableObject {
     }
     
     private var recordingCompletion: ((Data?) -> Void)?
-    
-    func flipCamera() {
-        guard let currentInput = currentVideoInput else { return }
-        
-        let currentPosition = currentInput.device.position
-        let newPosition: AVCaptureDevice.Position = currentPosition == .back ? .front : .back
-        
-        guard let newDevice = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: newPosition),
-              let newInput = try? AVCaptureDeviceInput(device: newDevice) else {
-            return
-        }
-        
-        captureSession.beginConfiguration()
-        captureSession.removeInput(currentInput)
-        
-        if captureSession.canAddInput(newInput) {
-            captureSession.addInput(newInput)
-            currentVideoInput = newInput
-        }
-        
-        captureSession.commitConfiguration()
-    }
 }
 
 // MARK: - AVCaptureFileOutputRecordingDelegate

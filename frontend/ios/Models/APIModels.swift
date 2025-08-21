@@ -603,6 +603,48 @@ struct LandmarkDeviation: Codable {
       let flight_analysis: FlightAnalysis?
       let trajectory_data: TrajectoryData
       let visualization_created: Bool
+      
+      // Manual selection support
+      let requires_manual_selection: Bool?
+      let extracted_frames: [(image: UIImage, timestamp: Double)]?
+      
+      enum CodingKeys: String, CodingKey {
+          case detection_summary, flight_analysis, trajectory_data, visualization_created
+          case requires_manual_selection
+          // extracted_frames is not codable - handled separately
+      }
+      
+      init(detection_summary: DetectionSummary, flight_analysis: FlightAnalysis?, 
+           trajectory_data: TrajectoryData, visualization_created: Bool,
+           requires_manual_selection: Bool? = nil, 
+           extracted_frames: [(image: UIImage, timestamp: Double)]? = nil) {
+          self.detection_summary = detection_summary
+          self.flight_analysis = flight_analysis
+          self.trajectory_data = trajectory_data
+          self.visualization_created = visualization_created
+          self.requires_manual_selection = requires_manual_selection
+          self.extracted_frames = extracted_frames
+      }
+      
+      init(from decoder: Decoder) throws {
+          let container = try decoder.container(keyedBy: CodingKeys.self)
+          detection_summary = try container.decode(DetectionSummary.self, forKey: .detection_summary)
+          flight_analysis = try container.decodeIfPresent(FlightAnalysis.self, forKey: .flight_analysis)
+          trajectory_data = try container.decode(TrajectoryData.self, forKey: .trajectory_data)
+          visualization_created = try container.decode(Bool.self, forKey: .visualization_created)
+          requires_manual_selection = try container.decodeIfPresent(Bool.self, forKey: .requires_manual_selection)
+          extracted_frames = nil // Not decoded from JSON
+      }
+      
+      func encode(to encoder: Encoder) throws {
+          var container = encoder.container(keyedBy: CodingKeys.self)
+          try container.encode(detection_summary, forKey: .detection_summary)
+          try container.encodeIfPresent(flight_analysis, forKey: .flight_analysis)
+          try container.encode(trajectory_data, forKey: .trajectory_data)
+          try container.encode(visualization_created, forKey: .visualization_created)
+          try container.encodeIfPresent(requires_manual_selection, forKey: .requires_manual_selection)
+          // extracted_frames is not encoded to JSON
+      }
   }
 
   struct DetectionSummary: Codable {
