@@ -24,6 +24,14 @@ from golfai_auth import (
     hash_password, verify_password
 )
 
+# Import OAuth handlers
+from golfai_oauth import (
+    GoogleSignIn, AppleSignIn, SocialLoginResponse,
+    handle_google_signin, handle_apple_signin,
+    link_oauth_to_existing_user, unlink_oauth_from_user,
+    update_oauth_database_schema
+)
+
 # Create router for GolfSwingAI authentication
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
@@ -511,6 +519,137 @@ async def update_preferences(
         "message": "Preferences updated successfully",
         "preferences": preferences
     }
+
+@router.post("/signin/google", response_model=SocialLoginResponse)
+async def google_signin(google_data: GoogleSignIn):
+    """
+    Sign in with Google
+    
+    Send the Google ID token received from Google Sign-In on the client.
+    Creates a new account if the user doesn't exist, or logs in existing user.
+    
+    Returns JWT tokens just like regular login.
+    """
+    db = get_db()
+    
+    # Ensure OAuth schema is up to date
+    update_oauth_database_schema(db)
+    
+    try:
+        response = await handle_google_signin(db, google_data)
+        return response
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Google sign-in failed: {str(e)}"
+        )
+
+@router.post("/signin/apple", response_model=SocialLoginResponse)
+async def apple_signin(apple_data: AppleSignIn):
+    """
+    Sign in with Apple
+    
+    Send the Apple ID token and optional user info (provided on first sign-in only).
+    Creates a new account if the user doesn't exist, or logs in existing user.
+    
+    Returns JWT tokens just like regular login.
+    """
+    db = get_db()
+    
+    # Ensure OAuth schema is up to date
+    update_oauth_database_schema(db)
+    
+    try:
+        response = await handle_apple_signin(db, apple_data)
+        return response
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Apple sign-in failed: {str(e)}"
+        )
+
+@router.post("/link/google")
+async def link_google_account(
+    google_data: GoogleSignIn,
+    current_user: str = Depends(get_current_user)
+):
+    """
+    Link Google account to existing user
+    
+    Allows users to add Google sign-in to their existing account.
+    """
+    db = get_db()
+    
+    try:
+        # Verify Google token
+        from golfai_oauth import verify_google_token
+        verified_data = await verify_google_token(google_data.id_token)
+        
+        # Link to existing account
+        result = link_oauth_to_existing_user(
+            db, 
+            current_user,
+            "google",
+            verified_data["provider_id"]
+        )
+        return result
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to link Google account: {str(e)}"
+        )
+
+@router.post("/link/apple")
+async def link_apple_account(
+    apple_data: AppleSignIn,
+    current_user: str = Depends(get_current_user)
+):
+    """
+    Link Apple account to existing user
+    
+    Allows users to add Apple sign-in to their existing account.
+    """
+    db = get_db()
+    
+    try:
+        # Verify Apple token
+        from golfai_oauth import verify_apple_token
+        verified_data = await verify_apple_token(apple_data.id_token)
+        
+        # Link to existing account
+        result = link_oauth_to_existing_user(
+            db,
+            current_user,
+            "apple",
+            verified_data["provider_id"]
+        )
+        return result
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to link Apple account: {str(e)}"
+        )
+
+@router.delete("/unlink/social")
+async def unlink_social_account(
+    current_user: str = Depends(get_current_user)
+):
+    """
+    Unlink social account from user
+    
+    Removes Google/Apple sign-in from the account.
+    User must have a password set to unlink social accounts.
+    """
+    db = get_db()
+    
+    try:
+        result = unlink_oauth_from_user(db, current_user)
+        return result
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to unlink social account: {str(e)}"
+        )
 
 @router.delete("/account")
 async def delete_account(
