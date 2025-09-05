@@ -1,5 +1,7 @@
 import SwiftUI
 import PhotosUI
+import AVKit
+import AVFoundation
 
 struct BallTrackingView: View {
     @StateObject private var apiService = APIService.shared
@@ -9,6 +11,11 @@ struct BallTrackingView: View {
     @State private var trackingResult: BallTrackingResponse?
     @State private var showPhysicsInfo = false
     @State private var errorMessage: String?
+    @State private var showManualSelection = false
+    @State private var showManualSelectionView = false
+    @State private var manualBallPositions: [CGPoint] = []
+    @State private var currentVideoURL: URL?
+    @State private var extractedFrames: [(image: UIImage, timestamp: Double)] = []
     
     var body: some View {
         NavigationView {
@@ -39,20 +46,21 @@ struct BallTrackingView: View {
                         
                         // Video Selection
                         VStack(spacing: 16) {
+                            let hasVideo = videoData != nil
                             PhotosPicker(
                                 selection: $selectedVideo,
                                 matching: .videos,
                                 photoLibrary: .shared()
                             ) {
                                 VStack(spacing: 12) {
-                                    Image(systemName: videoData != nil ? "checkmark.circle.fill" : "plus.circle.fill")
+                                    Image(systemName: hasVideo ? "checkmark.circle.fill" : "plus.circle.fill")
                                         .font(.system(size: 40))
-                                        .foregroundColor(videoData != nil ? .green : .orange)
+                                        .foregroundColor(hasVideo ? .green : .orange)
                                     
-                                    Text(videoData != nil ? "Video Selected" : "Select Golf Ball Video")
+                                    Text(hasVideo ? "Video Selected" : "Select Golf Ball Video")
                                         .font(.headline)
                                     
-                                    Text(videoData != nil ? "Tap to change video" : "Choose a video showing ball flight")
+                                    Text(hasVideo ? "Tap to change video" : "Choose a video showing ball flight")
                                         .font(.caption)
                                         .foregroundColor(.secondary)
                                 }
@@ -62,7 +70,7 @@ struct BallTrackingView: View {
                                 .cornerRadius(12)
                                 .overlay(
                                     RoundedRectangle(cornerRadius: 12)
-                                        .stroke(videoData != nil ? Color.green.opacity(0.5) : Color.orange.opacity(0.3), lineWidth: 2)
+                                        .stroke(hasVideo ? Color.green.opacity(0.5) : Color.orange.opacity(0.3), lineWidth: 2)
                                 )
                             }
                             
@@ -92,21 +100,38 @@ struct BallTrackingView: View {
                             TrackingResultView(result: result, videoData: videoData)
                         }
                         
-                        // Error Message
+                        // Error Message with Manual Selection Option
                         if let error = errorMessage {
-                            VStack(spacing: 8) {
+                            VStack(spacing: 12) {
                                 HStack {
                                     Image(systemName: "exclamationmark.triangle.fill")
                                         .foregroundColor(.orange)
-                                    Text("Tracking Error")
+                                    Text("Tracking Issue")
                                         .fontWeight(.semibold)
                                 }
+                                
                                 Text(error)
                                     .font(.caption)
+                                    .multilineTextAlignment(.center)
+                                
+                                if showManualSelection {
+                                    Button("Manual Ball Selection") {
+                                        // Open manual selection view
+                                        if let videoURL = currentVideoURL {
+                                            openManualSelection(videoURL: videoURL)
+                                        }
+                                    }
+                                    .font(.headline)
+                                    .foregroundColor(.white)
+                                    .frame(maxWidth: .infinity)
+                                    .padding()
+                                    .background(Color.blue)
+                                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                                }
                             }
                             .padding()
                             .background(Color.orange.opacity(0.1))
-                            .cornerRadius(8)
+                            .cornerRadius(12)
                         }
                         
                         Spacer()
@@ -134,15 +159,95 @@ struct BallTrackingView: View {
                 }
             }
         }
+        .sheet(isPresented: $showManualSelectionView) {
+            if !extractedFrames.isEmpty {
+                ManualBallSelectionView(
+                    videoFrames: extractedFrames,
+                    onComplete: { selections in
+                        handleManualSelections(selections)
+                    },
+                    onCancel: {
+                        showManualSelectionView = false
+                    }
+                )
+            }
+        }
         .onChange(of: selectedVideo) { oldValue, newItem in
             Task {
                 if let data = try? await newItem?.loadTransferable(type: Data.self) {
-                    videoData = data
-                    trackingResult = nil
-                    errorMessage = nil
+                    await MainActor.run {
+                        videoData = data
+                        trackingResult = nil
+                        errorMessage = nil
+                    }
                 }
             }
         }
+    }
+    
+    private func openManualSelection(videoURL: URL) {
+        print("🎯 Opening manual ball selection for video: \(videoURL)")
+        showManualSelectionView = true
+    }
+    
+    private func handleManualSelections(_ selections: [ManualBallSelection]) {
+        showManualSelectionView = false
+        isTracking = true
+        errorMessage = nil
+        
+        Task {
+            do {
+                let result = try await LocalBallTracker().processManualSelections(
+                    from: selections,
+                    videoFrames: extractedFrames
+                )
+                
+                await MainActor.run {
+                    self.trackingResult = result
+                    self.isTracking = false
+                    self.showManualSelection = false
+                    print("✅ Manual ball tracking complete: \(selections.count) selections processed")
+                }
+            } catch {
+                await MainActor.run {
+                    self.errorMessage = "Manual ball tracking failed: \(error.localizedDescription)"
+                    self.isTracking = false
+                }
+            }
+        }
+    }
+    
+    private func createImprovedMockResult() {
+        // Create a more realistic tracking result
+        let detectionSummary = DetectionSummary(
+            total_frames: 180,
+            ball_detected_frames: 156,
+            detection_rate: 0.867,
+            trajectory_points: 45
+        )
+        
+        let trajectoryData = TrajectoryData(
+            flight_time: 3.2,
+            has_valid_trajectory: true
+        )
+        
+        let flightAnalysis = FlightAnalysis(
+            launch_speed_ms: 28.5,
+            launch_angle_degrees: 12.8,
+            trajectory_type: "Mid-height drive with slight draw",
+            estimated_max_height: 15.2,
+            estimated_range: 165.0
+        )
+        
+        trackingResult = BallTrackingResponse(
+            detection_summary: detectionSummary,
+            flight_analysis: flightAnalysis,
+            trajectory_data: trajectoryData,
+            visualization_created: true
+        )
+        
+        errorMessage = nil
+        showManualSelection = false
     }
     
     private func trackBall() {
@@ -150,19 +255,52 @@ struct BallTrackingView: View {
         
         isTracking = true
         errorMessage = nil
+        trackingResult = nil
         
         Task {
             do {
+                // Save video to temporary file for manual selection fallback
+                let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent("tracking_video_\(UUID().uuidString).mp4")
+                try data.write(to: tempURL)
+                currentVideoURL = tempURL
+                
                 let result = try await apiService.trackBall(videoData: data)
                 
                 await MainActor.run {
-                    trackingResult = result
-                    isTracking = false
+                    // Check if manual selection is required
+                    if result.requires_manual_selection == true {
+                        self.errorMessage = "Automatic ball detection was unable to find the golf ball in your video. Tap 'Manual Ball Selection' to select the ball manually in key frames."
+                        self.showManualSelection = true
+                        self.extractedFrames = result.extracted_frames ?? []
+                    } else if result.detection_summary.ball_detected_frames < 5 || result.detection_summary.detection_rate < 0.1 {
+                        // Poor detection - offer manual selection
+                        self.errorMessage = "Automatic ball detection found only \(result.detection_summary.ball_detected_frames) frames (\(String(format: "%.1f", result.detection_summary.detection_rate * 100))% success rate). Would you like to manually select the ball for better accuracy?"
+                        self.showManualSelection = true
+                        self.extractedFrames = result.extracted_frames ?? []
+                    } else {
+                        self.trackingResult = result
+                        print("✅ Ball tracking successful: \(result.detection_summary.ball_detected_frames) detections")
+                    }
+                    self.isTracking = false
                 }
             } catch {
                 await MainActor.run {
-                    errorMessage = "Failed to track ball: \(error.localizedDescription)"
-                    isTracking = false
+                    if let ballTrackingError = error as? BallTrackingError {
+                        switch ballTrackingError {
+                        case .noBallDetected:
+                            self.errorMessage = "No golf ball could be detected automatically. Would you like to manually select the ball?"
+                            self.showManualSelection = true
+                        case .noFramesExtracted:
+                            self.errorMessage = "Could not extract frames from video. Please ensure the video is valid."
+                        default:
+                            self.errorMessage = ballTrackingError.localizedDescription
+                            self.showManualSelection = true
+                        }
+                    } else {
+                        self.errorMessage = "Ball tracking failed: \(error.localizedDescription)"
+                        self.showManualSelection = true
+                    }
+                    self.isTracking = false
                 }
             }
         }
@@ -509,16 +647,29 @@ struct BallTrackingVideoOverlayView: View {
                 VStack(spacing: 0) {
                     // Video Player with Overlay
                     ZStack {
-                        // Simulated Video Background
-                        Rectangle()
-                            .fill(
-                                LinearGradient(
-                                    colors: [.black, .gray.opacity(0.8), .black],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                )
+                        // Real Video Player
+                        if let videoData = videoData {
+                            RealVideoPlayerWithOverlay(
+                                videoData: videoData,
+                                result: result,
+                                showTrajectoryPath: showTrajectoryPath,
+                                showDetectionPoints: showDetectionPoints,
+                                playbackProgress: $playbackProgress,
+                                isPlaying: $isPlaying
                             )
                             .frame(height: 320)
+                        } else {
+                            // Fallback Simulated Video Background
+                            Rectangle()
+                                .fill(
+                                    LinearGradient(
+                                        colors: [.black, .gray.opacity(0.8), .black],
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    )
+                                )
+                                .frame(height: 320)
+                        }
                         
                         // Golf Scene Elements
                         VStack {
@@ -734,20 +885,24 @@ struct BallTrackingVideoOverlayView: View {
     private func startPlaybackSimulation() {
         guard isPlaying else { return }
         
-        Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { timer in
-            if !isPlaying || playbackProgress >= 1.0 {
-                timer.invalidate()
-                if playbackProgress >= 1.0 {
-                    isPlaying = false
-                    playbackProgress = 0
-                    currentTime = 0
+        let timer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { _ in
+            Task { @MainActor in
+                if !isPlaying || playbackProgress >= 1.0 {
+                    if playbackProgress >= 1.0 {
+                        isPlaying = false
+                        playbackProgress = 0
+                        currentTime = 0
+                    }
+                    return
                 }
-                return
+                
+                playbackProgress += 0.02 // Adjust speed as needed
+                currentTime = playbackProgress * result.trajectory_data.flight_time
             }
-            
-            playbackProgress += 0.02 // Adjust speed as needed
-            currentTime = playbackProgress * result.trajectory_data.flight_time
         }
+        
+        // Store the timer to invalidate it when needed
+        RunLoop.current.add(timer, forMode: .common)
     }
     
     private func formatTime(_ time: Double) -> String {
@@ -784,7 +939,7 @@ struct BallTrajectoryOverlay: View {
                 
                 // Ball detection points
                 if showDetectionPoints {
-                    ForEach(0..<result.detection_summary.trajectory_points, id: \.self) { index in
+                    ForEach(Array(0..<result.detection_summary.trajectory_points), id: \.self) { index in
                         let progress = Double(index) / Double(result.detection_summary.trajectory_points - 1)
                         if progress <= playbackProgress {
                             let point = getTrajectoryPoint(progress: progress, in: geometry.size)
@@ -792,7 +947,7 @@ struct BallTrajectoryOverlay: View {
                                 .fill(Color.warning)
                                 .frame(width: 6, height: 6)
                                 .position(point)
-                                .animation(.easeInOut(duration: 0.2), value: playbackProgress)
+                                .animation(Animation.easeInOut(duration: 0.2), value: playbackProgress)
                         }
                     }
                 }
@@ -805,7 +960,7 @@ struct BallTrajectoryOverlay: View {
                         .frame(width: 12, height: 12)
                         .position(currentPoint)
                         .shadow(color: Color.ballTracking, radius: 4)
-                        .animation(.easeInOut(duration: 0.1), value: playbackProgress)
+                        .animation(Animation.easeInOut(duration: 0.1), value: playbackProgress)
                 }
             }
         }
@@ -1132,7 +1287,7 @@ struct BallPositionWithTrail: View {
     var body: some View {
         ZStack {
             // Ball trail effect
-            ForEach(0..<10, id: \.self) { index in
+            ForEach(Array(0..<10), id: \.self) { index in
                 let trailProgress = max(0, playbackProgress - Double(index) * 0.05)
                 if trailProgress > 0 {
                     let position = calculateTrajectoryPoint(progress: trailProgress)
@@ -1178,11 +1333,11 @@ struct BallPositionWithTrail: View {
                         Circle()
                             .stroke(Color.yellow.opacity(speedAlpha), lineWidth: 2)
                             .frame(width: 16, height: 16)
-                            .animation(.easeInOut(duration: 0.5).repeatForever(autoreverses: true), value: playbackProgress)
+                            .animation(Animation.easeInOut(duration: 0.5).repeatForever(autoreverses: true), value: playbackProgress)
                     }
                 }
                 .position(currentPosition)
-                .animation(.easeInOut(duration: 0.1), value: playbackProgress)
+                .animation(Animation.easeInOut(duration: 0.1), value: playbackProgress)
             }
         }
     }
@@ -1331,7 +1486,7 @@ struct TrajectoryCallout: View {
         .position(CGPoint(x: position.x, y: position.y - 30))
         .scaleEffect(isActive ? 1.1 : 0.9)
         .opacity(isActive ? 1.0 : 0.7)
-        .animation(.easeInOut(duration: 0.3), value: isActive)
+        .animation(Animation.easeInOut(duration: 0.3), value: isActive)
     }
 }
 
@@ -1352,7 +1507,7 @@ struct DetectionConfidenceIndicators: View {
     let size: CGSize
     
     var body: some View {
-        ForEach(0..<result.detection_summary.trajectory_points, id: \.self) { index in
+        ForEach(Array(0..<result.detection_summary.trajectory_points), id: \.self) { index in
             let progress = Double(index) / Double(result.detection_summary.trajectory_points - 1)
             
             if progress <= playbackProgress {
@@ -1480,6 +1635,315 @@ struct FlightCharacteristicBadge: View {
     }
 }
 
+
+// MARK: - Real Video Player with Overlay
+
+struct RealVideoPlayerWithOverlay: View {
+    let videoData: Data
+    let result: BallTrackingResponse
+    let showTrajectoryPath: Bool
+    let showDetectionPoints: Bool
+    @Binding var playbackProgress: Double
+    @Binding var isPlaying: Bool
+    
+    @State private var player: AVPlayer?
+    @State private var videoURL: URL?
+    
+    var body: some View {
+        ZStack {
+            // Video Player
+            if let player = player {
+                VideoPlayer(player: player)
+                    .onAppear {
+                        setupPlayer()
+                    }
+                    .onDisappear {
+                        player.pause()
+                    }
+            } else {
+                Rectangle()
+                    .fill(Color.black)
+                    .overlay(
+                        ProgressView()
+                            .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                    )
+            }
+            
+            // Ball Trajectory Overlay
+            if showTrajectoryPath {
+                BallTrajectoryOverlay(
+                    result: result,
+                    showDetectionPoints: showDetectionPoints,
+                    playbackProgress: playbackProgress
+                )
+            }
+        }
+        .onAppear {
+            setupVideoPlayer()
+        }
+        .onDisappear {
+            cleanupVideo()
+        }
+    }
+    
+    private func setupVideoPlayer() {
+        // Create temporary file for video playback
+        let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent("ball_tracking_\(UUID().uuidString).mp4")
+        
+        do {
+            try videoData.write(to: tempURL)
+            self.videoURL = tempURL
+            
+            let asset = AVURLAsset(url: tempURL)
+            let playerItem = AVPlayerItem(asset: asset)
+            self.player = AVPlayer(playerItem: playerItem)
+            
+            // Setup time observation for progress tracking
+            let interval = CMTime(seconds: 0.1, preferredTimescale: CMTimeScale(NSEC_PER_SEC))
+            let currentPlayer = self.player
+            player?.addPeriodicTimeObserver(forInterval: interval, queue: .main) { time in
+                Task { @MainActor in
+                    if let duration = currentPlayer?.currentItem?.duration {
+                        let progress = time.seconds / duration.seconds
+                        if !progress.isNaN && !progress.isInfinite {
+                            playbackProgress = min(max(progress, 0), 1)
+                        }
+                    }
+                }
+            }
+            
+        } catch {
+            print("❌ Failed to setup video player: \(error)")
+        }
+    }
+    
+    private func setupPlayer() {
+        // Update playing state based on player state
+        if isPlaying {
+            player?.play()
+        } else {
+            player?.pause()
+        }
+    }
+    
+    private func cleanupVideo() {
+        player?.pause()
+        if let url = videoURL {
+            try? FileManager.default.removeItem(at: url)
+        }
+    }
+}
+
+// MARK: - Manual Ball Selection Views
+
+struct ManualBallSelectionView: View {
+    let videoFrames: [(image: UIImage, timestamp: Double)]
+    let onComplete: ([ManualBallSelection]) -> Void
+    let onCancel: () -> Void
+    
+    @State private var currentFrameIndex = 0
+    @State private var ballSelections: [ManualBallSelection] = []
+    @State private var selectedPoints: [CGPoint] = []
+    @State private var frameSize: CGSize = .zero
+    
+    private let minimumSelections = 3
+    
+    var body: some View {
+        NavigationView {
+            VStack(spacing: 20) {
+                // Instructions
+                VStack(spacing: 12) {
+                    Text("Manual Ball Selection")
+                        .font(.title2)
+                        .fontWeight(.bold)
+                    
+                    Text("Tap on the golf ball in each frame. You need at least \(minimumSelections) selections for trajectory analysis.")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal)
+                }
+                
+                // Progress
+                VStack(spacing: 8) {
+                    HStack {
+                        Text("Frame \(currentFrameIndex + 1) of \(videoFrames.count)")
+                            .font(.headline)
+                        
+                        Spacer()
+                        
+                        Text("Selected: \(ballSelections.count)")
+                            .font(.subheadline)
+                            .foregroundColor(ballSelections.count >= minimumSelections ? .green : .orange)
+                    }
+                    
+                    ProgressView(value: Double(currentFrameIndex), total: Double(videoFrames.count - 1))
+                        .progressViewStyle(LinearProgressViewStyle(tint: .orange))
+                }
+                .padding(.horizontal)
+                
+                // Frame Display with Ball Selection
+                if currentFrameIndex < videoFrames.count {
+                    BallSelectionFrameView(
+                        frame: videoFrames[currentFrameIndex],
+                        frameIndex: currentFrameIndex,
+                        onBallSelected: { point in
+                            addBallSelection(at: point)
+                        },
+                        selectedPoint: selectedPoints.count > currentFrameIndex ? selectedPoints[currentFrameIndex] : nil
+                    )
+                    .frame(maxHeight: 400)
+                }
+                
+                // Navigation Controls
+                HStack(spacing: 20) {
+                    Button("Previous") {
+                        if currentFrameIndex > 0 {
+                            currentFrameIndex -= 1
+                        }
+                    }
+                    .disabled(currentFrameIndex == 0)
+                    
+                    Button("Skip Frame") {
+                        nextFrame()
+                    }
+                    
+                    Button("Next") {
+                        nextFrame()
+                    }
+                    .disabled(currentFrameIndex >= videoFrames.count - 1)
+                }
+                .buttonStyle(.bordered)
+                
+                Spacer()
+                
+                // Action Buttons
+                VStack(spacing: 12) {
+                    Button("Complete Analysis") {
+                        onComplete(ballSelections)
+                    }
+                    .disabled(ballSelections.count < minimumSelections)
+                    .font(.headline)
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(ballSelections.count >= minimumSelections ? Color.green : Color.gray)
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                    
+                    Button("Cancel") {
+                        onCancel()
+                    }
+                    .font(.subheadline)
+                    .foregroundColor(.red)
+                }
+                .padding(.horizontal)
+            }
+            .padding()
+            .navigationBarHidden(true)
+        }
+    }
+    
+    private func addBallSelection(at point: CGPoint) {
+        let selection = ManualBallSelection(
+            frameIndex: currentFrameIndex,
+            timestamp: videoFrames[currentFrameIndex].timestamp,
+            position: point,
+            selectionDate: Date()
+        )
+        
+        // Remove any existing selection for this frame
+        ballSelections.removeAll { $0.frameIndex == currentFrameIndex }
+        ballSelections.append(selection)
+        
+        // Update selected points array
+        while selectedPoints.count <= currentFrameIndex {
+            selectedPoints.append(.zero)
+        }
+        selectedPoints[currentFrameIndex] = point
+        
+        // Auto-advance to next frame
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            nextFrame()
+        }
+    }
+    
+    private func nextFrame() {
+        if currentFrameIndex < videoFrames.count - 1 {
+            currentFrameIndex += 1
+        }
+    }
+}
+
+struct BallSelectionFrameView: View {
+    let frame: (image: UIImage, timestamp: Double)
+    let frameIndex: Int
+    let onBallSelected: (CGPoint) -> Void
+    let selectedPoint: CGPoint?
+    
+    @State private var imageSize: CGSize = .zero
+    
+    var body: some View {
+        ZStack {
+            Image(uiImage: frame.image)
+                .resizable()
+                .aspectRatio(contentMode: .fit)
+                .overlay(
+                    GeometryReader { geometry in
+                        Color.clear
+                            .onAppear {
+                                imageSize = geometry.size
+                            }
+                            .onTapGesture { location in
+                                onBallSelected(location)
+                            }
+                    }
+                )
+                .overlay(
+                    // Show selected ball position
+                    Group {
+                        if let point = selectedPoint, point != .zero {
+                            Circle()
+                                .fill(Color.red)
+                                .frame(width: 20, height: 20)
+                                .position(point)
+                                .overlay(
+                                    Circle()
+                                        .stroke(Color.white, lineWidth: 2)
+                                        .frame(width: 20, height: 20)
+                                        .position(point)
+                                )
+                        }
+                    }
+                )
+                .clipShape(RoundedRectangle(cornerRadius: 12))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(Color.orange, lineWidth: 2)
+                )
+            
+            // Frame info overlay
+            VStack {
+                HStack {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Frame \(frameIndex + 1)")
+                            .font(.caption)
+                            .fontWeight(.semibold)
+                        Text("\(String(format: "%.2f", frame.timestamp))s")
+                            .font(.caption2)
+                    }
+                    .padding(8)
+                    .background(Color.black.opacity(0.7))
+                    .foregroundColor(.white)
+                    .clipShape(RoundedRectangle(cornerRadius: 6))
+                    
+                    Spacer()
+                }
+                Spacer()
+            }
+            .padding(8)
+        }
+    }
+}
 
 #Preview {
     BallTrackingView()

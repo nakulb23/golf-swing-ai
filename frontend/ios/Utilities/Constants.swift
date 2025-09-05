@@ -21,10 +21,4 @@ import Foundation
           static let connectionFailed = "Failed to connect to AI server"
       }
   }
-//
-//  Constants.swift
-//  Golf Swing AI
-//
-//  Created by Nakul Bhatnagar on 6/5/25.
-//
 

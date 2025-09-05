@@ -175,15 +175,22 @@ struct SwingSpeedChart: View {
                         .foregroundColor(.green)
                 }
                 
-                // Mock chart placeholder
+                // Chart placeholder - will be populated with actual data
                 RoundedRectangle(cornerRadius: 8)
                     .fill(Color.accentDynamic.opacity(0.1))
                     .frame(height: 120)
                     .overlay(
-                        Text("Swing Speed Chart\n(\(timeframe.rawValue))")
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                            .multilineTextAlignment(.center)
+                        VStack {
+                            Image(systemName: "chart.line.uptrend.xyaxis")
+                                .font(.title2)
+                                .foregroundColor(.secondary)
+                            Text("Swing Speed Chart")
+                                .font(.subheadline)
+                                .fontWeight(.medium)
+                            Text("Record swings to see data")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
                     )
             }
         }
@@ -207,15 +214,22 @@ struct AccuracyChart: View {
                         .foregroundColor(.green)
                 }
                 
-                // Mock chart placeholder
+                // Chart placeholder - will be populated with actual data
                 RoundedRectangle(cornerRadius: 8)
                     .fill(Color.accentDynamic.opacity(0.1))
                     .frame(height: 120)
                     .overlay(
-                        Text("Accuracy Chart\n(\(timeframe.rawValue))")
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                            .multilineTextAlignment(.center)
+                        VStack {
+                            Image(systemName: "target")
+                                .font(.title2)
+                                .foregroundColor(.secondary)
+                            Text("Accuracy Chart")
+                                .font(.subheadline)
+                                .fontWeight(.medium)
+                            Text("Record swings to see data")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
                     )
             }
         }
@@ -239,15 +253,22 @@ struct ConsistencyChart: View {
                         .foregroundColor(.green)
                 }
                 
-                // Mock chart placeholder
+                // Chart placeholder - will be populated with actual data
                 RoundedRectangle(cornerRadius: 8)
                     .fill(Color.accentDynamic.opacity(0.1))
                     .frame(height: 120)
                     .overlay(
-                        Text("Consistency Chart\n(\(timeframe.rawValue))")
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                            .multilineTextAlignment(.center)
+                        VStack {
+                            Image(systemName: "chart.xyaxis.line")
+                                .font(.title2)
+                                .foregroundColor(.secondary)
+                            Text("Consistency Chart")
+                                .font(.subheadline)
+                                .fontWeight(.medium)
+                            Text("Record swings to see data")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
                     )
             }
         }

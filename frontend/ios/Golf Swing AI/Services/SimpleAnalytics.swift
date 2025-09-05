@@ -2,6 +2,7 @@ import Foundation
 import UIKit
 
 // MARK: - Simple Anonymous Analytics Service
+@MainActor
 class SimpleAnalytics: ObservableObject {
     static let shared = SimpleAnalytics()
     

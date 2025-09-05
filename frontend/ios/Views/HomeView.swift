@@ -27,11 +27,7 @@ struct HomeView: View {
     
     // Helper computed property for connection status text
     private var connectionStatusText: String {
-        if apiService.isOnline {
-            return apiService.connectionType ?? "Connected"
-        } else {
-            return "Offline"
-        }
+        return "Local AI Active" // Always active since it's local-only
     }
     
     // Helper function for time ago formatting
@@ -63,23 +59,16 @@ struct HomeView: View {
                             // API Connection Status
                             HStack(spacing: 4) {
                                 Circle()
-                                    .fill(apiService.isOnline ? Color.green : Color.red)
+                                    .fill(Color.green) // Always green since local AI is always available
                                     .frame(width: 6, height: 6)
                                 
                                 Text(connectionStatusText)
                                     .font(.system(size: 10, weight: .medium))
                                     .foregroundColor(.secondary)
                                 
-                                if let lastCheck = apiService.lastHealthCheck {
-                                    Text("• \(timeAgo(from: lastCheck))")
-                                        .font(.system(size: 9, weight: .regular))
-                                        .foregroundColor(.secondary.opacity(0.7))
-                                }
-                            }
-                            .onTapGesture {
-                                Task {
-                                    await apiService.retryConnection()
-                                }
+                                Text("• Ready")
+                                    .font(.system(size: 9, weight: .regular))
+                                    .foregroundColor(.secondary.opacity(0.7))
                             }
                         }
                         
@@ -126,15 +115,21 @@ struct HomeView: View {
                             
                             // Profile Avatar
                             Button(action: {
-                                navigateToProfile = true
+                                if authManager.isAuthenticated {
+                                    // User is logged in - go to profile
+                                    navigateToProfile = true
+                                } else {
+                                    // User not logged in - show login screen
+                                    showingLogin = true
+                                }
                             }) {
                                 Circle()
-                                    .fill(Color.blue.opacity(0.2))
+                                    .fill(authManager.isAuthenticated ? Color.blue.opacity(0.2) : Color.gray.opacity(0.2))
                                     .frame(width: 48, height: 48)
                                     .overlay(
-                                        Image(systemName: "person.fill")
+                                        Image(systemName: authManager.isAuthenticated ? "person.fill" : "person")
                                             .font(.system(size: 20, weight: .medium))
-                                            .foregroundColor(.blue)
+                                            .foregroundColor(authManager.isAuthenticated ? .blue : .gray)
                                     )
                             }
                             .buttonStyle(PlainButtonStyle())
@@ -403,12 +398,16 @@ struct HomeView: View {
         }
         .sheet(isPresented: $showingSettings) {
             SettingsView()
+                .environmentObject(authManager)
+                .environmentObject(ThemeManager.shared)
         }
         .navigationDestination(isPresented: $navigateToProfile) {
             ProfileView()
+                .environmentObject(authManager)
         }
         .navigationDestination(isPresented: $navigateToAllTools) {
             AllToolsView()
+                .environmentObject(authManager)
         }
         .sheet(isPresented: $showingPhysicsEnginePaywall) {
             PhysicsEnginePremiumView()

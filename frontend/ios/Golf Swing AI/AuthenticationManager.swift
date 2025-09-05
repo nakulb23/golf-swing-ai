@@ -1,8 +1,9 @@
 import SwiftUI
 import Combine
 import AuthenticationServices
-import GoogleSignIn
+@preconcurrency import GoogleSignIn
 
+@MainActor
 class AuthenticationManager: NSObject, ObservableObject {
     @Published var isAuthenticated = false
     @Published var currentUser: User?
@@ -20,16 +21,13 @@ class AuthenticationManager: NSObject, ObservableObject {
     
     // MARK: - Authentication Methods
     func signIn(email: String, password: String) async {
-        await MainActor.run {
-            isLoading = true
-            errorMessage = nil
-        }
+        isLoading = true
+        errorMessage = nil
         
         // Simulate API call delay
         try? await Task.sleep(nanoseconds: 1_000_000_000)
         
-        await MainActor.run {
-            do {
+        do {
                 // In a real app, this would call your backend API
                 let user = try validateAndCreateUser(email: email, password: password)
                 currentUser = user
@@ -50,20 +48,16 @@ class AuthenticationManager: NSObject, ObservableObject {
                 }
             }
             isLoading = false
-        }
     }
     
     func signUp(registrationData: RegistrationData) async {
-        await MainActor.run {
-            isLoading = true
-            errorMessage = nil
-        }
+        isLoading = true
+        errorMessage = nil
         
         // Simulate API call delay
         try? await Task.sleep(nanoseconds: 1_500_000_000)
         
-        await MainActor.run {
-            do {
+        do {
                 try validateRegistrationData(registrationData)
                 
                 let user = User(
@@ -94,7 +88,6 @@ class AuthenticationManager: NSObject, ObservableObject {
                 }
             }
             isLoading = false
-        }
     }
     
     func signOut() {
@@ -104,19 +97,15 @@ class AuthenticationManager: NSObject, ObservableObject {
     }
     
     func resetPassword(email: String) async {
-        await MainActor.run {
-            isLoading = true
-            errorMessage = nil
-        }
+        isLoading = true
+        errorMessage = nil
         
         // Simulate API call delay
         try? await Task.sleep(nanoseconds: 1_000_000_000)
         
-        await MainActor.run {
-            // In a real app, this would call your backend API
-            // For now, just show success
-            isLoading = false
-        }
+        // In a real app, this would call your backend API
+        // For now, just show success
+        isLoading = false
     }
     
     // MARK: - Social Authentication Methods
@@ -299,13 +288,19 @@ class AuthenticationManager: NSObject, ObservableObject {
             throw AuthenticationError.invalidCredentials
         }
         
-        // In a real app, this would authenticate against your backend
-        // For demo purposes, create a mock user
+        // TODO: Replace with actual backend authentication
+        // This is a basic local authentication - replace with your backend API
+        
+        // For now, store credentials locally (NOT RECOMMENDED for production)
+        // You should implement proper backend authentication
+        let username = email.components(separatedBy: "@").first ?? "user"
+        let firstName = username.capitalized
+        
         return User(
             email: email,
-            username: "demo_user",
-            firstName: "Demo",
-            lastName: "User"
+            username: username,
+            firstName: firstName,
+            lastName: "Golfer"
         )
     }
     
@@ -362,7 +357,7 @@ extension AuthenticationManager: ASAuthorizationControllerDelegate {
                 lastName: lastName
             )
             
-            DispatchQueue.main.async {
+            Task { @MainActor in
                 print("🍎 Apple Sign-In: Setting user and authentication state...")
                 self.currentUser = user
                 self.isAuthenticated = true
@@ -380,7 +375,7 @@ extension AuthenticationManager: ASAuthorizationControllerDelegate {
             }
         } else {
             print("🍎 Apple Sign-In: ERROR - No Apple ID credential found")
-            DispatchQueue.main.async {
+            Task { @MainActor in
                 self.errorMessage = "Failed to get Apple ID credential"
                 self.isLoading = false
                 self.authorizationController = nil
@@ -391,7 +386,7 @@ extension AuthenticationManager: ASAuthorizationControllerDelegate {
     func authorizationController(controller: ASAuthorizationController, didCompleteWithError error: Error) {
         print("🍎 Apple Sign-In: Error callback received: \(error)")
         
-        DispatchQueue.main.async {
+        Task { @MainActor in
             if let authError = error as? ASAuthorizationError {
                 print("🍎 Apple Sign-In: ASAuthorizationError code: \(authError.code.rawValue)")
                 switch authError.code {

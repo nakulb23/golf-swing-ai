@@ -1,17 +1,28 @@
 import Foundation
-import AVFoundation
+@preconcurrency import AVFoundation
 import SwiftUI
 
+@MainActor
 class CameraManager: NSObject, ObservableObject {
     @Published var isRecording = false
     @Published var recordingTime: TimeInterval = 0
     @Published var hasPermission = false
+    @Published var isRealTimeAnalysisEnabled = false
+    @Published var currentPoseConfidence: Float = 0.0
+    @Published var detectedPoseCount: Int = 0
     
     let captureSession = AVCaptureSession()
     private var videoOutput: AVCaptureMovieFileOutput?
+    private var videoDataOutput: AVCaptureVideoDataOutput?
     private var currentVideoInput: AVCaptureDeviceInput?
     private var recordingTimer: Timer?
     private var outputURL: URL?
+    
+    // Real-time analysis components
+    private let poseDetector = MediaPipePoseDetector()
+    private let analysisQueue = DispatchQueue(label: "pose.analysis.queue", qos: .userInitiated)
+    private var frameCounter = 0
+    private var lastAnalysisTime = Date()
     
     var formattedRecordingTime: String {
         let minutes = Int(recordingTime) / 60
@@ -19,9 +30,51 @@ class CameraManager: NSObject, ObservableObject {
         return String(format: "%02d:%02d", minutes, seconds)
     }
     
+    var isSessionRunning: Bool {
+        return captureSession.isRunning
+    }
+    
     override init() {
         super.init()
         // Don't setup session until we have permission
+    }
+    
+    func flipCamera() {
+        print("🔄 Flipping camera...")
+        
+        captureSession.beginConfiguration()
+        
+        // Remove current input
+        if let currentInput = currentVideoInput {
+            captureSession.removeInput(currentInput)
+        }
+        
+        // Determine new camera position
+        let currentPosition = currentVideoInput?.device.position ?? .back
+        let newPosition: AVCaptureDevice.Position = currentPosition == .back ? .front : .back
+        
+        // Get new camera device
+        guard let newDevice = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: newPosition),
+              let newInput = try? AVCaptureDeviceInput(device: newDevice) else {
+            print("❌ Failed to get new camera device")
+            captureSession.commitConfiguration()
+            return
+        }
+        
+        // Add new input
+        if captureSession.canAddInput(newInput) {
+            captureSession.addInput(newInput)
+            currentVideoInput = newInput
+            print("✅ Camera flipped to \(newPosition == .front ? "front" : "back")")
+        } else {
+            print("❌ Cannot add new camera input")
+            // Re-add the old input if we can't add the new one
+            if let currentInput = currentVideoInput, captureSession.canAddInput(currentInput) {
+                captureSession.addInput(currentInput)
+            }
+        }
+        
+        captureSession.commitConfiguration()
     }
     
     func checkPermission() {
@@ -32,17 +85,18 @@ class CameraManager: NSObject, ObservableObject {
         switch status {
         case .authorized:
             print("✅ Camera permission already granted")
-            DispatchQueue.main.async {
-                self.hasPermission = true
-                self.setupSession()
-                // Start session immediately after setup when permission is already granted
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-                    self.startSession()
-                }
+            hasPermission = true
+            setupSession()
+            // Start session after a brief delay to ensure setup is complete
+            Task { @MainActor [weak self] in
+                try? await Task.sleep(nanoseconds: 500_000_000)
+                self?.startSession()
             }
+            
         case .notDetermined:
             print("❓ Requesting camera permission...")
-            AVCaptureDevice.requestAccess(for: .video) { granted in
+            AVCaptureDevice.requestAccess(for: .video) { @Sendable [weak self] granted in
+                guard let self = self else { return }
                 print("🎥 Permission request result: \(granted)")
                 DispatchQueue.main.async {
                     self.hasPermission = granted
@@ -50,23 +104,22 @@ class CameraManager: NSObject, ObservableObject {
                         print("✅ Permission granted, setting up camera...")
                         self.setupSession()
                         // Start session after setup when permission is newly granted
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-                            self.startSession()
+                        Task { @MainActor [weak self] in
+                            try? await Task.sleep(nanoseconds: 500_000_000)
+                            self?.startSession()
                         }
                     } else {
                         print("❌ Camera permission denied")
                     }
                 }
             }
+            
         case .denied, .restricted:
             print("❌ Camera permission denied or restricted")
-            DispatchQueue.main.async {
-                self.hasPermission = false
-            }
+            hasPermission = false
+            
         @unknown default:
-            DispatchQueue.main.async {
-                self.hasPermission = false
-            }
+            hasPermission = false
         }
     }
     
@@ -148,7 +201,45 @@ class CameraManager: NSObject, ObservableObject {
             print("❌ Cannot add video output to session")
         }
         
+        // Add video data output for real-time analysis
+        setupRealTimeAnalysis()
+        
         print("🎬 Camera session setup complete")
+    }
+    
+    private func setupRealTimeAnalysis() {
+        print("🔍 Setting up real-time pose analysis...")
+        
+        // Create video data output for real-time frame analysis
+        let videoDataOutput = AVCaptureVideoDataOutput()
+        videoDataOutput.setSampleBufferDelegate(self, queue: analysisQueue)
+        
+        // Configure video data output
+        videoDataOutput.videoSettings = [
+            kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA
+        ]
+        videoDataOutput.alwaysDiscardsLateVideoFrames = true
+        
+        if captureSession.canAddOutput(videoDataOutput) {
+            captureSession.addOutput(videoDataOutput)
+            self.videoDataOutput = videoDataOutput
+            print("✅ Added video data output for real-time analysis")
+        } else {
+            print("❌ Cannot add video data output")
+        }
+    }
+    
+    func toggleRealTimeAnalysis() {
+        isRealTimeAnalysisEnabled.toggle()
+        print("🔍 Real-time analysis \(isRealTimeAnalysisEnabled ? "enabled" : "disabled")")
+        
+        if isRealTimeAnalysisEnabled {
+            // Reset analysis counters
+            detectedPoseCount = 0
+            currentPoseConfidence = 0.0
+            frameCounter = 0
+            lastAnalysisTime = Date()
+        }
     }
     
     func startSession() {
@@ -159,19 +250,38 @@ class CameraManager: NSObject, ObservableObject {
         
         guard hasPermission else {
             print("⚠️ Cannot start session without camera permission")
+            checkPermission() // Try to re-check permission
             return
         }
         
         guard captureSession.inputs.count > 0 else {
-            print("⚠️ Cannot start session without camera inputs")
+            print("⚠️ Cannot start session without camera inputs - setting up session")
+            setupSession()
+            // Retry after a brief delay
+            Task { @MainActor [weak self] in
+                try? await Task.sleep(nanoseconds: 300_000_000)
+                self?.startSession()
+            }
             return
         }
         
         print("▶️ Starting camera session...")
-        DispatchQueue.global(qos: .userInitiated).async {
-            self.captureSession.startRunning()
-            DispatchQueue.main.async {
-                print("✅ Camera session started successfully - isRunning: \(self.captureSession.isRunning)")
+        print("📹 Session configuration:")
+        print("   - Has permission: \(hasPermission)")
+        print("   - Input count: \(captureSession.inputs.count)")
+        print("   - Output count: \(captureSession.outputs.count)")
+        
+        let session = captureSession
+        Task.detached { [weak self] in
+            session.startRunning()
+            
+            await MainActor.run { [weak self] in
+                guard let self = self else { return }
+                print("✅ Camera session started - isRunning: \(session.isRunning)")
+                if !session.isRunning {
+                    print("❌ Session failed to start - debugging...")
+                    self.debugSessionStatus()
+                }
             }
         }
     }
@@ -183,12 +293,19 @@ class CameraManager: NSObject, ObservableObject {
         }
         
         print("⏹️ Stopping camera session...")
-        DispatchQueue.global(qos: .background).async {
-            self.captureSession.stopRunning()
-            DispatchQueue.main.async {
-                print("✅ Camera session stopped - isRunning: \(self.captureSession.isRunning)")
+        let session = captureSession
+        Task.detached {
+            session.stopRunning()
+            await MainActor.run {
+                print("✅ Camera session stopped - isRunning: \(session.isRunning)")
             }
         }
+    }
+    
+    // MARK: - Preview Layer
+    
+    func getPreviewLayer() -> AVCaptureVideoPreviewLayer {
+        return AVCaptureVideoPreviewLayer(session: captureSession)
     }
     
     func debugSessionStatus() {
@@ -222,15 +339,14 @@ class CameraManager: NSObject, ObservableObject {
         
         // Start timer
         recordingTime = 0
-        recordingTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { _ in
-            DispatchQueue.main.async {
+        recordingTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { @Sendable _ in
+            Task { @MainActor [weak self] in
+                guard let self = self else { return }
                 self.recordingTime += 0.1
             }
         }
         
-        DispatchQueue.main.async {
-            self.isRecording = true
-        }
+        self.isRecording = true
     }
     
     func stopRecording(completion: @escaping (Data?) -> Void) {
@@ -243,47 +359,25 @@ class CameraManager: NSObject, ObservableObject {
         recordingTimer?.invalidate()
         recordingTimer = nil
         
-        DispatchQueue.main.async {
-            self.isRecording = false
-            self.recordingTime = 0
-        }
+        self.isRecording = false
+        self.recordingTime = 0
         
         // Store completion for use in delegate
         self.recordingCompletion = completion
     }
     
     private var recordingCompletion: ((Data?) -> Void)?
-    
-    func flipCamera() {
-        guard let currentInput = currentVideoInput else { return }
-        
-        let currentPosition = currentInput.device.position
-        let newPosition: AVCaptureDevice.Position = currentPosition == .back ? .front : .back
-        
-        guard let newDevice = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: newPosition),
-              let newInput = try? AVCaptureDeviceInput(device: newDevice) else {
-            return
-        }
-        
-        captureSession.beginConfiguration()
-        captureSession.removeInput(currentInput)
-        
-        if captureSession.canAddInput(newInput) {
-            captureSession.addInput(newInput)
-            currentVideoInput = newInput
-        }
-        
-        captureSession.commitConfiguration()
-    }
 }
 
 // MARK: - AVCaptureFileOutputRecordingDelegate
 
 extension CameraManager: AVCaptureFileOutputRecordingDelegate {
-    func fileOutput(_ output: AVCaptureFileOutput, didFinishRecordingTo outputFileURL: URL, from connections: [AVCaptureConnection], error: Error?) {
+    nonisolated func fileOutput(_ output: AVCaptureFileOutput, didFinishRecordingTo outputFileURL: URL, from connections: [AVCaptureConnection], error: Error?) {
         if let error = error {
             print("❌ Recording error: \(error)")
-            recordingCompletion?(nil)
+            Task { @MainActor in
+                recordingCompletion?(nil)
+            }
         } else {
             print("✅ Recording completed successfully")
             print("📹 Video file URL: \(outputFileURL)")
@@ -315,18 +409,24 @@ extension CameraManager: AVCaptureFileOutputRecordingDelegate {
                     }
                 }
                 
-                recordingCompletion?(videoData)
+                Task { @MainActor in
+                    recordingCompletion?(videoData)
+                }
                 
                 // Clean up the temporary file
                 try? FileManager.default.removeItem(at: outputFileURL)
                 print("🗑️ Cleaned up temporary video file")
             } catch {
                 print("❌ Error reading video file: \(error)")
-                recordingCompletion?(nil)
+                Task { @MainActor in
+                    recordingCompletion?(nil)
+                }
             }
         }
         
-        recordingCompletion = nil
+        Task { @MainActor in
+            recordingCompletion = nil
+        }
     }
 }
 
@@ -362,9 +462,10 @@ struct CameraPreview: UIViewRepresentable {
         // Force session to start if it's not already running and has inputs
         if !session.isRunning && session.inputs.count > 0 {
             print("🔄 Session not running but has inputs - attempting to start")
-            DispatchQueue.global(qos: .background).async {
-                session.startRunning()
-                DispatchQueue.main.async {
+            let captureSession = session
+            Task.detached {
+                captureSession.startRunning()
+                await MainActor.run {
                     print("✅ Session started from preview")
                 }
             }
@@ -374,11 +475,98 @@ struct CameraPreview: UIViewRepresentable {
     }
     
     func updateUIView(_ uiView: UIView, context: Context) {
-        DispatchQueue.main.async {
-            if let previewLayer = uiView.layer.sublayers?.first as? AVCaptureVideoPreviewLayer {
-                previewLayer.frame = uiView.bounds
-                print("🔄 Updated preview layer frame: \(uiView.bounds)")
+        if let previewLayer = uiView.layer.sublayers?.first as? AVCaptureVideoPreviewLayer {
+            previewLayer.frame = uiView.bounds
+            print("🔄 Updated preview layer frame: \(uiView.bounds)")
+        }
+    }
+}
+
+// MARK: - Real-time Video Analysis
+
+extension CameraManager: AVCaptureVideoDataOutputSampleBufferDelegate {
+    nonisolated func captureOutput(
+        _ output: AVCaptureOutput,
+        didOutput sampleBuffer: CMSampleBuffer,
+        from connection: AVCaptureConnection
+    ) {
+        // Only process frames if real-time analysis is enabled
+        Task { @MainActor in
+            guard self.isRealTimeAnalysisEnabled else { return }
+        }
+        
+        // Process the sample buffer immediately on the capture queue to avoid data races
+        let bufferCopy = sampleBuffer
+        Task.detached { [weak self] in
+            await self?.processSampleBufferDetached(bufferCopy)
+        }
+    }
+    
+    nonisolated private func processSampleBufferDetached(_ sampleBuffer: CMSampleBuffer) async {
+        // Check if analysis is enabled first
+        let isEnabled = await MainActor.run { self.isRealTimeAnalysisEnabled }
+        guard isEnabled else { return }
+        // Get frame counter and last analysis time atomically
+        let (currentFrameCounter, lastTime) = await MainActor.run {
+            self.frameCounter += 1
+            return (self.frameCounter, self.lastAnalysisTime)
+        }
+        
+        // Throttle frame processing to avoid overwhelming the system
+        if currentFrameCounter % 15 != 0 { // Process every 15th frame (~2 FPS at 30 FPS)
+            return
+        }
+        
+        // Check time since last analysis
+        let now = Date()
+        if now.timeIntervalSince(lastTime) < 0.5 { // Minimum 500ms between analyses
+            return
+        }
+        
+        // Convert sample buffer to UIImage
+        guard let imageBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) else { return }
+        let ciImage = CIImage(cvPixelBuffer: imageBuffer)
+        
+        let context = CIContext()
+        guard let cgImage = context.createCGImage(ciImage, from: ciImage.extent) else { return }
+        let uiImage = UIImage(cgImage: cgImage)
+        
+        // Perform pose detection asynchronously
+        Task.detached { [weak self, uiImage, now] in
+            guard let self = self else { return }
+            
+            do {
+                let timestamp = Date().timeIntervalSince1970
+                if let poseResult = try await self.poseDetector.detectPose(in: uiImage, timestamp: timestamp) {
+                    
+                    // Update UI on main thread
+                    await MainActor.run {
+                        self.currentPoseConfidence = poseResult.confidence
+                        self.detectedPoseCount += 1
+                        self.lastAnalysisTime = now
+                    }
+                    
+                    // Log successful detection
+                    print("🦴 Real-time pose detected: \(poseResult.landmarks.count) landmarks, confidence: \(String(format: "%.2f", poseResult.confidence))")
+                    
+                } else {
+                    await MainActor.run {
+                        self.currentPoseConfidence = 0.0
+                        self.lastAnalysisTime = now
+                    }
+                }
+                
+            } catch {
+                print("❌ Real-time pose detection error: \(error)")
             }
         }
+    }
+    
+    nonisolated func captureOutput(
+        _ output: AVCaptureOutput,
+        didDrop sampleBuffer: CMSampleBuffer,
+        from connection: AVCaptureConnection
+    ) {
+        print("⚠️ Dropped video frame for analysis")
     }
 }

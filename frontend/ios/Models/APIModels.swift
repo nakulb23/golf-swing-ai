@@ -1,13 +1,159 @@
 import Foundation
 
-  // MARK: - Chat Models
+// MARK: - Local Golf AI Models
+
+/// Golf AI analysis result that includes all golf-specific data
+struct LocalGolfAnalysisResult: Codable {
+    let predicted_label: String
+    let confidence: Double
+    let swing_phases: [GolfSwingPhase]
+    let biomechanics: GolfBiomechanicsData
+    let club_analysis: GolfClubAnalysisData
+    let recommendations: [GolfRecommendation]
+    let overall_score: Double
+    let analysis_type: String // Always "golf_ai_local"
+    let model_version: String
+    
+    // Compatibility with existing SwingAnalysisResponse
+    var asSwingAnalysisResponse: SwingAnalysisResponse {
+        return SwingAnalysisResponse(
+            predicted_label: predicted_label,
+            confidence: confidence,
+            confidence_gap: 0.8 - confidence,
+            all_probabilities: generateProbabilities(),
+            camera_angle: biomechanics.camera_angle,
+            angle_confidence: Double(biomechanics.angle_confidence),
+            feature_reliability: biomechanics.feature_reliability,
+            club_face_analysis: club_analysis.club_face_analysis,
+            club_speed_analysis: club_analysis.club_speed_analysis,
+            premium_features_available: true, // Golf AI always provides premium features
+            physics_insights: biomechanics.physics_summary,
+            angle_insights: biomechanics.posture_insights,
+            recommendations: recommendations.map { $0.description },
+            extraction_status: "success",
+            analysis_type: analysis_type,
+            model_version: model_version,
+            plane_angle: biomechanics.swing_plane_angle,
+            tempo_ratio: biomechanics.tempo_ratio,
+            shoulder_tilt: biomechanics.shoulder_rotation,
+            video_duration_seconds: biomechanics.video_duration
+        )
+    }
+    
+    private func generateProbabilities() -> [String: Double] {
+        var probs: [String: Double] = [:]
+        probs[predicted_label] = confidence
+        
+        let otherLabels = ["perfect", "too_steep", "too_flat", "over_the_top", "inside_out"]
+        let remainingProb = 1.0 - confidence
+        let otherProb = remainingProb / Double(otherLabels.count - 1)
+        
+        for label in otherLabels where label != predicted_label {
+            probs[label] = otherProb
+        }
+        
+        return probs
+    }
+}
+
+struct GolfSwingPhase: Codable {
+    let phase: String // address, backswing, etc.
+    let start_time: Double
+    let end_time: Double
+    let duration: Double
+    let quality_score: Double
+    let keypoints_detected: Int
+}
+
+struct GolfBiomechanicsData: Codable {
+    let spine_angle: Double
+    let hip_rotation: Double
+    let shoulder_rotation: Double
+    let weight_transfer: GolfWeightTransfer
+    let posture_rating: String
+    let tempo_ratio: Double
+    let swing_plane_angle: Double
+    let balance_score: Double
+    
+    // Analysis metadata
+    let camera_angle: String
+    let angle_confidence: Float
+    let feature_reliability: [String: Double]
+    let physics_summary: String
+    let posture_insights: String
+    let video_duration: Double
+}
+
+struct GolfWeightTransfer: Codable {
+    let left_percentage: Double
+    let right_percentage: Double
+    let transfer_quality: String // "excellent", "good", "needs_work"
+    let center_of_gravity_path: [GolfPoint]
+}
+
+struct GolfPoint: Codable {
+    let x: Double
+    let y: Double
+    let timestamp: Double
+}
+
+struct GolfClubAnalysisData: Codable {
+    let club_detected: Bool
+    let club_type: String
+    let shaft_angle_at_impact: Double
+    let club_face_angle: Double
+    let club_path: [GolfPoint]
+    let grip_analysis: GolfGripAnalysis
+    
+    // Premium club analysis features
+    let club_face_analysis: ClubFaceAnalysis?
+    let club_speed_analysis: ClubSpeedAnalysis?
+}
+
+struct GolfGripAnalysis: Codable {
+    let grip_strength: String // "weak", "neutral", "strong"
+    let grip_position: String // "correct", "too_high", "too_low"
+    let grip_consistency: Double
+    let hand_separation: Double
+}
+
+struct GolfRecommendation: Codable {
+    let category: String // "posture", "grip", "swing_plane", etc.
+    let priority: Int // 1 = highest priority
+    let title: String
+    let description: String
+    let drill_suggestion: String?
+    
+    var displayText: String {
+        return "\(title): \(description)"
+    }
+}
+
+// MARK: - Chat Models
   struct ChatRequest: Codable {
       let question: String
   }
 
   struct ChatResponse: Codable {
-      let answer: String
-      let is_golf_related: Bool
+      let id: String
+      let message: String
+      let isUser: Bool
+      let timestamp: Date
+      let intent: String
+      let confidence: Double
+      
+      // Legacy support
+      var answer: String { return message }
+      let is_golf_related: Bool = true
+      
+      init(id: String, message: String, isUser: Bool, timestamp: Date, intent: String, confidence: Double) {
+          self.id = id
+          self.message = message
+          self.isUser = isUser
+          self.timestamp = timestamp
+          self.intent = intent
+          self.confidence = confidence
+      }
   }
 
   // MARK: - API Health
@@ -40,6 +186,12 @@ import Foundation
       let camera_angle: String?
       let angle_confidence: Double?
       let feature_reliability: [String: Double]?
+      
+      // New fields for enhanced UI
+      let plane_angle: Double?
+      let tempo_ratio: Double?
+      let shoulder_tilt: Double?
+      let video_duration_seconds: Double?
       
       // Quality validation fields (optional)
       let feature_dimension_ok: Bool?
@@ -89,7 +241,9 @@ import Foundation
            club_face_analysis: ClubFaceAnalysis?, club_speed_analysis: ClubSpeedAnalysis?,
            premium_features_available: Bool?, physics_insights: String, angle_insights: String?, 
            recommendations: [String]?, extraction_status: String,
-           analysis_type: String?, model_version: String?) {
+           analysis_type: String?, model_version: String?,
+           plane_angle: Double? = nil, tempo_ratio: Double? = nil, 
+           shoulder_tilt: Double? = nil, video_duration_seconds: Double? = nil) {
           self.predicted_label = predicted_label
           self.confidence = confidence
           self.confidence_gap = confidence_gap
@@ -97,6 +251,12 @@ import Foundation
           self.camera_angle = camera_angle
           self.angle_confidence = angle_confidence
           self.feature_reliability = feature_reliability
+          
+          // New enhanced UI fields
+          self.plane_angle = plane_angle
+          self.tempo_ratio = tempo_ratio
+          self.shoulder_tilt = shoulder_tilt
+          self.video_duration_seconds = video_duration_seconds
           
           // Initialize optional detailed analysis fields
           self.feature_dimension_ok = nil
@@ -130,6 +290,12 @@ import Foundation
           self.camera_angle = nil
           self.angle_confidence = nil
           self.feature_reliability = nil
+          
+          // New enhanced UI fields - defaults for backward compatibility
+          self.plane_angle = nil
+          self.tempo_ratio = nil
+          self.shoulder_tilt = nil
+          self.video_duration_seconds = nil
           
           // Initialize optional detailed analysis fields
           self.feature_dimension_ok = nil
@@ -194,14 +360,15 @@ import Foundation
           case _physics_insights = "physics_insights"
           case angle_insights, recommendations, extraction_status
           case analysis_type, model_version
+          case plane_angle, tempo_ratio, shoulder_tilt, video_duration_seconds
       }
       
       // Custom decoder to handle both string and object formats
       init(from decoder: Decoder) throws {
           let container = try decoder.container(keyedBy: CodingKeys.self)
           
-          predicted_label = try container.decode(String.self, forKey: .predicted_label)
-          confidence = try container.decode(Double.self, forKey: .confidence)
+          predicted_label = try container.decodeIfPresent(String.self, forKey: .predicted_label) ?? "unknown"
+          confidence = try container.decodeIfPresent(Double.self, forKey: .confidence) ?? 0.5
           confidence_gap = try container.decodeIfPresent(Double.self, forKey: .confidence_gap) ?? 0.0
           all_probabilities = try container.decodeIfPresent([String: Double].self, forKey: .all_probabilities) ?? [:]
           extraction_status = try container.decodeIfPresent(String.self, forKey: .extraction_status) ?? "success"
@@ -210,6 +377,12 @@ import Foundation
           camera_angle = try container.decodeIfPresent(String.self, forKey: .camera_angle)
           angle_confidence = try container.decodeIfPresent(Double.self, forKey: .angle_confidence)
           feature_reliability = try container.decodeIfPresent([String: Double].self, forKey: .feature_reliability)
+          
+          // Enhanced UI fields
+          plane_angle = try container.decodeIfPresent(Double.self, forKey: .plane_angle)
+          tempo_ratio = try container.decodeIfPresent(Double.self, forKey: .tempo_ratio)
+          shoulder_tilt = try container.decodeIfPresent(Double.self, forKey: .shoulder_tilt)
+          video_duration_seconds = try container.decodeIfPresent(Double.self, forKey: .video_duration_seconds)
           
           // Quality validation fields
           feature_dimension_ok = try container.decodeIfPresent(Bool.self, forKey: .feature_dimension_ok)
@@ -275,6 +448,10 @@ import Foundation
           try container.encodeIfPresent(recommendations, forKey: .recommendations)
           try container.encodeIfPresent(analysis_type, forKey: .analysis_type)
           try container.encodeIfPresent(model_version, forKey: .model_version)
+          try container.encodeIfPresent(plane_angle, forKey: .plane_angle)
+          try container.encodeIfPresent(tempo_ratio, forKey: .tempo_ratio)
+          try container.encodeIfPresent(shoulder_tilt, forKey: .shoulder_tilt)
+          try container.encodeIfPresent(video_duration_seconds, forKey: .video_duration_seconds)
           
           // Encode physics_insights based on internal format
           switch _physics_insights {
@@ -443,6 +620,48 @@ struct LandmarkDeviation: Codable {
       let flight_analysis: FlightAnalysis?
       let trajectory_data: TrajectoryData
       let visualization_created: Bool
+      
+      // Manual selection support
+      let requires_manual_selection: Bool?
+      let extracted_frames: [(image: UIImage, timestamp: Double)]?
+      
+      enum CodingKeys: String, CodingKey {
+          case detection_summary, flight_analysis, trajectory_data, visualization_created
+          case requires_manual_selection
+          // extracted_frames is not codable - handled separately
+      }
+      
+      init(detection_summary: DetectionSummary, flight_analysis: FlightAnalysis?, 
+           trajectory_data: TrajectoryData, visualization_created: Bool,
+           requires_manual_selection: Bool? = nil, 
+           extracted_frames: [(image: UIImage, timestamp: Double)]? = nil) {
+          self.detection_summary = detection_summary
+          self.flight_analysis = flight_analysis
+          self.trajectory_data = trajectory_data
+          self.visualization_created = visualization_created
+          self.requires_manual_selection = requires_manual_selection
+          self.extracted_frames = extracted_frames
+      }
+      
+      init(from decoder: Decoder) throws {
+          let container = try decoder.container(keyedBy: CodingKeys.self)
+          detection_summary = try container.decode(DetectionSummary.self, forKey: .detection_summary)
+          flight_analysis = try container.decodeIfPresent(FlightAnalysis.self, forKey: .flight_analysis)
+          trajectory_data = try container.decode(TrajectoryData.self, forKey: .trajectory_data)
+          visualization_created = try container.decode(Bool.self, forKey: .visualization_created)
+          requires_manual_selection = try container.decodeIfPresent(Bool.self, forKey: .requires_manual_selection)
+          extracted_frames = nil // Not decoded from JSON
+      }
+      
+      func encode(to encoder: Encoder) throws {
+          var container = encoder.container(keyedBy: CodingKeys.self)
+          try container.encode(detection_summary, forKey: .detection_summary)
+          try container.encodeIfPresent(flight_analysis, forKey: .flight_analysis)
+          try container.encode(trajectory_data, forKey: .trajectory_data)
+          try container.encode(visualization_created, forKey: .visualization_created)
+          try container.encodeIfPresent(requires_manual_selection, forKey: .requires_manual_selection)
+          // extracted_frames is not encoded to JSON
+      }
   }
 
   struct DetectionSummary: Codable {
