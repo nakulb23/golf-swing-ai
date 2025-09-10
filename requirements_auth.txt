@@ -1,0 +1,19 @@
+# Authentication Requirements for GolfSwingAI
+# Install with: pip install -r requirements_auth.txt
+
+# JWT Authentication
+PyJWT==2.8.0
+
+# Password hashing
+bcrypt==4.1.2
+
+# Email validation (already included with FastAPI)
+pydantic[email]==2.5.3
+
+# Database (SQLite is built-in to Python)
+# No additional requirements
+
+# Existing dependencies that should already be installed:
+# fastapi
+# uvicorn
+# python-multipart (for file uploads)

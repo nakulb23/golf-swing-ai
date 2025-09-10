@@ -27,7 +27,7 @@ try:
     from predict_enhanced_lstm import predict_with_enhanced_lstm
     LSTM_AVAILABLE = True
 except ImportError:
-    print("ℹ️ Enhanced LSTM module not available")
+    print("Enhanced LSTM module not available")
     LSTM_AVAILABLE = False
 from detailed_swing_analysis import analyze_swing_with_details
 # Conditional import for incremental LSTM trainer
@@ -35,12 +35,28 @@ try:
     from incremental_lstm_trainer import get_trainer, add_user_contribution, get_training_status
     INCREMENTAL_TRAINER_AVAILABLE = True
 except ImportError:
-    print("ℹ️ Incremental LSTM trainer not available")
+    print("Incremental LSTM trainer not available")
     INCREMENTAL_TRAINER_AVAILABLE = False
 
 # Utility modules
 from golf_chatbot import CaddieChat
 from ball_tracking import GolfBallTracker
+
+# Import MotorMates API
+try:
+    from motormates_api import router as motormates_router
+    MOTORMATES_AVAILABLE = True
+except ImportError:
+    print("MotorMates API module not available")
+    MOTORMATES_AVAILABLE = False
+
+# Import GolfSwingAI Authentication API
+try:
+    from golfai_auth_api import router as auth_router
+    AUTH_AVAILABLE = True
+except ImportError:
+    print("GolfSwingAI Authentication API module not available")
+    AUTH_AVAILABLE = False
 
 # Initialize components
 chatbot = CaddieChat()
@@ -57,9 +73,9 @@ class ChatResponse(BaseModel):
     is_golf_related: bool
 
 app = FastAPI(
-    title="Golf Swing AI Enhanced",
-    description="Advanced golf analysis with LSTM temporal modeling, multi-angle detection, physics-based features, swing classification, ball tracking, and Q&A chatbot",
-    version="2.1.0"
+    title="Golf Swing AI & MotorMates API",
+    description="Combined API for Golf Swing AI (golf analysis) and MotorMates (automotive social platform)",
+    version="3.0.0"
 )
 
 # Add CORS middleware for iOS app
@@ -71,23 +87,71 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Include MotorMates router if available
+if MOTORMATES_AVAILABLE:
+    app.include_router(motormates_router)
+    print("MotorMates API routes included")
+
+# Include GolfSwingAI Authentication router if available
+if AUTH_AVAILABLE:
+    app.include_router(auth_router)
+    print("GolfSwingAI Authentication API routes included")
+
 @app.get("/")
 async def root():
-    return {
-        "message": "Golf Swing AI - Complete golf analysis system",
-        "version": "2.0.0",
-        "features": {
-            "swing_analysis": "Physics-based swing plane classification",
-            "ball_tracking": "Real-time golf ball trajectory analysis", 
-            "chatbot": "CaddieChat - Golf Q&A with PGA tournament data"
-        },
-        "endpoints": {
-            "swing_analysis": "/predict",
-            "ball_tracking": "/track-ball",
-            "chatbot": "/chat"
-        },
-        "swing_classes": ["on_plane", "too_steep", "too_flat"]
+    response = {
+        "message": "Combined API Server - Golf Swing AI & MotorMates",
+        "version": "3.0.0",
+        "services": {
+            "golf_swing_ai": {
+                "description": "Complete golf analysis system with user authentication",
+                "features": {
+                    "authentication": "JWT-based user authentication with persistent login",
+                    "user_profiles": "Personalized profiles with handicap and skill tracking",
+                    "swing_analysis": "Physics-based swing plane classification",
+                    "ball_tracking": "Real-time golf ball trajectory analysis", 
+                    "chatbot": "CaddieChat - Golf Q&A with PGA tournament data",
+                    "progress_tracking": "Track improvement over time with detailed analytics"
+                },
+                "endpoints": {
+                    "authentication": {
+                        "register": "/auth/register",
+                        "login": "/auth/login",
+                        "refresh": "/auth/refresh",
+                        "logout": "/auth/logout",
+                        "profile": "/auth/profile"
+                    },
+                    "swing_analysis": "/predict",
+                    "ball_tracking": "/track-ball",
+                    "chatbot": "/chat",
+                    "history": "/auth/swing/history",
+                    "progress": "/auth/progress"
+                }
+            }
+        }
     }
+    
+    if MOTORMATES_AVAILABLE:
+        response["services"]["motormates"] = {
+            "description": "Automotive social platform",
+            "features": {
+                "authentication": "User registration and login",
+                "posts": "Share automotive content and photos",
+                "routes": "Create and discover driving routes",
+                "garage": "Manage your car collection"
+            },
+            "endpoints": {
+                "root": "/motormates",
+                "health": "/motormates/health",
+                "auth": "/motormates/auth",
+                "posts": "/motormates/posts",
+                "routes": "/motormates/routes",
+                "garage": "/motormates/garage",
+                "app_updates": "/motormates/app-updates"
+            }
+        }
+    
+    return response
 
 @app.get("/health")
 async def health_check():
