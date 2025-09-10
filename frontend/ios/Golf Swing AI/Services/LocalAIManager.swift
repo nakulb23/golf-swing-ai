@@ -167,7 +167,7 @@ extension LocalSwingAnalyzer {
     private func calculateTempoFromPoses(_ poses: [PoseData], currentIndex: Int) -> GolfTempoAnalysis {
         // Estimate tempo based on position in sequence
         let totalFrames = poses.count
-        let progress = Double(currentIndex) / Double(max(totalFrames - 1, 1))
+        let _ = Double(currentIndex) / Double(max(totalFrames - 1, 1))
         
         // Typical golf swing tempo ratios
         let backswingFrames = Int(Double(totalFrames) * 0.75)
@@ -1226,6 +1226,94 @@ class LocalSwingAnalyzer: ObservableObject {
                 your_percentile: max(0, min(100, (estimatedMPH / 90) * 50)),
                 comparison_text: "Your club speed is \(String(format: "%.0f", (estimatedMPH / 90 - 1) * 100))% \(estimatedMPH > 90 ? "above" : "below") amateur average"
             )
+        )
+    }
+    
+    // MARK: - Club Path Analysis Helper Function
+    
+    private func analyzeClubPath(_ clubPath: [GolfPoint]) -> ClubPathAnalysis {
+        guard clubPath.count >= 3 else {
+            return ClubPathAnalysis(
+                efficiency: 65.0,
+                energyLossPoints: ["Insufficient club path data"],
+                contactQuality: 70.0,
+                pathType: "neutral"
+            )
+        }
+        
+        // Calculate path characteristics
+        var pathAngles: [Double] = []
+        var pathSpeeds: [Double] = []
+        
+        for i in 2..<clubPath.count {
+            let p1 = clubPath[i-2]
+            let p2 = clubPath[i-1] 
+            let p3 = clubPath[i]
+            
+            // Calculate angle at p2
+            let v1 = CGVector(dx: p2.x - p1.x, dy: p2.y - p1.y)
+            let v2 = CGVector(dx: p3.x - p2.x, dy: p3.y - p2.y)
+            
+            let dot = v1.dx * v2.dx + v1.dy * v2.dy
+            let mag1 = sqrt(v1.dx * v1.dx + v1.dy * v1.dy)
+            let mag2 = sqrt(v2.dx * v2.dx + v2.dy * v2.dy)
+            
+            if mag1 > 0 && mag2 > 0 {
+                let cosAngle = dot / (mag1 * mag2)
+                let angle = acos(min(max(cosAngle, -1), 1)) * 180 / .pi
+                pathAngles.append(angle)
+            }
+            
+            // Calculate instantaneous speed
+            let distance = sqrt(pow(p3.x - p2.x, 2) + pow(p3.y - p2.y, 2))
+            let time = p3.timestamp - p2.timestamp
+            if time > 0 {
+                pathSpeeds.append(distance / time)
+            }
+        }
+        
+        // Analyze path consistency  
+        let avgAngle = pathAngles.isEmpty ? 0 : pathAngles.reduce(0, +) / Double(pathAngles.count)
+        let angleVariation = pathAngles.isEmpty ? 0 : pathAngles.map { abs($0 - avgAngle) }.reduce(0, +) / Double(pathAngles.count)
+        
+        // Determine path type and efficiency
+        let pathType: String
+        let efficiency: Double
+        var energyLossPoints: [String] = []
+        
+        if angleVariation < 15 {
+            pathType = "on-plane"
+            efficiency = max(85.0, 95.0 - angleVariation)
+        } else if angleVariation < 25 {
+            pathType = "neutral" 
+            efficiency = max(70.0, 85.0 - angleVariation)
+            energyLossPoints.append("Minor path inconsistencies")
+        } else if avgAngle > 90 {
+            pathType = "outside-in"
+            efficiency = max(50.0, 70.0 - angleVariation * 0.5)
+            energyLossPoints.append("Outside-in swing path")
+        } else {
+            pathType = "inside-out"
+            efficiency = max(60.0, 75.0 - angleVariation * 0.5)
+            energyLossPoints.append("Excessive inside-out path")
+        }
+        
+        // Add energy loss points based on speed consistency
+        let avgSpeed = pathSpeeds.isEmpty ? 0 : pathSpeeds.reduce(0, +) / Double(pathSpeeds.count)
+        let speedVariation = pathSpeeds.isEmpty ? 0 : pathSpeeds.map { abs($0 - avgSpeed) }.reduce(0, +) / Double(pathSpeeds.count)
+        
+        if speedVariation > avgSpeed * 0.3 {
+            energyLossPoints.append("Inconsistent acceleration")
+        }
+        
+        // Calculate contact quality based on path efficiency
+        let contactQuality = min(95.0, efficiency * 1.1)
+        
+        return ClubPathAnalysis(
+            efficiency: efficiency,
+            energyLossPoints: energyLossPoints,
+            contactQuality: contactQuality,
+            pathType: pathType
         )
     }
     
@@ -2775,93 +2863,6 @@ enum LocalAnalysisError: Error, LocalizedError {
         }
     }
     
-    // MARK: - Club Path Analysis Helper Function
-    
-    private func analyzeClubPath(_ clubPath: [GolfPoint]) -> ClubPathAnalysis {
-        guard clubPath.count >= 3 else {
-            return ClubPathAnalysis(
-                efficiency: 65.0,
-                energyLossPoints: ["Insufficient club path data"],
-                contactQuality: 70.0,
-                pathType: "neutral"
-            )
-        }
-        
-        // Calculate path characteristics
-        var pathAngles: [Double] = []
-        var pathSpeeds: [Double] = []
-        
-        for i in 2..<clubPath.count {
-            let p1 = clubPath[i-2]
-            let p2 = clubPath[i-1] 
-            let p3 = clubPath[i]
-            
-            // Calculate angle at p2
-            let v1 = CGVector(dx: p2.x - p1.x, dy: p2.y - p1.y)
-            let v2 = CGVector(dx: p3.x - p2.x, dy: p3.y - p2.y)
-            
-            let dot = v1.dx * v2.dx + v1.dy * v2.dy
-            let mag1 = sqrt(v1.dx * v1.dx + v1.dy * v1.dy)
-            let mag2 = sqrt(v2.dx * v2.dx + v2.dy * v2.dy)
-            
-            if mag1 > 0 && mag2 > 0 {
-                let cosAngle = dot / (mag1 * mag2)
-                let angle = acos(min(max(cosAngle, -1), 1)) * 180 / .pi
-                pathAngles.append(angle)
-            }
-            
-            // Calculate instantaneous speed
-            let distance = sqrt(pow(p3.x - p2.x, 2) + pow(p3.y - p2.y, 2))
-            let time = p3.timestamp - p2.timestamp
-            if time > 0 {
-                pathSpeeds.append(distance / time)
-            }
-        }
-        
-        // Analyze path consistency  
-        let avgAngle = pathAngles.isEmpty ? 0 : pathAngles.reduce(0, +) / Double(pathAngles.count)
-        let angleVariation = pathAngles.isEmpty ? 0 : pathAngles.map { abs($0 - avgAngle) }.reduce(0, +) / Double(pathAngles.count)
-        
-        // Determine path type and efficiency
-        let pathType: String
-        let efficiency: Double
-        var energyLossPoints: [String] = []
-        
-        if angleVariation < 15 {
-            pathType = "on-plane"
-            efficiency = max(85.0, 95.0 - angleVariation)
-        } else if angleVariation < 25 {
-            pathType = "neutral" 
-            efficiency = max(70.0, 85.0 - angleVariation)
-            energyLossPoints.append("Minor path inconsistencies")
-        } else if avgAngle > 90 {
-            pathType = "outside-in"
-            efficiency = max(50.0, 70.0 - angleVariation * 0.5)
-            energyLossPoints.append("Outside-in swing path")
-        } else {
-            pathType = "inside-out"
-            efficiency = max(60.0, 75.0 - angleVariation * 0.5)
-            energyLossPoints.append("Excessive inside-out path")
-        }
-        
-        // Add energy loss points based on speed consistency
-        let avgSpeed = pathSpeeds.isEmpty ? 0 : pathSpeeds.reduce(0, +) / Double(pathSpeeds.count)
-        let speedVariation = pathSpeeds.isEmpty ? 0 : pathSpeeds.map { abs($0 - avgSpeed) }.reduce(0, +) / Double(pathSpeeds.count)
-        
-        if speedVariation > avgSpeed * 0.3 {
-            energyLossPoints.append("Inconsistent acceleration")
-        }
-        
-        // Calculate contact quality based on path efficiency
-        let contactQuality = min(95.0, efficiency * 1.1)
-        
-        return ClubPathAnalysis(
-            efficiency: efficiency,
-            energyLossPoints: energyLossPoints,
-            contactQuality: contactQuality,
-            pathType: pathType
-        )
-    }
 }
 
 // MARK: - Club Path Analysis Result
@@ -2871,4 +2872,3 @@ struct ClubPathAnalysis {
     let contactQuality: Double
     let pathType: String
 }
-
