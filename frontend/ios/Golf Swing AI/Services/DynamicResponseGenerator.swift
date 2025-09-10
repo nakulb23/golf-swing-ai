@@ -3,7 +3,7 @@ import Foundation
 // MARK: - Dynamic Response Generator
 // Generates contextual, conversational responses using knowledge base and conversation memory
 
-class DynamicResponseGenerator {
+class DynamicResponseGenerator: @unchecked Sendable {
     
     func generateResponse(
         for analysis: ContextualAnalysis,
@@ -352,7 +352,7 @@ struct GeneratedResponse {
     let content: String
     let confidence: Double
     let usedKnowledge: [String]
-    let responseType: EnhancedGolfChat.ResponseType
+    let responseType: ResponseType
 }
 
 

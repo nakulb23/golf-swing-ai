@@ -3,7 +3,7 @@ import Foundation
 // MARK: - Dynamic Golf Knowledge Engine
 // Flexible knowledge base that can answer any golf question contextually
 
-class GolfKnowledgeEngine {
+class GolfKnowledgeEngine: @unchecked Sendable {
     private let knowledgeBase: [String: GolfKnowledgeDomain]
     
     init() {

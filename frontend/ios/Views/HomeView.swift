@@ -137,47 +137,53 @@ struct HomeView: View {
                         .padding(.horizontal, 24)
                         .padding(.top, 20)
                         
-                        // Show analytics for logged-in users, tools preview for guests
+                        // Dynamic content based on user state and data
                         if authManager.isAuthenticated {
-                            // Real User Analytics or Getting Started Message
+                            // Logged-in users - check if they have swing data
                             if let user = authManager.currentUser, user.profile.totalSwingsAnalyzed > 0 {
-                                // Show real analytics for users with data
-                                VStack(spacing: 12) {
-                                    HStack(spacing: 12) {
-                                        AnalyticsCard(
-                                            icon: "chart.line.uptrend.xyaxis",
-                                            title: "Best Speed",
-                                            value: user.profile.bestSwingSpeed > 0 ? "\(Int(user.profile.bestSwingSpeed)) mph" : "—",
-                                            color: .blue
-                                        )
+                                // Show user stats and progress
+                                VStack(spacing: 24) {
+                                    // Analytics cards
+                                    VStack(spacing: 12) {
+                                        HStack(spacing: 12) {
+                                            AnalyticsCard(
+                                                icon: "chart.line.uptrend.xyaxis",
+                                                title: "Best Speed",
+                                                value: user.profile.bestSwingSpeed > 0 ? "\(Int(user.profile.bestSwingSpeed)) mph" : "—",
+                                                color: .blue
+                                            )
+                                            
+                                            AnalyticsCard(
+                                                icon: "video.fill",
+                                                title: "Swings",
+                                                value: "\(user.profile.totalSwingsAnalyzed)",
+                                                color: .green
+                                            )
+                                        }
                                         
-                                        AnalyticsCard(
-                                            icon: "video.fill",
-                                            title: "Swings",
-                                            value: "\(user.profile.totalSwingsAnalyzed)",
-                                            color: .green
-                                        )
+                                        HStack(spacing: 12) {
+                                            AnalyticsCard(
+                                                icon: "chart.bar.fill",
+                                                title: "Avg Speed",
+                                                value: user.profile.averageSwingSpeed > 0 ? "\(Int(user.profile.averageSwingSpeed)) mph" : "—",
+                                                color: .orange
+                                            )
+                                            
+                                            AnalyticsCard(
+                                                icon: "calendar.badge.clock",
+                                                title: "Member",
+                                                value: membershipDuration(from: user.dateCreated),
+                                                color: .purple
+                                            )
+                                        }
                                     }
+                                    .padding(.horizontal, 24)
                                     
-                                    HStack(spacing: 12) {
-                                        AnalyticsCard(
-                                            icon: "chart.bar.fill",
-                                            title: "Avg Speed",
-                                            value: user.profile.averageSwingSpeed > 0 ? "\(Int(user.profile.averageSwingSpeed)) mph" : "—",
-                                            color: .orange
-                                        )
-                                        
-                                        AnalyticsCard(
-                                            icon: "calendar.badge.clock",
-                                            title: "Member",
-                                            value: membershipDuration(from: user.dateCreated),
-                                            color: .purple
-                                        )
-                                    }
+                                    // Progress section
+                                    UserPerformanceSection(user: user)
                                 }
-                                .padding(.horizontal, 24)
                             } else {
-                                // Getting started message for new users
+                                // New user - encourage first swing analysis
                                 VStack(spacing: 16) {
                                     VStack(spacing: 8) {
                                         Image(systemName: "wand.and.stars")
@@ -218,15 +224,65 @@ struct HomeView: View {
                                 )
                                 .padding(.horizontal, 24)
                             }
-                        } else {
-                            // Guest Tools Preview
-                            VStack(spacing: 16) {
-                                Text("What You Can Do")
-                                    .font(.system(size: 20, weight: .semibold))
+                        }
+                        
+                        // Analysis Tools Section - shown for all users
+                        VStack(spacing: 20) {
+                            HStack {
+                                Text(authManager.isAuthenticated ? "Analysis Tools" : "What You Can Do")
+                                    .font(.system(size: 22, weight: .semibold))
                                     .foregroundColor(.primary)
-                                    .frame(maxWidth: .infinity, alignment: .leading)
                                 
-                                VStack(spacing: 12) {
+                                Spacer()
+                                
+                                if authManager.isAuthenticated {
+                                    Button("See all") {
+                                        navigateToAllTools = true
+                                    }
+                                    .font(.system(size: 16, weight: .medium))
+                                    .foregroundColor(.blue)
+                                }
+                            }
+                            .padding(.horizontal, 24)
+                            
+                            // Tool Cards - different style based on auth status
+                            VStack(spacing: 12) {
+                                if authManager.isAuthenticated {
+                                    // Compact analytical style for logged-in users
+                                    NavigationLink(destination: SwingAnalysisView()) {
+                                        AnalyticalToolCard(
+                                            icon: "waveform.path.ecg",
+                                            title: "Swing Analysis",
+                                            subtitle: "Motion tracking & biomechanics",
+                                            metrics: "12 data points",
+                                            color: .blue
+                                        )
+                                    }
+                                    .buttonStyle(ElegantButtonStyle())
+                                    
+                                    HStack(spacing: 12) {
+                                        NavigationLink(destination: CaddieChatView()) {
+                                            CompactAnalyticalCard(
+                                                icon: "message.circle.fill",
+                                                title: "CaddieChat",
+                                                value: "AI Expert",
+                                                color: .green
+                                            )
+                                        }
+                                        .buttonStyle(ElegantButtonStyle())
+                                        
+                                        NavigationLink(destination: BallTrackingView()) {
+                                            CompactAnalyticalCard(
+                                                icon: "dot.radiowaves.up.forward",
+                                                title: "Ball Flight",
+                                                value: "3D tracking",
+                                                color: .orange
+                                            )
+                                        }
+                                        .buttonStyle(ElegantButtonStyle())
+                                    }
+                                } else {
+                                    // Descriptive preview style for guests
                                     NavigationLink(destination: SwingAnalysisView()) {
                                         GuestToolPreview(
                                             icon: "waveform.path.ecg",
@@ -256,128 +312,60 @@ struct HomeView: View {
                                         )
                                     }
                                     .buttonStyle(PlainButtonStyle())
-                                    
-                                    if premiumManager.validatePremiumAccess() {
-                                        NavigationLink(destination: PhysicsEngineView()) {
-                                            GuestToolPreview(
-                                                icon: "function",
-                                                title: "Physics Engine",
-                                                description: "Premium: Professional biomechanics analysis with video upload, real-time force vectors, and energy calculations",
-                                                color: .purple,
-                                                isComingSoon: false
-                                            )
-                                        }
-                                        .buttonStyle(PlainButtonStyle())
-                                    } else {
-                                        Button(action: {
-                                            showingPhysicsEnginePaywall = true
-                                        }) {
-                                            GuestToolPreview(
-                                                icon: "function",
-                                                title: "Physics Engine",
-                                                description: "Premium: Professional biomechanics analysis with video upload, real-time force vectors, and energy calculations",
-                                                color: .purple,
-                                                isComingSoon: false
-                                            )
-                                        }
-                                        .buttonStyle(PlainButtonStyle())
-                                    }
-                                }
-                            }
-                            .padding(.horizontal, 24)
-                        }
-                        
-                        // User Performance Analytics (only show if user has swing data)
-                        if authManager.isAuthenticated, 
-                           let user = authManager.currentUser, 
-                           user.profile.totalSwingsAnalyzed > 0 {
-                            UserPerformanceSection(user: user)
-                        }
-                        
-                        // Analysis Tools Section
-                        VStack(spacing: 20) {
-                            HStack {
-                                Text("Analysis Tools")
-                                    .font(.system(size: 22, weight: .semibold))
-                                    .foregroundColor(.primary)
-                                
-                                Spacer()
-                                
-                                Button("See all") {
-                                    navigateToAllTools = true
-                                }
-                                .font(.system(size: 16, weight: .medium))
-                                .foregroundColor(.blue)
-                            }
-                            .padding(.horizontal, 24)
-                            
-                            // Tool Cards
-                            VStack(spacing: 12) {
-                                NavigationLink(destination: SwingAnalysisView()) {
-                                    AnalyticalToolCard(
-                                        icon: "waveform.path.ecg",
-                                        title: "Swing Analysis",
-                                        subtitle: "Motion tracking & biomechanics",
-                                        metrics: "12 data points",
-                                        color: .blue
-                                    )
-                                }
-                                .buttonStyle(ElegantButtonStyle())
-                                
-                                HStack(spacing: 12) {
-                                    NavigationLink(destination: CaddieChatView()) {
-                                        CompactAnalyticalCard(
-                                            icon: "message.circle.fill",
-                                            title: "CaddieChat",
-                                            value: "AI Expert",
-                                            color: .green
-                                        )
-                                    }
-                                    .buttonStyle(ElegantButtonStyle())
-                                    
-                                    NavigationLink(destination: BallTrackingView()) {
-                                        CompactAnalyticalCard(
-                                            icon: "dot.radiowaves.up.forward",
-                                            title: "Ball Flight",
-                                            value: "3D tracking",
-                                            color: .orange
-                                        )
-                                    }
-                                    .buttonStyle(ElegantButtonStyle())
                                 }
                                 
+                                // Premium Physics Engine - same for both auth states
                                 if premiumManager.validatePremiumAccess() {
                                     NavigationLink(destination: PhysicsEngineView()) {
-                                        AnalyticalToolCard(
-                                            icon: "function",
-                                            title: "Physics Engine",
-                                            subtitle: "Force vectors & impact analysis",
-                                            metrics: "Premium offering",
-                                            color: .purple,
-                                            isComingSoon: false
-                                        )
+                                        if authManager.isAuthenticated {
+                                            AnalyticalToolCard(
+                                                icon: "function",
+                                                title: "Physics Engine",
+                                                subtitle: "Force vectors & impact analysis",
+                                                metrics: "Premium offering",
+                                                color: .purple,
+                                                isComingSoon: false
+                                            )
+                                        } else {
+                                            GuestToolPreview(
+                                                icon: "function",
+                                                title: "Physics Engine",
+                                                description: "Premium: Professional biomechanics analysis with video upload, real-time force vectors, and energy calculations",
+                                                color: .purple,
+                                                isComingSoon: false
+                                            )
+                                        }
                                     }
                                     .buttonStyle(PlainButtonStyle())
                                 } else {
                                     Button(action: {
-                                        print("🔘 Showing premium paywall for Physics Engine")
                                         showingPhysicsEnginePaywall = true
                                     }) {
-                                        AnalyticalToolCard(
-                                            icon: "function",
-                                            title: "Physics Engine",
-                                            subtitle: "Force vectors & impact analysis",
-                                            metrics: "Premium offering",
-                                            color: .purple,
-                                            isComingSoon: false
-                                        )
+                                        if authManager.isAuthenticated {
+                                            AnalyticalToolCard(
+                                                icon: "function",
+                                                title: "Physics Engine",
+                                                subtitle: "Force vectors & impact analysis",
+                                                metrics: "Premium offering",
+                                                color: .purple,
+                                                isComingSoon: false
+                                            )
+                                        } else {
+                                            GuestToolPreview(
+                                                icon: "function",
+                                                title: "Physics Engine",
+                                                description: "Premium: Professional biomechanics analysis with video upload, real-time force vectors, and energy calculations",
+                                                color: .purple,
+                                                isComingSoon: false
+                                            )
+                                        }
                                     }
                                     .buttonStyle(PlainButtonStyle())
                                 }
                             }
                             .padding(.horizontal, 24)
                         }
-                        .padding(.top, 40)
+                        .padding(.top, authManager.isAuthenticated ? 32 : 40)
                         
                         Spacer(minLength: 60)
                     }

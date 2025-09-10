@@ -13,6 +13,29 @@ struct Golf_Swing_AIApp: App {
     @StateObject private var authManager = AuthenticationManager()
     @StateObject private var themeManager = ThemeManager()
     
+    init() {
+        // Configure Google Sign-In as early as possible
+        configureGoogleSignIn()
+    }
+    
+    private func configureGoogleSignIn() {
+        // Perform configuration on a background queue to avoid blocking
+        DispatchQueue.global(qos: .background).async {
+            guard let path = Bundle.main.path(forResource: "GoogleService-Info", ofType: "plist"),
+                  let plist = NSDictionary(contentsOfFile: path),
+                  let clientId = plist["CLIENT_ID"] as? String else {
+                print("❌ Failed to load GoogleService-Info.plist or CLIENT_ID")
+                return
+            }
+            
+            // Configure on main queue
+            DispatchQueue.main.async {
+                GIDSignIn.sharedInstance.configuration = GIDConfiguration(clientID: clientId)
+                print("✅ Google Sign-In configured successfully")
+            }
+        }
+    }
+    
     var body: some Scene {
         WindowGroup {
             MinimalLaunchScreen()
@@ -33,14 +56,6 @@ struct Golf_Swing_AIApp: App {
                     UITabBar.appearance().scrollEdgeAppearance = tabBarAppearance
                     UITabBar.appearance().tintColor = UIColor(Color("AccentColor"))
                     UITabBar.appearance().unselectedItemTintColor = UIColor.systemGray
-                    
-                    // Configure Google Sign-In from GoogleService-Info.plist
-                    if let path = Bundle.main.path(forResource: "GoogleService-Info", ofType: "plist"),
-                       let plist = NSDictionary(contentsOfFile: path),
-                       let clientId = plist["CLIENT_ID"] as? String {
-                        GIDSignIn.sharedInstance.configuration = GIDConfiguration(clientID: clientId)
-                    }
-                    
                 }
                 .onOpenURL { url in
                     // Handle Google Sign-In URLs

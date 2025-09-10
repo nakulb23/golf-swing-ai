@@ -114,7 +114,7 @@ import Foundation
       private func addWelcomeMessage() {
           if messages.isEmpty {
               let welcome = ChatMessage(
-                  text: "Welcome to CaddieChat Pro! 🏌️\n\nI'm your AI golf expert with dynamic conversational abilities and memory. I can help with any golf question - from 'What is a chip shot?' to complex course strategy.\n\nI remember our conversation, learn your preferences, and provide personalized guidance. Everything runs locally on your device for instant responses.\n\nWhat would you like to know about golf?",
+                  text: "Welcome to CaddieChat Pro! 🏌️\n\nI'm your AI golf expert with dynamic conversational abilities and memory. \n\nWhat would you like to know about golf?",
                   isUser: false,
                   timestamp: Date()
               )

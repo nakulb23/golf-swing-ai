@@ -181,42 +181,40 @@ class AuthenticationManager: NSObject, ObservableObject {
         
         print("✅ Google Sign-In: Root view controller found: \(type(of: rootViewController))")
         
-        await MainActor.run {
-            print("🚀 Google Sign-In: Calling signIn on main thread...")
+        print("🚀 Google Sign-In: Calling signIn...")
+        
+        do {
+            let result = try await GIDSignIn.sharedInstance.signIn(withPresenting: rootViewController)
+            let user = result.user
             
-            Task {
-                do {
-                    let result = try await GIDSignIn.sharedInstance.signIn(withPresenting: rootViewController)
-                    let user = result.user
-                    
-                    print("✅ Google Sign-In: Success! User: \(user.profile?.email ?? "unknown")")
-                    
-                    await MainActor.run {
-                        let newUser = User(
-                            email: user.profile?.email ?? "user@gmail.com",
-                            username: "google_user_\(Date().timeIntervalSince1970)",
-                            firstName: user.profile?.givenName ?? "Google",
-                            lastName: user.profile?.familyName ?? "User"
-                        )
-                        self.currentUser = newUser
-                        self.isAuthenticated = true
-                        self.saveUserToStorage()
-                        SimpleAnalytics.shared.trackAuth(method: "google")
-                        SimpleAnalytics.shared.trackProfileUpdate(
-                            experienceLevel: newUser.experienceLevel.rawValue,
-                            hasHandicap: newUser.handicap != nil,
-                            hasHomeCourse: newUser.homeCourse != nil,
-                            yearsPlayed: SimpleAnalytics.shared.getYearsRange(newUser.yearsPlayed)
-                        )
-                        self.isLoading = false
-                    }
-                } catch {
-                    print("❌ Google Sign-In: Error: \(error)")
-                    await MainActor.run {
-                        if let gidError = error as? GIDSignInError {
-                            switch gidError.code {
-                            case .canceled:
-                                print("🔴 Google Sign-In: User cancelled")
+            print("✅ Google Sign-In: Success! User: \(user.profile?.email ?? "unknown")")
+            
+            await MainActor.run {
+                let newUser = User(
+                    email: user.profile?.email ?? "user@gmail.com",
+                    username: "google_user_\(Date().timeIntervalSince1970)",
+                    firstName: user.profile?.givenName ?? "Google",
+                    lastName: user.profile?.familyName ?? "User"
+                )
+                self.currentUser = newUser
+                self.isAuthenticated = true
+                self.saveUserToStorage()
+                SimpleAnalytics.shared.trackAuth(method: "google")
+                SimpleAnalytics.shared.trackProfileUpdate(
+                    experienceLevel: newUser.experienceLevel.rawValue,
+                    hasHandicap: newUser.handicap != nil,
+                    hasHomeCourse: newUser.homeCourse != nil,
+                    yearsPlayed: SimpleAnalytics.shared.getYearsRange(newUser.yearsPlayed)
+                )
+                self.isLoading = false
+            }
+        } catch {
+            print("❌ Google Sign-In: Error: \(error)")
+            await MainActor.run {
+                if let gidError = error as? GIDSignInError {
+                    switch gidError.code {
+                    case .canceled:
+                        print("🔴 Google Sign-In: User cancelled")
                                 // User cancelled - don't show error, just stop loading
                                 break
                             case .keychain:
@@ -234,8 +232,6 @@ class AuthenticationManager: NSObject, ObservableObject {
                     }
                 }
             }
-        }
-    }
     
     
     // MARK: - User Profile Updates

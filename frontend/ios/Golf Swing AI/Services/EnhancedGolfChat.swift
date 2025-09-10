@@ -666,6 +666,12 @@ class ConversationalFormatter {
             formatted = addRecommendationTone(formatted)
         case .problemSolving:
             formatted = addProblemSolvingTone(formatted)
+        case .followUp:
+            formatted = addFollowUpTone(formatted)
+        case .clarification:
+            formatted = addClarificationTone(formatted)
+        case .information:
+            formatted = addInformationTone(formatted)
         case .general:
             formatted = addGeneralTone(formatted)
         case .redirect:
@@ -706,6 +712,18 @@ class ConversationalFormatter {
     private func addGeneralTone(_ content: String) -> String {
         return content + "\n\nI'm excited to help you improve your golf game! What would you like to focus on first?"
     }
+    
+    private func addFollowUpTone(_ content: String) -> String {
+        return content + "\n\nBuilding on that, is there anything else you'd like to explore on this topic?"
+    }
+    
+    private func addClarificationTone(_ content: String) -> String {
+        return content + "\n\nDoes this help clarify things? Let me know if you'd like me to explain any part in more detail!"
+    }
+    
+    private func addInformationTone(_ content: String) -> String {
+        return content + "\n\nHope this information helps! Feel free to ask about any specific aspect you'd like to explore further."
+    }
 }
 
 // MARK: - Supporting Models
@@ -726,35 +744,38 @@ enum MessageTone {
     case neutral
 }
 
-enum ChatIntent {
-    case swingAdvice
-    case equipment
-    case courseStrategy
-    case rules
-    case training
-    case recommendation
-    case problemSolving
-    case general
-    case followUp
-    case clarification
+enum ChatIntent: String {
+    case swingAdvice = "swing_advice"
+    case equipment = "equipment"
+    case courseStrategy = "course_strategy"
+    case rules = "rules"
+    case training = "training"
+    case recommendation = "recommendation"
+    case problemSolving = "problem_solving"
+    case general = "general"
+    case followUp = "follow_up"
+    case clarification = "clarification"
+}
+
+enum ResponseType: String {
+    case followUp = "follow_up"
+    case clarification = "clarification"
+    case information = "information"
+    case problemSolving = "problem_solving"
+    case recommendation = "recommendation"
+    case general = "general"
+    case instruction = "instruction"
+    case advice = "advice"
+    case strategy = "strategy"
+    case rules = "rules"
+    case training = "training"
+    case redirect = "redirect"
 }
 
 struct ExpertResponse {
     let mainContent: String
     let type: ResponseType
     let confidence: Double
-}
-
-enum ResponseType {
-    case instruction
-    case advice
-    case strategy
-    case rules
-    case training
-    case recommendation
-    case problemSolving
-    case general
-    case redirect
 }
 
 class AdvancedGolfKnowledge {

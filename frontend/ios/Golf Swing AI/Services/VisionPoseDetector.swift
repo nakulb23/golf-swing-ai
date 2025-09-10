@@ -302,7 +302,7 @@ class VisionPoseDetector: ObservableObject {
             try handler.perform([request])
             
             // Debug: Check all observations regardless of confidence
-            if let allObservations = request.results as? [VNHumanBodyPoseObservation] {
+            if let allObservations = request.results {
                 print("📊 Vision returned \(allObservations.count) total observations")
                 
                 for (index, obs) in allObservations.enumerated() {
@@ -399,7 +399,8 @@ class VisionPoseDetector: ObservableObject {
                     landmarks.append(landmark)
                 }
             } catch {
-                // Joint not detected - continue with other joints
+                // Joint recognition failed - continue with other joints
+                print("⚠️ Failed to recognize joint \(landmarkName): \(error)")
                 continue
             }
         }

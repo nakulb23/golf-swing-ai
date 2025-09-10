@@ -188,11 +188,8 @@ extension LocalSwingAnalyzer {
     private func calculatePostureAnalysis(from poseData: PoseData, spineAngle: Double) -> PostureAnalysis {
         // Calculate knee flexion from knee and hip positions
         let leftKnee = poseData.keypoints.first { $0.type == .leftKnee }
-        let rightKnee = poseData.keypoints.first { $0.type == .rightKnee }
         let leftHip = poseData.keypoints.first { $0.type == .leftHip }
-        let rightHip = poseData.keypoints.first { $0.type == .rightHip }
         let leftAnkle = poseData.keypoints.first { $0.type == .leftAnkle }
-        let rightAnkle = poseData.keypoints.first { $0.type == .rightAnkle }
         
         var kneeFlexion = 20.0 // Default
         

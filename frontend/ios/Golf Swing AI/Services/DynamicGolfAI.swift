@@ -1,5 +1,5 @@
 import Foundation
-import NaturalLanguage
+@preconcurrency import NaturalLanguage
 
 // MARK: - Dynamic Golf AI System
 // A truly conversational AI that can handle any golf question with context
@@ -73,7 +73,7 @@ class DynamicGolfAI: ObservableObject {
 
 // MARK: - Conversation Memory System
 
-class ConversationMemory {
+class ConversationMemory: @unchecked Sendable {
     private var exchanges: [ConversationExchange] = []
     private var userProfile = UserGolfProfile()
     private var topicThreads: [String: [ConversationExchange]] = [:]
@@ -159,7 +159,7 @@ class ConversationMemory {
 
 // MARK: - Contextual Analyzer
 
-class ContextualAnalyzer {
+class ContextualAnalyzer: @unchecked Sendable {
     private let nlProcessor = NLLanguageRecognizer()
     
     func analyze(message: String, conversationHistory: [ConversationExchange], userProfile: UserGolfProfile) async -> ContextualAnalysis {

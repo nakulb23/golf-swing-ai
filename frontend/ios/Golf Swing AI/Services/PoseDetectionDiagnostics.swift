@@ -136,7 +136,7 @@ class PoseDetectionDiagnostics: ObservableObject {
             
             try handler.perform([request])
             
-            if let observations = request.results as? [VNHumanBodyPoseObservation] {
+            if let observations = request.results {
                 print("📊 Test image results: \(observations.count) observations")
                 
                 for (index, observation) in observations.enumerated() {

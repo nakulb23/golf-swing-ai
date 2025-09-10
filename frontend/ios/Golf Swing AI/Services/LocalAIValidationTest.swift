@@ -51,7 +51,7 @@ class LocalAIValidationTest: ObservableObject {
         print("🔍 Testing model loading...")
         
         // Since we're using built-in biomechanical analysis, no Core ML models needed
-        var passed = true
+        let passed = true
         var details: [String] = []
         
         details.append("✅ Using built-in biomechanical analysis engine")

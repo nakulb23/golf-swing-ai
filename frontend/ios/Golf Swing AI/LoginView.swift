@@ -20,7 +20,7 @@ struct LoginView: View {
                         
                         // Logo and Title
                         VStack(spacing: 16) {
-                            Image(systemName: "sportscourt.fill")
+                            Image(systemName: "figure.golf")
                                 .font(.system(size: 80))
                                 .foregroundColor(.green)
                             

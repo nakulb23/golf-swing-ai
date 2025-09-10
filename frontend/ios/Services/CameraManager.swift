@@ -3,7 +3,7 @@ import Foundation
 import SwiftUI
 
 @MainActor
-class CameraManager: NSObject, ObservableObject {
+class CameraManager: NSObject, ObservableObject, @unchecked Sendable {
     @Published var isRecording = false
     @Published var recordingTime: TimeInterval = 0
     @Published var hasPermission = false

@@ -266,7 +266,7 @@ struct GolfRecommendation: Codable {
           self.pose_sequence = nil
           self.optimal_reference = nil
           self.comparison_data = nil
-          self.has_detailed_analysis = false
+          self.has_detailed_analysis = nil
           
           self.club_face_analysis = club_face_analysis
           self.club_speed_analysis = club_speed_analysis
@@ -305,7 +305,7 @@ struct GolfRecommendation: Codable {
           self.pose_sequence = nil
           self.optimal_reference = nil
           self.comparison_data = nil
-          self.has_detailed_analysis = false
+          self.has_detailed_analysis = nil
           
           self.club_face_analysis = nil
           self.club_speed_analysis = nil
