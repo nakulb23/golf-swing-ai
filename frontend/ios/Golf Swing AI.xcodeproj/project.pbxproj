@@ -10,6 +10,7 @@
 		11B5441795A647CB9C0275159C3B1BC6 /* Configuration.storekit in Resources */ = {isa = PBXBuildFile; fileRef = 11B5441795A647CB9C0275159C3B1BC5 /* Configuration.storekit */; };
 		CF5394712DFAA169008AB6C0 /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = CF5394702DFAA169008AB6C0 /* GoogleSignIn */; };
 		CF5394732DFAA169008AB6C0 /* GoogleSignInSwift in Frameworks */ = {isa = PBXBuildFile; productRef = CF5394722DFAA169008AB6C0 /* GoogleSignInSwift */; };
+		CF9999992DF99999005A1B24 /* CoreML.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CF9999982DF99999005A1B24 /* CoreML.framework */; };
 		CFB40C7B2DF20A1E005A1B24 /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFB40C762DF207D1005A1B24 /* Constants.swift */; };
 		CFB40C7C2DF20A1E005A1B24 /* API Service.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFB40C782DF20876005A1B24 /* API Service.swift */; };
 		CFB40C7D2DF20A1E005A1B24 /* CaddieChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFB40C7A2DF2092A005A1B24 /* CaddieChatView.swift */; };
@@ -44,6 +45,7 @@
 /* Begin PBXFileReference section */
 		11B5441795A647CB9C0275159C3B1BC5 /* Configuration.storekit */ = {isa = PBXFileReference; lastKnownFileType = text; name = Configuration.storekit; path = "Golf Swing AI.xcodeproj/project.xcworkspace/Configuration.storekit"; sourceTree = SOURCE_ROOT; };
 		3571F2BC2CB0D469C9DBD538 /* CameraManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraManager.swift; sourceTree = "<group>"; };
+		CF9999982DF99999005A1B24 /* CoreML.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreML.framework; path = System/Library/Frameworks/CoreML.framework; sourceTree = SDKROOT; };
 		CFB40C452DF20678005A1B24 /* Golf Swing AI.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Golf Swing AI.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		CFB40C552DF20679005A1B24 /* Golf Swing AITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Golf Swing AITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		CFB40C5F2DF20679005A1B24 /* Golf Swing AIUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Golf Swing AIUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -85,6 +87,7 @@
 			files = (
 				CF5394712DFAA169008AB6C0 /* GoogleSignIn in Frameworks */,
 				CF5394732DFAA169008AB6C0 /* GoogleSignInSwift in Frameworks */,
+				CF9999992DF99999005A1B24 /* CoreML.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
