@@ -1349,11 +1349,21 @@ struct ComprehensiveResultsView: View {
                                 }
                                 
                                 if let tempo = result.tempo_ratio {
-                                    MetricCard(title: "Tempo", value: String(format: "%.2f", tempo), color: .purple)
+                                    let tempoText = formatTempoRatio(tempo)
+                                    let tempoColor = getTempoColor(tempo)
+                                    MetricCard(title: "Tempo", value: tempoText, color: tempoColor)
                                 }
                             }
                             
-                            MetricCard(title: "Confidence", value: "\(Int(result.confidence * 100))%", color: .green)
+                            HStack(spacing: 12) {
+                                MetricCard(title: "Confidence", value: "\(Int(result.confidence * 100))%", color: .green)
+                                
+                                // Add Club Path metric if available
+                                if let clubSpeed = result.club_speed_analysis {
+                                    let clubPathText = formatClubPath(clubSpeed)
+                                    MetricCard(title: "Club Path", value: clubPathText, color: .blue)
+                                }
+                            }
                         }
                         
                         // Insights Section
@@ -1395,6 +1405,58 @@ struct ComprehensiveResultsView: View {
                     showingVideoPlayer = false
                 }
             }
+        }
+    }
+    
+    // MARK: - Helper Functions for Metrics
+    private func formatTempoRatio(_ tempo: Double) -> String {
+        // Convert raw tempo ratio to user-friendly format
+        // Ideal tempo ratio is around 3:1 (backswing:downswing)
+        
+        if tempo < 2.0 {
+            return "Fast ⚡"  // Too fast
+        } else if tempo <= 2.5 {
+            return "Quick 🔥"  // Quick but acceptable
+        } else if tempo <= 3.5 {
+            return "Good ✅"   // Ideal range (2.5-3.5:1)
+        } else if tempo <= 4.5 {
+            return "Smooth 🎯" // Smooth tempo
+        } else {
+            return "Slow 🐌"   // Too slow
+        }
+    }
+    
+    private func getTempoColor(_ tempo: Double) -> Color {
+        if tempo < 2.0 || tempo > 4.5 {
+            return .red        // Too fast or too slow
+        } else if tempo <= 2.5 || tempo > 3.5 {
+            return .orange     // Acceptable but not ideal
+        } else {
+            return .green      // Ideal range
+        }
+    }
+    
+    private func formatClubPath(_ clubSpeed: ClubSpeedAnalysis) -> String {
+        // Extract club path information from efficiency metrics
+        let efficiency = clubSpeed.efficiency_metrics.swing_efficiency
+        
+        // Determine path type from energy loss points
+        let energyLossPoints = clubSpeed.efficiency_metrics.energy_loss_points
+        let hasOutsideIn = energyLossPoints.contains { $0.lowercased().contains("outside") }
+        let hasInsideOut = energyLossPoints.contains { $0.lowercased().contains("inside") }
+        
+        if efficiency >= 85 {
+            return "On-Plane ✅"
+        } else if efficiency >= 75 {
+            return "Good 👍"
+        } else if hasOutsideIn {
+            return "Outside-In ⚠️"
+        } else if hasInsideOut {
+            return "Inside-Out ⚠️"  
+        } else if efficiency >= 60 {
+            return "Neutral 📈"
+        } else {
+            return "Needs Work 🔧"
         }
     }
 }
