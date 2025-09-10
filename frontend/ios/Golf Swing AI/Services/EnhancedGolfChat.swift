@@ -275,27 +275,24 @@ class GolfExpertSystem {
         if message.contains("chip") && (message.contains("what") || message.contains("how")) {
             return ExpertResponse(
                 mainContent: """
-                A chip shot is a short, low-flying shot played around the green to get your ball close to the pin!
+                **A chip shot** is a short, low-flying shot around the green to get close to the pin! 🎯
                 
-                **What is a chip shot:**
-                • Short shot from just off the green (usually 10-30 yards)
-                • Low trajectory - mostly rolls after landing
-                • Used when you have a clear path to the pin
-                • Typically played with wedges or short irons
+                **The Basics:**
+                • 10-30 yards from green
+                • Low flight, mostly rolls
+                • Clear path to pin
                 
-                **How to hit a chip shot:**
-                1. **Setup**: Narrow stance, weight slightly forward (60% on front foot)
-                2. **Ball position**: Slightly back of center in your stance
-                3. **Hands**: Ahead of the ball at address and impact
-                4. **Motion**: Small backswing, accelerate through with quiet hands
-                5. **Contact**: Hit ball first, then turf (minimal divot)
+                **Quick Setup:**
+                • Narrow stance, weight forward
+                • Ball slightly back
+                • Hands ahead at address
                 
-                **Club selection:**
-                • **Pitching wedge**: More roll, less air time
-                • **Sand wedge**: Higher flight, less roll
-                • **9-iron**: Lots of roll for longer chips
+                **Club Choice:**
+                • Pitching wedge → more roll
+                • Sand wedge → higher flight
+                • 9-iron → maximum roll
                 
-                **Golden rule**: Pick a landing spot 1/3 of the way to the pin, let it roll the rest!
+                **Golden Rule:** Pick landing spot 1/3 to pin, let it roll! 🏌️
                 """,
                 type: .instruction,
                 confidence: 0.95
@@ -305,23 +302,22 @@ class GolfExpertSystem {
         if concepts.contains("slice") {
             return ExpertResponse(
                 mainContent: """
-                A slice is one of the most common issues golfers face, but it's definitely fixable! Here's what's typically happening and how to correct it:
+                **Slice Fix** - totally fixable! 💪
                 
-                **Root Causes:**
-                • Open clubface at impact (most common)
+                **Main Causes:**
+                • Open clubface at impact
                 • Outside-in swing path
-                • Weak grip position
+                • Weak grip
                 
-                **Step-by-Step Fix:**
-                1. **Strengthen your grip** - Rotate both hands slightly to the right on the club until you can see 2-3 knuckles on your left hand
-                2. **Check your setup** - Make sure you're not aimed too far left, which forces an outside-in path
-                3. **Feel the release** - Practice rotating your forearms through impact to square the clubface
-                4. **Swing from inside** - Try the "slot" feeling - drop your right elbow closer to your body on the downswing
+                **Quick Fixes:**
+                1. **Strengthen grip** → see 2-3 knuckles on left hand
+                2. **Square up setup** → don't aim too far left
+                3. **Feel the release** → rotate forearms through impact
+                4. **Swing from inside** → drop right elbow down
                 
-                **Practice Drill:**
-                Place an alignment stick or club about 2 feet behind your ball, angled slightly from inside to out. Practice swinging without hitting it.
+                **Practice Drill:** Place club behind ball angled inside-out, swing without hitting it.
                 
-                The key is patience - work on one element at a time. Start with the grip, as it influences everything else!
+                Start with grip first - it affects everything else! 🏌️
                 """,
                 type: .instruction,
                 confidence: 0.9
@@ -330,22 +326,22 @@ class GolfExpertSystem {
         
         return ExpertResponse(
             mainContent: """
-            Great question about swing technique! The golf swing is complex, but focusing on fundamentals makes all the difference.
+            **Swing Fundamentals** 🏌️
             
-            **Core Swing Principles:**
-            • **Setup Foundation** - Proper posture, alignment, and ball position
-            • **Tempo & Rhythm** - Smooth acceleration, not rushing
-            • **Balance** - Stay centered throughout the swing
-            • **Impact Position** - Hands ahead of the ball, clean contact
+            **The Big 4:**
+            • **Setup** → posture, alignment, ball position
+            • **Tempo** → smooth acceleration
+            • **Balance** → stay centered
+            • **Impact** → hands ahead, clean contact
             
-            **Key Feels to Practice:**
-            1. **Address** - Athletic posture, weight on balls of feet
-            2. **Takeaway** - One-piece movement with shoulders
-            3. **Top** - Full shoulder turn, stable lower body
-            4. **Downswing** - Start with lower body, then unwind
-            5. **Follow-through** - Balanced finish facing target
+            **Key Sequence:**
+            1. Athletic setup
+            2. One-piece takeaway
+            3. Full shoulder turn
+            4. Start down with lower body
+            5. Balanced finish to target
             
-            What specific aspect of your swing would you like to dive deeper into? I can provide more targeted advice based on what you're working on!
+            What specific part would you like help with?
             """,
             type: .instruction,
             confidence: 0.8
@@ -355,26 +351,24 @@ class GolfExpertSystem {
     private func generateEquipmentAdvice(_ analysis: MessageAnalysis) -> ExpertResponse {
         return ExpertResponse(
             mainContent: """
-            Equipment can definitely impact your game! The key is finding clubs that match your swing and skill level.
+            **Equipment Advice** ⛳
             
-            **General Equipment Principles:**
-            • **Get fitted** - Even basic fitting makes a huge difference
-            • **Start simple** - Focus on fundamentals before advanced tech
-            • **Quality over quantity** - Better to have fewer, well-fitted clubs
-            
-            **Common Equipment Questions:**
+            **Golden Rules:**
+            • Get fitted (even basic fitting helps!)
+            • Start simple, add tech later
+            • Quality > quantity
             
             **For Beginners:**
-            • Game improvement irons with larger sweet spots
-            • Higher-lofted driver (10.5° or higher)
-            • Hybrid clubs instead of long irons
+            • Game improvement irons
+            • Higher-lofted driver (10.5°+)
+            • Hybrids instead of long irons
             
-            **Club Selection Tips:**
-            • Take one more club than you think you need
-            • Consider course conditions (wind, elevation, firmness)
-            • Know your comfortable distances with each club
+            **Course Tips:**
+            • Take one more club than you think
+            • Factor in wind/elevation
+            • Know your distances
             
-            What specific equipment question do you have? Are you looking at drivers, irons, putters, or something else? I can give you more targeted advice!
+            What specific equipment are you looking at?
             """,
             type: .advice,
             confidence: 0.85
@@ -602,41 +596,18 @@ class GolfExpertSystem {
     private func generateGeneralAdvice(_ analysis: MessageAnalysis) -> ExpertResponse {
         return ExpertResponse(
             mainContent: """
-            I'm here to help with all aspects of your golf game! As your AI golf instructor, I can assist with technique, strategy, equipment, rules, mental game, and more.
+            **Your AI Golf Pro** 🏌️‍♂️
             
-            **Popular Topics I Can Help With:**
+            **I Can Help With:**
             
-            **🏌️ Swing Technique**
-            • Fixing common issues (slice, hook, fat shots, etc.)
-            • Fundamental mechanics
-            • Specific club techniques
+            🏌️ **Swing Technique** → fixing slice, fundamentals
+            ⛳ **Course Strategy** → shot selection, management  
+            🎯 **Short Game** → putting, chipping, bunkers
+            🛠️ **Equipment** → club fitting, selection
+            📋 **Rules & Etiquette** → penalties, proper play
+            💪 **Practice** → drills, improvement plans
             
-            **⛳ Course Strategy**
-            • Shot selection and course management
-            • Reading greens and wind
-            • Situational strategy
-            
-            **🎯 Short Game**
-            • Putting technique and green reading
-            • Chipping and pitching
-            • Bunker play
-            
-            **🛠️ Equipment**
-            • Club selection and fitting
-            • Understanding specifications
-            • Equipment maintenance
-            
-            **📋 Rules & Etiquette**
-            • Official rules clarification
-            • Penalty situations
-            • Course etiquette
-            
-            **💪 Practice & Improvement**
-            • Effective practice routines
-            • Drill recommendations
-            • Goal setting and progress tracking
-            
-            **What would you like to explore today?** Feel free to ask specific questions or describe what you're working on. I'm here to provide detailed, practical advice to help improve your game!
+            **What golf challenge can I help you tackle?**
             """,
             type: .general,
             confidence: 0.7
@@ -682,35 +653,35 @@ class ConversationalFormatter {
     }
     
     private func addInstructionalTone(_ content: String) -> String {
-        return content + "\n\nFeel free to ask follow-up questions - I'm here to help you master this! 🏌️"
+        return content
     }
     
     private func addAdvisoryTone(_ content: String) -> String {
-        return content + "\n\nRemember, every golfer's situation is unique. Let me know if you'd like me to dive deeper into any of these points!"
+        return content
     }
     
     private func addStrategicTone(_ content: String) -> String {
-        return content + "\n\nSmart course management is often the difference between good and great scores. What specific scenarios would you like to discuss?"
+        return content
     }
     
     private func addRulesTone(_ content: String) -> String {
-        return content + "\n\nRules questions can be complex - if you have a specific situation, describe it and I'll walk you through the correct procedure!"
+        return content
     }
     
     private func addTrainingTone(_ content: String) -> String {
-        return content + "\n\nConsistent, focused practice is the path to improvement. What aspect of your game would you like to prioritize?"
+        return content
     }
     
     private func addRecommendationTone(_ content: String) -> String {
-        return content + "\n\nI'm happy to get more specific once I know more about your game. What details can you share?"
+        return content
     }
     
     private func addProblemSolvingTone(_ content: String) -> String {
-        return content + "\n\nDon't get discouraged - every golfer faces challenges! Let's work through this together step by step."
+        return content
     }
     
     private func addGeneralTone(_ content: String) -> String {
-        return content + "\n\nI'm excited to help you improve your golf game! What would you like to focus on first?"
+        return content
     }
     
     private func addFollowUpTone(_ content: String) -> String {

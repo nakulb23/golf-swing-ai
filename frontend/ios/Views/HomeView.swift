@@ -270,16 +270,6 @@ struct HomeView: View {
                                             )
                                         }
                                         .buttonStyle(ElegantButtonStyle())
-                                        
-                                        // Ball tracking temporarily disabled
-                                        CompactAnalyticalCard(
-                                            icon: "dot.radiowaves.up.forward",
-                                            title: "Ball Flight",
-                                            value: "Coming Soon",
-                                            color: .gray.opacity(0.3)
-                                        )
-                                        .opacity(0.5)
-                                        .disabled(true)
                                     }
                                 } else {
                                     // Descriptive preview style for guests
@@ -302,16 +292,6 @@ struct HomeView: View {
                                         )
                                     }
                                     .buttonStyle(PlainButtonStyle())
-                                    
-                                    // Ball tracking temporarily disabled
-                                    GuestToolPreview(
-                                        icon: "dot.radiowaves.up.forward",
-                                        title: "Ball Flight Tracking",
-                                        description: "Coming soon - Advanced trajectory analysis in development",
-                                        color: .gray.opacity(0.3)
-                                    )
-                                    .opacity(0.5)
-                                    .disabled(true)
                                 }
                                 
                                 // Premium Physics Engine - same for both auth states
@@ -942,18 +922,6 @@ struct AllToolsView: View {
                             )
                         }
                         .buttonStyle(PlainButtonStyle())
-                        
-                        // Ball Flight Tracking - temporarily disabled
-                        AllToolCard(
-                            icon: "dot.radiowaves.up.forward",
-                            title: "Ball Flight Tracking",
-                            description: "Coming soon - Advanced 3D trajectory analysis in development",
-                            features: ["In Development", "Coming Soon", "Check Back Later"],
-                            color: .gray.opacity(0.3),
-                            isPremium: false
-                        )
-                        .opacity(0.5)
-                        .disabled(true)
                         
                         // Physics Engine (Premium)
                         if PremiumManager.shared.isDevelopmentMode || PremiumManager.shared.canAccessPhysicsEngine {

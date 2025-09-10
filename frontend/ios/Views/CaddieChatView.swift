@@ -5,6 +5,8 @@ import Foundation
       @State private var messageText = ""
       @State private var messages: [ChatMessage] = []
       @StateObject private var dynamicAI = DynamicGolfAI.shared
+      @StateObject private var mlChatModel = GolfChatMLModel()
+      @StateObject private var enhancedChat = EnhancedGolfChat.shared
       @State private var isLoading = false
 
       private var buttonBackgroundGradient: some View {
@@ -114,7 +116,7 @@ import Foundation
       private func addWelcomeMessage() {
           if messages.isEmpty {
               let welcome = ChatMessage(
-                  text: "Welcome to CaddieChat Pro! 🏌️\n\nI'm your AI golf expert with dynamic conversational abilities and memory. \n\nWhat would you like to know about golf?",
+                  text: "Welcome to CaddieChat Pro! 🏌️\n\nI'm your enhanced AI golf expert with Core ML-powered intelligence and contextual memory. I can help with swing mechanics, course strategy, equipment advice, rules, and more!\n\nWhat golf challenge can I help you tackle today?",
                   isUser: false,
                   timestamp: Date()
               )
@@ -135,12 +137,14 @@ import Foundation
           messageText = ""
           isLoading = true
 
-          // Use new Dynamic Golf AI system
+          // Use enhanced AI system with dynamic responses
           Task {
               do {
-                  print("🤖 Processing with Dynamic Golf AI: \(userMessage)")
-                  let response = try await dynamicAI.sendMessage(userMessage)
-                  print("✅ Dynamic AI response: \(response.message)")
+                  print("🤖 Processing with Enhanced Golf Chat: \(userMessage)")
+                  
+                  // Use the enhanced chat system directly for better responses
+                  let response = try await enhancedChat.sendChatMessage(userMessage)
+                  print("✅ Enhanced AI response: \(response.message)")
                   
                   await MainActor.run {
                       let botMsg = ChatMessage(
@@ -151,22 +155,33 @@ import Foundation
                       messages.append(botMsg)
                       isLoading = false
                       
-                      SimpleAnalytics.shared.trackEvent("dynamic_ai_chat", properties: [
+                      SimpleAnalytics.shared.trackEvent("enhanced_ai_chat", properties: [
                           "message_length": userMessage.count,
                           "intent": response.intent,
-                          "confidence": response.confidence
+                          "confidence": response.confidence,
+                          "model_used": "enhanced_chat"
                       ])
                   }
               } catch {
-                  print("❌ Dynamic AI error: \(error)")
+                  print("❌ Enhanced chat error: \(error)")
+                  
+                  // Fallback to Core ML model
+                  let mlResponse = await mlChatModel.sendMessage(userMessage)
+                  
                   await MainActor.run {
-                      let errorMsg = ChatMessage(
-                          text: "I'm here to help with your golf questions! It looks like I had a brief technical hiccup. Please try asking again, and I'll provide you with expert golf guidance.",
+                      let botMsg = ChatMessage(
+                          text: mlResponse.message,
                           isUser: false,
                           timestamp: Date()
                       )
-                      messages.append(errorMsg)
+                      messages.append(botMsg)
                       isLoading = false
+                      
+                      SimpleAnalytics.shared.trackEvent("ml_fallback_chat", properties: [
+                          "message_length": userMessage.count,
+                          "intent": mlResponse.intent,
+                          "confidence": mlResponse.confidence
+                      ])
                   }
               }
           }
