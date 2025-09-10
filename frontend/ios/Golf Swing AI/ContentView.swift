@@ -37,21 +37,14 @@ struct MainTabView: View {
                 }
                 .tag(2)
 
-            BallTrackingView()
-                .tabItem {
-                    Image(systemName: selectedTab == 3 ? "scope" : "scope")
-                    Text("Tracking")
-                }
-                .tag(3)
-            
             SettingsView()
                 .environmentObject(themeManager)
                 .environmentObject(authManager)
                 .tabItem {
-                    Image(systemName: selectedTab == 4 ? "gear.fill" : "gear")
+                    Image(systemName: selectedTab == 3 ? "gear.fill" : "gear")
                     Text("Settings")
                 }
-                .tag(4)
+                .tag(3)
         }
         .tint(Color("AccentColor"))
         .preferredColorScheme(themeManager.effectiveColorScheme)

@@ -5,7 +5,8 @@ struct AllToolsView: View {
     @StateObject private var premiumManager = PremiumManager.shared
     @Environment(\.dismiss) private var dismiss
     @State private var showingSwingAnalysis = false
-    @State private var showingBallTracker = false
+    // Ball tracking temporarily removed
+    // @State private var showingBallTracker = false
     @State private var showingPhysicsEngine = false
     @State private var showingCaddieChat = false
     @State private var showingPremiumPaywall = false
@@ -44,16 +45,18 @@ struct AllToolsView: View {
                             showingSwingAnalysis = true
                         }
                         
-                        // Ball Tracker Tool
+                        // Ball Tracker Tool - temporarily disabled
                         ToolCard(
                             title: "Ball Tracker",
-                            subtitle: "Track ball trajectory",
+                            subtitle: "Coming Soon",
                             icon: "target",
-                            gradient: [Color.green, Color.green.opacity(0.7)],
+                            gradient: [Color.gray.opacity(0.3), Color.gray.opacity(0.2)],
                             isPremium: false
                         ) {
-                            showingBallTracker = true
+                            // Disabled - no action
                         }
+                        .opacity(0.5)
+                        .disabled(true)
                         
                         // Physics Engine (Premium)
                         ToolCard(
@@ -132,10 +135,11 @@ struct AllToolsView: View {
             SwingAnalysisView()
                 .environmentObject(authManager)
         }
-        .sheet(isPresented: $showingBallTracker) {
-            BallTrackingView()
-                .environmentObject(authManager)
-        }
+        // Ball tracking sheet temporarily removed
+        // .sheet(isPresented: $showingBallTracker) {
+        //     BallTrackingView()
+        //         .environmentObject(authManager)
+        // }
         .sheet(isPresented: $showingPhysicsEngine) {
             PhysicsEngineView()
                 .environmentObject(authManager)
