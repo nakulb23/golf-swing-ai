@@ -355,12 +355,49 @@ enum ConversationIntent: String, CaseIterable {
     case general = "general"
 }
 
+enum ResponseType: String {
+    case answer = "answer"
+    case clarification = "clarification"
+    case followUp = "follow_up"
+    case information = "information"
+    case problemSolving = "problem_solving"
+    case recommendation = "recommendation"
+    case general = "general"
+}
+
+enum ChatIntent: String {
+    case information = "information"
+    case technique = "technique"
+    case equipment = "equipment"
+    case strategy = "strategy"
+    case problemSolving = "problem_solving"
+    case recommendation = "recommendation"
+    case rules = "rules"
+    case followUp = "follow_up"
+    case clarification = "clarification"
+    case general = "general"
+    case swingAdvice = "swing_advice"
+    case courseStrategy = "course_strategy"
+    case training = "training"
+}
+
 enum ConversationSentiment {
     case enthusiastic, frustrated, seekingHelp, confident, neutral
 }
 
 enum QuestionComplexity {
     case simple, moderate, complex
+    
+    init(from message: String) {
+        let wordCount = message.components(separatedBy: .whitespacesAndNewlines).count
+        if wordCount < 5 {
+            self = .simple
+        } else if wordCount < 15 {
+            self = .moderate  
+        } else {
+            self = .complex
+        }
+    }
 }
 
 enum SkillLevel {
@@ -369,4 +406,87 @@ enum SkillLevel {
 
 enum PlayingFrequency {
     case daily, weekly, monthly, rarely, unknown
+}
+
+// MARK: - Dynamic Response Generator Implementation
+
+@MainActor
+class DynamicResponseGenerator {
+    init() {}
+    
+    func generateResponse(for analysis: ContextualAnalysis, using knowledgeEngine: GolfKnowledgeEngine, withMemory memory: ConversationMemory) async -> AIResponse {
+        
+        let message = analysis.originalMessage.lowercased()
+        
+        // Handle driver slice specifically
+        if (message.contains("driver") || message.contains("driving")) && message.contains("slic") {
+            return AIResponse(
+                content: "Driver slice fix! The main issue is usually an open clubface at impact plus an outside-in swing path. Try this: 1. Strengthen your grip so you see 2-3 knuckles on your left hand. 2. Tee the ball higher and position it more forward. 3. Focus on swinging from inside-out, like hitting toward right field. 4. Feel your hands rotate through impact to close the clubface. 5. Swing smoother, not harder - tempo is key. Practice these changes on the range first!",
+                confidence: 0.9
+            )
+        }
+        
+        // Handle 200 yard club selection
+        if message.contains("200 yard") || (message.contains("200") && message.contains("yard")) {
+            return AIResponse(
+                content: "For 200 yards, most golfers need a 5-iron, 4-hybrid, or 7-wood, but it depends on your swing speed and conditions. Here's how to choose: Into the wind or uphill? Take a 4-iron or 4-hybrid. Downwind or downhill? A 6-iron might work. Consider the pin position too - back pin, take more club; front pin, less club. The key is knowing YOUR distances with each club. What's your typical distance with your 6-iron? That'll help me give you a more specific recommendation.",
+                confidence: 0.85
+            )
+        }
+        
+        // Handle general club selection questions
+        if message.contains("club") && (message.contains("choose") || message.contains("select") || message.contains("best")) {
+            return AIResponse(
+                content: "Club selection depends on several factors: 1. Distance to target (know your yardages!). 2. Wind conditions - into wind take more club, with wind take less. 3. Lie of the ball - uphill needs more loft, downhill needs less. 4. Pin position - back pin take more club, front pin less. 5. Your miss pattern - if you typically come up short, take more club. The key is being honest about your distances and playing within your abilities. What specific yardage are you dealing with?",
+                confidence: 0.8
+            )
+        }
+        
+        // Handle slice problems in general
+        if message.contains("slice") || message.contains("slic") {
+            return AIResponse(
+                content: "Slice fix time! Most slices come from an open clubface at impact and swinging outside-in. Quick fixes: 1. Strengthen your grip - see more knuckles on your left hand. 2. Check your setup - don't aim left to compensate. 3. Feel like you're swinging from the inside, dropping your right elbow down. 4. Practice the 'baseball swing' feeling - rotating your hands through impact. 5. Tempo is crucial - smooth acceleration, not a quick hit. Which club gives you the most trouble with slicing?",
+                confidence: 0.9
+            )
+        }
+        
+        // Handle equipment questions
+        if analysis.topics.contains("equipment") {
+            return AIResponse(
+                content: "Equipment can make a big difference! What specific equipment are you asking about? For beginners, I'd recommend game improvement irons, a higher-lofted driver (10.5° or more), and hybrids instead of long irons. Getting properly fitted is worth it even for a basic fitting. What's your current setup or what are you looking to upgrade?",
+                confidence: 0.8
+            )
+        }
+        
+        // Handle short game questions
+        if analysis.topics.contains("short_game") {
+            return AIResponse(
+                content: "Short game is where you can really save strokes! Are you asking about chipping, pitching, or putting specifically? General tip: practice your short game more than your full swing - it's where most golfers can improve fastest. What specific short game situation are you dealing with?",
+                confidence: 0.85
+            )
+        }
+        
+        // Default response for unclear questions
+        return AIResponse(
+            content: "I'd love to help with your golf question! Could you be a bit more specific? For example, are you asking about swing technique, equipment, course strategy, or rules? The more details you give me, the better advice I can provide.",
+            confidence: 0.6
+        )
+    }
+}
+
+// MARK: - Golf Knowledge Engine Implementation
+
+@MainActor
+class GolfKnowledgeEngine {
+    init() {}
+    
+    // Golf knowledge database - topics and responses are handled in DynamicResponseGenerator
+    func getTopicExpertise(_ topic: String) -> Double {
+        return 0.8 // Default expertise level
+    }
+}
+
+struct AIResponse {
+    let content: String
+    let confidence: Double
 }

@@ -261,7 +261,9 @@ struct HomeView: View {
                                     .buttonStyle(ElegantButtonStyle())
                                     
                                     HStack(spacing: 12) {
-                                        NavigationLink(destination: CaddieChatView()) {
+                                        Button(action: {
+                                            NotificationCenter.default.post(name: NSNotification.Name("SwitchToCaddieTab"), object: nil)
+                                        }) {
                                             CompactAnalyticalCard(
                                                 icon: "message.circle.fill",
                                                 title: "CaddieChat",
@@ -283,7 +285,9 @@ struct HomeView: View {
                                     }
                                     .buttonStyle(PlainButtonStyle())
                                     
-                                    NavigationLink(destination: CaddieChatView()) {
+                                    Button(action: {
+                                        NotificationCenter.default.post(name: NSNotification.Name("SwitchToCaddieTab"), object: nil)
+                                    }) {
                                         GuestToolPreview(
                                             icon: "message.circle.fill",
                                             title: "CaddieChat",
@@ -911,7 +915,9 @@ struct AllToolsView: View {
                         .buttonStyle(PlainButtonStyle())
                         
                         // CaddieChat
-                        NavigationLink(destination: CaddieChatView()) {
+                        Button(action: {
+                            NotificationCenter.default.post(name: NSNotification.Name("SwitchToCaddieTab"), object: nil)
+                        }) {
                             AllToolCard(
                                 icon: "message.circle.fill",
                                 title: "CaddieChat",

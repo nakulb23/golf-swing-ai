@@ -167,6 +167,12 @@ class LocalCaddieChat: ObservableObject {
             return responseGenerator.generateGeneralAdvice(keywords: keywords, message: originalMessage)
         case .clarification:
             return responseGenerator.generateGeneralAdvice(keywords: keywords, message: originalMessage)
+        case .information:
+            return responseGenerator.generateGeneralAdvice(keywords: keywords, message: originalMessage)
+        case .technique:
+            return responseGenerator.generateSwingAdvice(keywords: keywords)
+        case .strategy:
+            return responseGenerator.generateCourseStrategy(keywords: keywords)
         }
     }
 }

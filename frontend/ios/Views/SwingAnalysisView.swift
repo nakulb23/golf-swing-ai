@@ -1358,11 +1358,9 @@ struct ComprehensiveResultsView: View {
                             HStack(spacing: 12) {
                                 MetricCard(title: "Confidence", value: "\(Int(result.confidence * 100))%", color: .green)
                                 
-                                // Add Club Path metric if available
-                                if let clubSpeed = result.club_speed_analysis {
-                                    let clubPathText = formatClubPath(clubSpeed)
-                                    MetricCard(title: "Club Path", value: clubPathText, color: .blue)
-                                }
+                                // Add Club Path metric (always show with fallback)
+                                let clubPathText = formatClubPath(result)
+                                MetricCard(title: "Club Path", value: clubPathText, color: .blue)
                             }
                         }
                         
@@ -1436,27 +1434,50 @@ struct ComprehensiveResultsView: View {
         }
     }
     
-    private func formatClubPath(_ clubSpeed: ClubSpeedAnalysis) -> String {
-        // Extract club path information from efficiency metrics
-        let efficiency = clubSpeed.efficiency_metrics.swing_efficiency
+    private func formatClubPath(_ result: SwingAnalysisResponse) -> String {
+        // Primary: Use club speed analysis if available
+        if let clubSpeed = result.club_speed_analysis {
+            let efficiency = clubSpeed.efficiency_metrics.swing_efficiency
+            
+            // Determine path type from energy loss points
+            let energyLossPoints = clubSpeed.efficiency_metrics.energy_loss_points
+            let hasOutsideIn = energyLossPoints.contains { $0.lowercased().contains("outside") }
+            let hasInsideOut = energyLossPoints.contains { $0.lowercased().contains("inside") }
+            
+            if efficiency >= 85 {
+                return "On-Plane ✅"
+            } else if efficiency >= 75 {
+                return "Good 👍"
+            } else if hasOutsideIn {
+                return "Outside-In ⚠️"
+            } else if hasInsideOut {
+                return "Inside-Out ⚠️"  
+            } else if efficiency >= 60 {
+                return "Neutral 📈"
+            } else {
+                return "Needs Work 🔧"
+            }
+        }
         
-        // Determine path type from energy loss points
-        let energyLossPoints = clubSpeed.efficiency_metrics.energy_loss_points
-        let hasOutsideIn = energyLossPoints.contains { $0.lowercased().contains("outside") }
-        let hasInsideOut = energyLossPoints.contains { $0.lowercased().contains("inside") }
-        
-        if efficiency >= 85 {
-            return "On-Plane ✅"
-        } else if efficiency >= 75 {
-            return "Good 👍"
-        } else if hasOutsideIn {
+        // Fallback: Use predicted label to infer club path
+        let label = result.predicted_label.lowercased()
+        if label.contains("over the top") || label.contains("outside") {
             return "Outside-In ⚠️"
-        } else if hasInsideOut {
-            return "Inside-Out ⚠️"  
-        } else if efficiency >= 60 {
-            return "Neutral 📈"
+        } else if label.contains("inside") || label.contains("under") {
+            return "Inside-Out ⚠️"
+        } else if label.contains("good") || label.contains("excellent") {
+            return "On-Plane ✅"
+        } else if let planeAngle = result.plane_angle {
+            // Use plane angle as final fallback
+            if planeAngle >= 40 && planeAngle <= 50 {
+                return "On-Plane ✅"
+            } else if planeAngle < 40 {
+                return "Too Flat 📉"
+            } else {
+                return "Too Steep 📈"
+            }
         } else {
-            return "Needs Work 🔧"
+            return "Analyzing... 🔍"
         }
     }
 }
@@ -1538,28 +1559,48 @@ struct ResultsHeader: View {
             swingScore = Int(max(0, min(100, 100 - (deviation * 2))))
         }
         
-        // Use the predicted label if it contains plane information
-        let labelLower = result.predicted_label.lowercased()
-        if labelLower.contains("flat") {
-            label = "Too Flat"
-            colors = [.orange, .red]
-            textColor = .orange
-        } else if labelLower.contains("steep") {
-            label = "Too Steep"
-            colors = [.red, .orange]
-            textColor = .red
-        } else if planeAngle < 35 {
-            label = "Too Flat"
-            colors = [.orange, .red]
-            textColor = .orange
-        } else if planeAngle > 55 {
-            label = "Too Steep"
-            colors = [.red, .orange]
-            textColor = .red
-        } else {
+        // Determine label based on calculated score and plane angle (not predicted label)
+        // This ensures score and label are consistent
+        if swingScore >= 85 {
+            // High scores should show positive results
+            label = "Excellent Plane"
+            colors = [.forestGreen, .sage]
+            textColor = .forestGreen
+        } else if swingScore >= 70 {
+            // Good scores
             label = "On Plane"
             colors = [.forestGreen, .sage]
             textColor = .forestGreen
+        } else if swingScore >= 50 {
+            // Average scores - check plane angle for specific feedback
+            if planeAngle < 35 {
+                label = "Slightly Flat"
+                colors = [.yellow, .orange]
+                textColor = .orange
+            } else if planeAngle > 55 {
+                label = "Slightly Steep"
+                colors = [.yellow, .orange]
+                textColor = .orange
+            } else {
+                label = "Needs Work"
+                colors = [.yellow, .orange]
+                textColor = .orange
+            }
+        } else {
+            // Low scores - more specific feedback
+            if planeAngle < 35 {
+                label = "Too Flat"
+                colors = [.orange, .red]
+                textColor = .red
+            } else if planeAngle > 55 {
+                label = "Too Steep"
+                colors = [.orange, .red]
+                textColor = .red
+            } else {
+                label = "Poor Plane"
+                colors = [.orange, .red]
+                textColor = .red
+            }
         }
         
         // Convert score to progress (0-1)

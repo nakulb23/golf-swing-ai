@@ -5,8 +5,6 @@ import Foundation
       @State private var messageText = ""
       @State private var messages: [ChatMessage] = []
       @StateObject private var dynamicAI = DynamicGolfAI.shared
-      @StateObject private var mlChatModel = GolfChatMLModel()
-      @StateObject private var enhancedChat = EnhancedGolfChat.shared
       @State private var isLoading = false
 
       private var buttonBackgroundGradient: some View {
@@ -38,6 +36,7 @@ import Foundation
                           }
                           .padding(.horizontal)
                           .padding(.bottom, 20)
+                          .padding(.top, 20)
                       }
                       
                       // Message Input
@@ -94,6 +93,7 @@ import Foundation
                       }
                   }
               }
+              
               .toolbarBackground(Color(UIColor.systemBackground), for: .navigationBar)
               .toolbar {
                   ToolbarItem(placement: .navigationBarTrailing) {
@@ -107,23 +107,22 @@ import Foundation
                       }
                   }
               }
-              .onAppear {
-                  addWelcomeMessage()
+          }
+          .onAppear {
+              print("🔍 CaddieChatView appeared - messages count: \\(messages.count)")
+              if messages.isEmpty {
+                  print("🔍 Adding welcome message")
+                  let welcome = ChatMessage(
+                      text: "Welcome to CaddieChat Pro! What golf challenge can I help you tackle today?",
+                      isUser: false,
+                      timestamp: Date()
+                  )
+                  messages.append(welcome)
+              } else {
+                  print("🔍 Messages already exist, not adding welcome")
               }
           }
       }
-
-      private func addWelcomeMessage() {
-          if messages.isEmpty {
-              let welcome = ChatMessage(
-                  text: "Welcome to CaddieChat Pro! 🏌️\n\nI'm your enhanced AI golf expert with Core ML-powered intelligence and contextual memory. I can help with swing mechanics, course strategy, equipment advice, rules, and more!\n\nWhat golf challenge can I help you tackle today?",
-                  isUser: false,
-                  timestamp: Date()
-              )
-              messages.append(welcome)
-          }
-      }
-
       private func sendMessage() {
           guard !messageText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
           
@@ -142,8 +141,8 @@ import Foundation
               do {
                   print("🤖 Processing with Enhanced Golf Chat: \(userMessage)")
                   
-                  // Use the enhanced chat system directly for better responses
-                  let response = try await enhancedChat.sendChatMessage(userMessage)
+                  // Use the local dynamic AI for contextual responses
+                  let response = try await dynamicAI.sendMessage(userMessage)
                   print("✅ Enhanced AI response: \(response.message)")
                   
                   await MainActor.run {
@@ -165,23 +164,15 @@ import Foundation
               } catch {
                   print("❌ Enhanced chat error: \(error)")
                   
-                  // Fallback to Core ML model
-                  let mlResponse = await mlChatModel.sendMessage(userMessage)
-                  
+                  // Simple fallback message if dynamic AI fails
                   await MainActor.run {
                       let botMsg = ChatMessage(
-                          text: mlResponse.message,
+                          text: "I'm having trouble processing that right now. Please try asking your golf question again!",
                           isUser: false,
                           timestamp: Date()
                       )
                       messages.append(botMsg)
                       isLoading = false
-                      
-                      SimpleAnalytics.shared.trackEvent("ml_fallback_chat", properties: [
-                          "message_length": userMessage.count,
-                          "intent": mlResponse.intent,
-                          "confidence": mlResponse.confidence
-                      ])
                   }
               }
           }
@@ -220,19 +211,7 @@ import Foundation
                   }
               } else {
                   VStack(alignment: .leading, spacing: 4) {
-                      Text(parseMarkdown(message.text))
-                          .font(.body)
-                          .foregroundColor(.primary)
-                          .padding(.horizontal, 16)
-                          .padding(.vertical, 12)
-                          .background(
-                              RoundedRectangle(cornerRadius: 18)
-                                  .fill(Color(UIColor.secondarySystemBackground))
-                                  .overlay(
-                                      RoundedRectangle(cornerRadius: 18)
-                                          .stroke(Color.secondary.opacity(0.3), lineWidth: 1)
-                                  )
-                          )
+                      PremiumChatBubble(text: message.text)
                       
                       Text(DateFormatter.timeFormatter.string(from: message.timestamp))
                           .font(.caption2)
@@ -252,6 +231,128 @@ import Foundation
               return AttributedString(text)
           }
       }
+  }
+
+  // MARK: - Premium Chat Bubble
+  
+  struct PremiumChatBubble: View {
+      let text: String
+      
+      var body: some View {
+          VStack(alignment: .leading, spacing: 12) {
+              ForEach(parsedSections, id: \.title) { section in
+                  if section.title.isEmpty {
+                      // Regular paragraph
+                      Text(section.content)
+                          .font(.body)
+                          .foregroundColor(.primary)
+                          .lineSpacing(2)
+                  } else {
+                      // Section with title
+                      VStack(alignment: .leading, spacing: 8) {
+                          HStack {
+                              Text(section.title)
+                                  .font(.system(size: 16, weight: .semibold))
+                                  .foregroundColor(.green)
+                              Spacer()
+                          }
+                          .padding(.bottom, 4)
+                          
+                          VStack(alignment: .leading, spacing: 6) {
+                              ForEach(section.items, id: \.self) { item in
+                                  HStack(alignment: .top, spacing: 8) {
+                                      Circle()
+                                          .fill(Color.green.opacity(0.7))
+                                          .frame(width: 4, height: 4)
+                                          .padding(.top, 8)
+                                      
+                                      Text(item)
+                                          .font(.system(size: 14))
+                                          .foregroundColor(.primary)
+                                          .lineSpacing(1)
+                                      
+                                      Spacer()
+                                  }
+                              }
+                          }
+                      }
+                  }
+              }
+          }
+          .padding(.horizontal, 16)
+          .padding(.vertical, 14)
+          .background(
+              RoundedRectangle(cornerRadius: 18)
+                  .fill(Color(UIColor.secondarySystemBackground))
+                  .overlay(
+                      RoundedRectangle(cornerRadius: 18)
+                          .stroke(LinearGradient(colors: [.green.opacity(0.3), .mint.opacity(0.2)], startPoint: .topLeading, endPoint: .bottomTrailing), lineWidth: 1)
+                  )
+          )
+      }
+      
+      private var parsedSections: [ChatSection] {
+          let lines = text.components(separatedBy: .newlines)
+          var sections: [ChatSection] = []
+          var currentSection: ChatSection?
+          
+          for line in lines {
+              let trimmedLine = line.trimmingCharacters(in: .whitespacesAndNewlines)
+              
+              if trimmedLine.isEmpty {
+                  continue
+              }
+              
+              // Check if it's a section header (contains :)
+              if trimmedLine.contains(":") && !trimmedLine.hasPrefix("•") && !trimmedLine.hasPrefix("-") {
+                  // Save previous section
+                  if let section = currentSection {
+                      sections.append(section)
+                  }
+                  
+                  let parts = trimmedLine.components(separatedBy: ":")
+                  let title = parts[0].trimmingCharacters(in: .whitespacesAndNewlines)
+                  let content = parts.dropFirst().joined(separator: ":").trimmingCharacters(in: .whitespacesAndNewlines)
+                  
+                  currentSection = ChatSection(title: title, content: content, items: content.isEmpty ? [] : [content])
+              }
+              // Check if it's a bullet point
+              else if trimmedLine.hasPrefix("•") || trimmedLine.hasPrefix("-") {
+                  let item = trimmedLine.dropFirst().trimmingCharacters(in: .whitespacesAndNewlines)
+                  if currentSection != nil {
+                      currentSection?.items.append(item)
+                  } else {
+                      // Create a new section for orphaned bullet points
+                      if sections.isEmpty || !sections.last!.title.isEmpty {
+                          currentSection = ChatSection(title: "", content: "", items: [item])
+                      } else {
+                          sections[sections.count - 1].items.append(item)
+                      }
+                  }
+              }
+              // Regular text
+              else {
+                  if currentSection != nil {
+                      currentSection?.items.append(trimmedLine)
+                  } else {
+                      sections.append(ChatSection(title: "", content: trimmedLine, items: []))
+                  }
+              }
+          }
+          
+          // Don't forget the last section
+          if let section = currentSection {
+              sections.append(section)
+          }
+          
+          return sections
+      }
+  }
+  
+  struct ChatSection {
+      let title: String
+      var content: String
+      var items: [String]
   }
 
   extension DateFormatter {

@@ -54,6 +54,9 @@ struct MainTabView: View {
         .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("SwitchToAnalysisTab"))) { _ in
             selectedTab = 1
         }
+        .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("SwitchToCaddieTab"))) { _ in
+            selectedTab = 2
+        }
     }
 }
 
