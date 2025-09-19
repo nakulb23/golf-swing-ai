@@ -21,11 +21,11 @@
       "localizations" : [
         {
           "description" : "Monthly premium access to all Golf Swing AI features including Physics Engine, advanced analytics, and expert insights.",
-          "displayName" : "Golf Swing AI Premium - Monthly",
+          "displayName" : "Golf AI Premium - Monthly",
           "locale" : "en_US"
         }
       ],
-      "productID" : "nakulb.Golf-Swing-AI.premium_monthly",
+      "productID" : "nakulb.GolfSwingAI.premium_monthly",
       "referenceName" : "Premium Monthly",
       "type" : "RecurringSubscription"
     },
@@ -36,11 +36,11 @@
       "localizations" : [
         {
           "description" : "Annual premium access to all Golf Swing AI features including Physics Engine, advanced analytics, and expert insights. Save 58% compared to monthly!",
-          "displayName" : "Golf Swing AI Premium - Annual",
+          "displayName" : "Golf AI Premium - Annual",
           "locale" : "en_US"
         }
       ],
-      "productID" : "nakulb.Golf-Swing-AI.premium_annual",
+      "productID" : "nakulb.GolfSwingAI.premium_annual",
       "referenceName" : "Premium Annual",
       "type" : "RecurringSubscription"
     }
@@ -123,11 +123,11 @@
           "localizations" : [
             {
               "description" : "Monthly premium access to all Golf Swing AI features including Physics Engine, advanced analytics, and expert insights.",
-              "displayName" : "Golf Swing AI Premium - Monthly",
+              "displayName" : "Golf AI Premium - Monthly",
               "locale" : "en_US"
             }
           ],
-          "productID" : "nakulb.Golf-Swing-AI.premium_monthly",
+          "productID" : "nakulb.GolfSwingAI.premium_monthly",
           "recurringSubscriptionPeriod" : "P1M",
           "referenceName" : "Premium Monthly",
           "subscriptionGroupID" : "21520033",
@@ -151,11 +151,11 @@
           "localizations" : [
             {
               "description" : "Annual premium access to all Golf Swing AI features including Physics Engine, advanced analytics, and expert insights. Save 58% compared to monthly!",
-              "displayName" : "Golf Swing AI Premium - Annual",
+              "displayName" : "Golf AI Premium - Annual",
               "locale" : "en_US"
             }
           ],
-          "productID" : "nakulb.Golf-Swing-AI.premium_annual",
+          "productID" : "nakulb.GolfSwingAI.premium_annual",
           "recurringSubscriptionPeriod" : "P1Y",
           "referenceName" : "Premium Annual",
           "subscriptionGroupID" : "21520033",

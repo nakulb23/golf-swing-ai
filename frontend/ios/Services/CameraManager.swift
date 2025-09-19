@@ -98,16 +98,14 @@ class CameraManager: NSObject, ObservableObject, @unchecked Sendable {
             AVCaptureDevice.requestAccess(for: .video) { @Sendable [weak self] granted in
                 guard let self = self else { return }
                 print("🎥 Permission request result: \(granted)")
-                DispatchQueue.main.async {
-                    self.hasPermission = granted
+                Task { @MainActor [weak self] in
+                    self?.hasPermission = granted
                     if granted {
                         print("✅ Permission granted, setting up camera...")
-                        self.setupSession()
+                        self?.setupSession()
                         // Start session after setup when permission is newly granted
-                        Task { @MainActor [weak self] in
-                            try? await Task.sleep(nanoseconds: 500_000_000)
-                            self?.startSession()
-                        }
+                        try? await Task.sleep(nanoseconds: 500_000_000)
+                        self?.startSession()
                     } else {
                         print("❌ Camera permission denied")
                     }

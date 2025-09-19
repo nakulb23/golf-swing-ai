@@ -16,14 +16,15 @@ class PremiumManager: ObservableObject {
     @Published var currentSubscription: Product.SubscriptionInfo.Status?
     @Published var isSubscriptionActive = false
     @Published var isDevelopmentMode = false // Production mode - use real StoreKit
+    @Published var isAppStoreReviewMode = false // For Apple reviewers in production builds
     @Published var showPaywall = false
     
     private var transactionUpdatesTask: Task<Void, Never>?
     
     // Subscription Product IDs (matching Configuration.storekit)
     // IMPORTANT: These must match EXACTLY with App Store Connect configuration
-    private let monthlySubscriptionID = "nakulb.Golf-Swing-AI.premium_monthly"
-    private let annualSubscriptionID = "nakulb.Golf-Swing-AI.premium_annual"
+    private let monthlySubscriptionID = "nakulb.GolfSwingAI.premium_monthly"
+    private let annualSubscriptionID = "nakulb.GolfSwingAI.premium_annual"
     
     private var productIDs: [String] {
         [monthlySubscriptionID, annualSubscriptionID]
@@ -417,20 +418,17 @@ class PremiumManager: ObservableObject {
         
         if enabled {
             print("🔧 Development mode enabled - FOR TESTING ONLY")
-            print("⚠️ This should NEVER be enabled in production builds")
-            // Only enable for development builds with explicit developer action
-            #if DEBUG
+            print("⚠️ This bypasses App Store purchases for development")
+            // Enable premium access for development/testing
             hasPhysicsEnginePremium = true
             isSubscriptionActive = true
-            #else
-            print("❌ Development mode blocked in release build")
-            #endif
+            print("✅ Premium features unlocked for development")
         } else {
-            // Reset to actual purchased state
-            hasPhysicsEnginePremium = false
-            isSubscriptionActive = false
-            print("🏭 Production mode enabled - Checking actual purchases")
-            checkPurchaseStatus()
+            print("🏭 Development mode disabled - Checking actual purchases")
+            // Only reset if not actually purchased
+            Task {
+                await checkPurchaseStatus()
+            }
         }
     }
     
@@ -446,11 +444,28 @@ class PremiumManager: ObservableObject {
         showPaywall = true
         #endif
     }
+
+    // MARK: - App Store Review Mode (Works in production builds)
+
+    func enableAppStoreReviewMode() {
+        isAppStoreReviewMode = true
+        print("📱 App Store Review Mode enabled - Premium features unlocked for Apple reviewers")
+        print("⚠️ This should only be used during App Store review process")
+        // Dismiss any existing paywall
+        showPaywall = false
+    }
+
+    func disableAppStoreReviewMode() {
+        isAppStoreReviewMode = false
+        print("📱 App Store Review Mode disabled - Checking actual premium status")
+        // Check actual purchase status
+        checkPurchaseStatus()
+    }
     
     // MARK: - Paywall Controls
     
     func requirePremiumAccess() {
-        if !hasPhysicsEnginePremium && !isSubscriptionActive {
+        if !canAccessPhysicsEngine {
             showPaywall = true
         }
     }
@@ -465,6 +480,7 @@ class PremiumManager: ObservableObject {
         hasPhysicsEnginePremium = false
         isSubscriptionActive = false
         isDevelopmentMode = false
+        isAppStoreReviewMode = false
         currentSubscription = nil
         purchaseError = nil
         showPaywall = false
@@ -496,11 +512,11 @@ class PremiumManager: ObservableObject {
     
     // Validate premium access - returns true only if user has genuine premium
     func validatePremiumAccess() -> Bool {
-        // In release builds, development mode should not grant access
+        // Allow access for legitimate premium users, development mode (DEBUG only), or App Store review mode
         #if DEBUG
-        return hasPhysicsEnginePremium || isSubscriptionActive
+        return hasPhysicsEnginePremium || isSubscriptionActive || isDevelopmentMode || isAppStoreReviewMode
         #else
-        return (hasPhysicsEnginePremium || isSubscriptionActive) && !isDevelopmentMode
+        return hasPhysicsEnginePremium || isSubscriptionActive || isAppStoreReviewMode
         #endif
     }
     
@@ -771,6 +787,11 @@ class PremiumManager: ObservableObject {
 
 extension PremiumManager {
     var canAccessPhysicsEngine: Bool {
-        hasPhysicsEnginePremium
+        // Allow access for legitimate premium users, development mode (DEBUG only), or App Store review mode
+        #if DEBUG
+        return hasPhysicsEnginePremium || isSubscriptionActive || isDevelopmentMode || isAppStoreReviewMode
+        #else
+        return hasPhysicsEnginePremium || isSubscriptionActive || isAppStoreReviewMode
+        #endif
     }
 }

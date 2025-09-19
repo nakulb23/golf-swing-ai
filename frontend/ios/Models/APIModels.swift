@@ -144,15 +144,16 @@ struct GolfRecommendation: Codable {
       
       // Legacy support
       var answer: String { return message }
-      let is_golf_related: Bool = true
+      let is_golf_related: Bool
       
-      init(id: String, message: String, isUser: Bool, timestamp: Date, intent: String, confidence: Double) {
+      init(id: String, message: String, isUser: Bool, timestamp: Date, intent: String, confidence: Double, is_golf_related: Bool = true) {
           self.id = id
           self.message = message
           self.isUser = isUser
           self.timestamp = timestamp
           self.intent = intent
           self.confidence = confidence
+          self.is_golf_related = is_golf_related
       }
   }
 

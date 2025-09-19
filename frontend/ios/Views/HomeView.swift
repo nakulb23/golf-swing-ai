@@ -299,7 +299,7 @@ struct HomeView: View {
                                 }
                                 
                                 // Premium Physics Engine - same for both auth states
-                                if premiumManager.validatePremiumAccess() {
+                                if premiumManager.canAccessPhysicsEngine {
                                     NavigationLink(destination: PhysicsEngineView()) {
                                         if authManager.isAuthenticated {
                                             AnalyticalToolCard(

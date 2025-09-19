@@ -36,16 +36,10 @@ class VisionPoseDetector: ObservableObject {
         // Check if Vision framework is available
         if #available(iOS 14.0, *) {
             // Test if we can actually create a pose request
-            do {
-                _ = VNDetectHumanBodyPoseRequest()
-                print("✅ Vision framework body pose detection is available")
-                print("📱 iOS Version: \(ProcessInfo.processInfo.operatingSystemVersionString)")
-                isInitialized = true
-            } catch {
-                print("❌ Vision framework available but body pose detection failed to initialize")
-                print("   Error: \(error)")
-                isInitialized = false
-            }
+            _ = VNDetectHumanBodyPoseRequest()
+            print("✅ Vision framework body pose detection is available")
+            print("📱 iOS Version: \(ProcessInfo.processInfo.operatingSystemVersionString)")
+            isInitialized = true
         } else {
             print("❌ iOS 14.0+ required for body pose detection")
             print("📱 Current iOS: \(ProcessInfo.processInfo.operatingSystemVersionString)")
@@ -273,29 +267,16 @@ class VisionPoseDetector: ObservableObject {
             return nil
         }
         
-        // Try creating the request and handler separately with error handling
-        var request: VNDetectHumanBodyPoseRequest
-        var handler: VNImageRequestHandler
-        
-        do {
-            // Create request with minimal configuration
-            request = VNDetectHumanBodyPoseRequest()
-            // Don't set revision - let it use default
-            // request.revision = VNDetectHumanBodyPoseRequestRevision1
-            
-            // Create handler using CIImage for better compatibility
-            let ciImage = CIImage(cgImage: cgImage)
-            handler = VNImageRequestHandler(ciImage: ciImage, options: [:])
-            
-            print("✅ Vision request and handler created successfully")
-        } catch {
-            print("❌ Failed to create Vision request/handler: \(error)")
-            print("   Attempting fallback method...")
-            
-            // Fallback: Try with CGImage directly
-            request = VNDetectHumanBodyPoseRequest()
-            handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
-        }
+        // Create the request and handler (these don't throw)
+        let request = VNDetectHumanBodyPoseRequest()
+        // Don't set revision - let it use default
+        // request.revision = VNDetectHumanBodyPoseRequestRevision1
+
+        // Create handler using CIImage for better compatibility
+        let ciImage = CIImage(cgImage: cgImage)
+        let handler = VNImageRequestHandler(ciImage: ciImage, options: [:])
+
+        print("✅ Vision request and handler created successfully")
         
         do {
             print("🚀 Performing Vision request...")

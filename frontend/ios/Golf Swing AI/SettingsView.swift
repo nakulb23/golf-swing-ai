@@ -236,29 +236,59 @@ struct SettingsView: View {
                     .onChange(of: premiumManager.isDevelopmentMode) { oldValue, newValue in
                         premiumManager.setDevelopmentMode(newValue)
                     }
+
+                    SettingsToggleRow(
+                        icon: "app.badge",
+                        title: "App Store Review Mode",
+                        isOn: $premiumManager.isAppStoreReviewMode
+                    )
+                    .onChange(of: premiumManager.isAppStoreReviewMode) { oldValue, newValue in
+                        if newValue {
+                            premiumManager.enableAppStoreReviewMode()
+                        } else {
+                            premiumManager.disableAppStoreReviewMode()
+                        }
+                    }
                     
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("⚠️ Development mode only works in DEBUG builds")
+                        Text("🔧 Developer & Review Modes")
                             .font(.caption)
                             .fontWeight(.semibold)
-                            .foregroundColor(.red)
-                        
-                        Text("Development mode enables:")
+                            .foregroundColor(.orange)
+
+                        Text("Development mode enables (DEBUG builds only):")
                             .font(.caption)
                             .fontWeight(.medium)
                             .foregroundColor(.secondary)
-                        
+
                         Text("• Testing premium features without purchase")
                             .font(.caption2)
                             .foregroundColor(.secondary)
-                        
-                        Text("• Debugging subscription flows")
+
+                        Text("• Access to Physics Engine for testing")
                             .font(.caption2)
                             .foregroundColor(.secondary)
-                        
-                        Text("• Does NOT work in release builds")
+
+                        Text("• Developer debugging tools")
                             .font(.caption2)
-                            .foregroundColor(.red)
+                            .foregroundColor(.secondary)
+
+                        Text("\n📱 App Store Review Mode enables (ALL builds):")
+                            .font(.caption)
+                            .fontWeight(.medium)
+                            .foregroundColor(.blue)
+
+                        Text("• Premium access for Apple reviewers")
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+
+                        Text("• Works in production/archived builds")
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+
+                        Text("• Safe for App Store submission")
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
                         
                         // Testing buttons
                         VStack(spacing: 8) {

@@ -42,10 +42,10 @@ class MediaPipePoseDetector: ObservableObject {
     }
     
     init() {
+        setupMediaPipePoseDetector()
         Task {
             await initializeCustomPoseDetection()
         }
-        setupMediaPipePoseDetector()
     }
     
     // MARK: - Setup
