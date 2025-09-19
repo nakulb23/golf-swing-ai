@@ -4334,7 +4334,6 @@ struct Interactive3DPlaceholder: View {
 struct InteractiveSwingVideoPlayer: View {
     let analysisResult: PhysicsSwingAnalysisResult
     @State private var player: AVPlayer?
-    @State private var currentTime: Double = 0
     @State private var isPlaying = false
     @State private var selectedPhase: SwingPhase = .address
     @State private var showAngleOverlays = true
@@ -4467,11 +4466,6 @@ struct InteractiveSwingVideoPlayer: View {
     private func setupPlayer() {
         player = AVPlayer(url: analysisResult.videoURL)
         player?.actionAtItemEnd = .pause
-
-        // Add time observer
-        player?.addPeriodicTimeObserver(forInterval: CMTime(seconds: 0.1, preferredTimescale: 600), queue: .main) { [weak self] time in
-            self?.currentTime = time.seconds
-        }
     }
 
     private func selectPhase(_ phase: SwingPhase) {
