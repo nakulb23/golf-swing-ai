@@ -2,6 +2,7 @@ import SwiftUI
 import Foundation
 import PhotosUI
 import AVFoundation
+import AVKit
 import StoreKit
 import CoreML
 import simd
@@ -1601,6 +1602,7 @@ struct PhysicsEngineView: View {
     @State private var analysisProgress: Double = 0.0
     @State private var showingPremiumPaywall = false
     @State private var showingVideoPicker = false
+    @State private var showingInfo = false
     @State private var showingVideoLibrary = false
     @State private var currentFeedback: SwingFeedback?
     @State private var showingFeedback = false
@@ -1629,6 +1631,9 @@ struct PhysicsEngineView: View {
             if let feedback = currentFeedback {
                 SwingFeedbackView(feedback: feedback)
             }
+        }
+        .sheet(isPresented: $showingInfo) {
+            InteractiveVideoInfoView()
         }
     }
     
@@ -2246,18 +2251,27 @@ struct RealBiomechanicsAnalysisView: View {
             }
             .padding(.horizontal, 4)
 
-            // Swing Sequence Visualization (Real Data)
+            // Interactive Video Analysis with Angle Measurements
             VStack(spacing: 16) {
                 HStack {
-                    Text("Swing Sequence Analysis")
+                    Text("Interactive Swing Analysis")
                         .font(.system(size: 16, weight: .semibold))
                     Spacer()
+                    if analysisResult != nil {
+                        Button(action: {
+                            showingInfo = true
+                        }) {
+                            Image(systemName: "info.circle")
+                                .font(.system(size: 14, weight: .medium))
+                                .foregroundColor(.secondary)
+                        }
+                    }
                 }
 
-                if analysisResult != nil {
-                    SwingPhaseTimeline(analysisResult: analysisResult)
+                if let analysis = analysisResult {
+                    InteractiveSwingVideoPlayer(analysisResult: analysis)
                 } else {
-                    SwingPhaseTimelinePlaceholder()
+                    InteractiveVideoPlaceholder()
                 }
 
                 // Real 3D Path Visualization
@@ -4316,6 +4330,680 @@ struct Interactive3DPlaceholder: View {
             }
         }
         .padding()
+    }
+}
+
+// MARK: - Interactive Video Analysis Components
+
+struct InteractiveSwingVideoPlayer: View {
+    let analysisResult: PhysicsSwingAnalysisResult
+    @State private var player: AVPlayer?
+    @State private var currentTime: Double = 0
+    @State private var isPlaying = false
+    @State private var selectedPhase: SwingPhase = .address
+    @State private var showAngleOverlays = true
+
+    enum SwingPhase: String, CaseIterable {
+        case address = "Address"
+        case backswing = "Backswing"
+        case top = "Top"
+        case downswing = "Downswing"
+        case impact = "Impact"
+        case followThrough = "Follow Through"
+
+        var timePercentage: Double {
+            switch self {
+            case .address: return 0.0
+            case .backswing: return 0.3
+            case .top: return 0.5
+            case .downswing: return 0.7
+            case .impact: return 0.8
+            case .followThrough: return 1.0
+            }
+        }
+
+        var color: Color {
+            switch self {
+            case .address: return .green
+            case .backswing: return .blue
+            case .top: return .purple
+            case .downswing: return .orange
+            case .impact: return .red
+            case .followThrough: return .yellow
+            }
+        }
+    }
+
+    var body: some View {
+        VStack(spacing: 16) {
+            // Video Player with Overlays
+            ZStack {
+                // Video Player
+                if let player = player {
+                    VideoPlayer(player: player)
+                        .aspectRatio(16/9, contentMode: .fit)
+                        .frame(height: 200)
+                        .cornerRadius(12)
+                        .overlay(
+                            // Angle Measurement Overlays
+                            AngleMeasurementOverlay(
+                                analysisResult: analysisResult,
+                                currentPhase: selectedPhase,
+                                showOverlays: showAngleOverlays
+                            )
+                        )
+                } else {
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(Color.black.opacity(0.1))
+                        .frame(height: 200)
+                        .overlay(
+                            VStack(spacing: 8) {
+                                Image(systemName: "play.circle")
+                                    .font(.system(size: 40))
+                                    .foregroundColor(.secondary)
+                                Text("Loading video...")
+                                    .font(.system(size: 14))
+                                    .foregroundColor(.secondary)
+                            }
+                        )
+                }
+            }
+
+            // Swing Phase Selector
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 12) {
+                    ForEach(SwingPhase.allCases, id: \.self) { phase in
+                        SwingPhaseButton(
+                            phase: phase,
+                            isSelected: selectedPhase == phase,
+                            analysisResult: analysisResult
+                        ) {
+                            selectPhase(phase)
+                        }
+                    }
+                }
+                .padding(.horizontal, 16)
+            }
+
+            // Controls
+            HStack(spacing: 16) {
+                Button(action: {
+                    togglePlayPause()
+                }) {
+                    Image(systemName: isPlaying ? "pause.circle.fill" : "play.circle.fill")
+                        .font(.system(size: 24))
+                        .foregroundColor(.primary)
+                }
+
+                Button(action: {
+                    showAngleOverlays.toggle()
+                }) {
+                    HStack(spacing: 4) {
+                        Image(systemName: showAngleOverlays ? "eye" : "eye.slash")
+                        Text("Angles")
+                    }
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundColor(showAngleOverlays ? .blue : .secondary)
+                }
+
+                Spacer()
+
+                VStack(alignment: .trailing, spacing: 2) {
+                    Text(selectedPhase.rawValue)
+                        .font(.system(size: 12, weight: .semibold))
+                    Text(getPhaseAngleMeasurement())
+                        .font(.system(size: 11))
+                        .foregroundColor(.secondary)
+                }
+            }
+        }
+        .padding()
+        .background(Color(.systemGray6))
+        .cornerRadius(16)
+        .onAppear {
+            setupPlayer()
+        }
+        .onDisappear {
+            player?.pause()
+        }
+    }
+
+    private func setupPlayer() {
+        player = AVPlayer(url: analysisResult.videoURL)
+        player?.actionAtItemEnd = .pause
+
+        // Add time observer
+        player?.addPeriodicTimeObserver(forInterval: CMTime(seconds: 0.1, preferredTimescale: 600), queue: .main) { time in
+            currentTime = time.seconds
+        }
+    }
+
+    private func selectPhase(_ phase: SwingPhase) {
+        selectedPhase = phase
+        let targetTime = phase.timePercentage * analysisResult.duration
+        let time = CMTime(seconds: targetTime, preferredTimescale: 600)
+        player?.seek(to: time)
+        player?.pause()
+        isPlaying = false
+    }
+
+    private func togglePlayPause() {
+        if isPlaying {
+            player?.pause()
+        } else {
+            player?.play()
+        }
+        isPlaying.toggle()
+    }
+
+    private func getPhaseAngleMeasurement() -> String {
+        switch selectedPhase {
+        case .address:
+            return "Spine: \(String(format: "%.1f", analysisResult.bodyKinematics.spineAngle.addressAngle))°"
+        case .backswing:
+            return "Shoulder: \(String(format: "%.1f", analysisResult.bodyKinematics.shoulderRotation.maxRotation))°"
+        case .top:
+            return "Plane: \(String(format: "%.1f", analysisResult.swingPlane.planeAngle))°"
+        case .downswing:
+            return "Hip Lead: \(String(format: "%.1f", analysisResult.bodyKinematics.hipRotation.rotationTiming * 100))ms"
+        case .impact:
+            return "Club Speed: \(String(format: "%.1f", analysisResult.clubHeadSpeed.speedAtImpact)) mph"
+        case .followThrough:
+            return "Weight Shift: \(String(format: "%.1f", analysisResult.bodyKinematics.weightShift.percentage * 100))%"
+        }
+    }
+}
+
+struct SwingPhaseButton: View {
+    let phase: InteractiveSwingVideoPlayer.SwingPhase
+    let isSelected: Bool
+    let analysisResult: PhysicsSwingAnalysisResult
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            VStack(spacing: 4) {
+                Circle()
+                    .fill(isSelected ? phase.color : Color.gray.opacity(0.3))
+                    .frame(width: 12, height: 12)
+
+                Text(phase.rawValue)
+                    .font(.system(size: 10, weight: isSelected ? .semibold : .medium))
+                    .foregroundColor(isSelected ? .primary : .secondary)
+
+                Text("\(Int(phase.timePercentage * 100))%")
+                    .font(.system(size: 9))
+                    .foregroundColor(.secondary)
+            }
+            .padding(.vertical, 8)
+            .padding(.horizontal, 6)
+            .background(
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(isSelected ? phase.color.opacity(0.1) : Color.clear)
+            )
+        }
+        .buttonStyle(PlainButtonStyle())
+    }
+}
+
+struct AngleMeasurementOverlay: View {
+    let analysisResult: PhysicsSwingAnalysisResult
+    let currentPhase: InteractiveSwingVideoPlayer.SwingPhase
+    let showOverlays: Bool
+
+    var body: some View {
+        if showOverlays {
+            GeometryReader { geometry in
+                ZStack {
+                    // Spine Angle Line (for address and top positions)
+                    if currentPhase == .address || currentPhase == .top {
+                        SpineAngleLine(
+                            angle: getSpineAngle(),
+                            geometry: geometry,
+                            color: currentPhase.color
+                        )
+                    }
+
+                    // Swing Plane Line (for backswing and top)
+                    if currentPhase == .backswing || currentPhase == .top {
+                        SwingPlaneLine(
+                            angle: analysisResult.swingPlane.planeAngle,
+                            geometry: geometry,
+                            color: currentPhase.color
+                        )
+                    }
+
+                    // Impact Zone Indicator
+                    if currentPhase == .impact {
+                        ImpactZoneIndicator(
+                            geometry: geometry,
+                            clubSpeed: analysisResult.clubHeadSpeed.speedAtImpact
+                        )
+                    }
+
+                    // Angle Measurement Labels
+                    VStack {
+                        HStack {
+                            AngleMeasurementLabel(
+                                title: getAngleTitle(),
+                                value: getAngleValue(),
+                                unit: getAngleUnit(),
+                                color: currentPhase.color
+                            )
+                            Spacer()
+                        }
+                        Spacer()
+                    }
+                    .padding(8)
+                }
+            }
+        }
+    }
+
+    private func getSpineAngle() -> Double {
+        switch currentPhase {
+        case .address:
+            return analysisResult.bodyKinematics.spineAngle.addressAngle
+        case .top:
+            return analysisResult.bodyKinematics.spineAngle.topAngle
+        default:
+            return analysisResult.bodyKinematics.spineAngle.addressAngle
+        }
+    }
+
+    private func getAngleTitle() -> String {
+        switch currentPhase {
+        case .address: return "Spine Angle"
+        case .backswing: return "Shoulder Turn"
+        case .top: return "Swing Plane"
+        case .downswing: return "Hip Rotation"
+        case .impact: return "Club Speed"
+        case .followThrough: return "Weight Shift"
+        }
+    }
+
+    private func getAngleValue() -> Double {
+        switch currentPhase {
+        case .address: return analysisResult.bodyKinematics.spineAngle.addressAngle
+        case .backswing: return analysisResult.bodyKinematics.shoulderRotation.maxRotation
+        case .top: return analysisResult.swingPlane.planeAngle
+        case .downswing: return analysisResult.bodyKinematics.hipRotation.maxRotation
+        case .impact: return analysisResult.clubHeadSpeed.speedAtImpact
+        case .followThrough: return analysisResult.bodyKinematics.weightShift.percentage * 100
+        }
+    }
+
+    private func getAngleUnit() -> String {
+        switch currentPhase {
+        case .address, .backswing, .top, .downswing: return "°"
+        case .impact: return " mph"
+        case .followThrough: return "%"
+        }
+    }
+}
+
+struct SpineAngleLine: View {
+    let angle: Double
+    let geometry: GeometryProxy
+    let color: Color
+
+    var body: some View {
+        Path { path in
+            let centerX = geometry.size.width * 0.3
+            let centerY = geometry.size.height * 0.6
+            let length = geometry.size.height * 0.4
+
+            let radians = (angle - 90) * .pi / 180
+            let endX = centerX + length * cos(radians)
+            let endY = centerY + length * sin(radians)
+
+            path.move(to: CGPoint(x: centerX, y: centerY))
+            path.addLine(to: CGPoint(x: endX, y: endY))
+        }
+        .stroke(color, lineWidth: 3)
+        .shadow(color: .black.opacity(0.3), radius: 1, x: 1, y: 1)
+    }
+}
+
+struct SwingPlaneLine: View {
+    let angle: Double
+    let geometry: GeometryProxy
+    let color: Color
+
+    var body: some View {
+        Path { path in
+            let startX = geometry.size.width * 0.2
+            let endX = geometry.size.width * 0.8
+            let centerY = geometry.size.height * 0.5
+            let verticalOffset = (endX - startX) * tan(angle * .pi / 180) * 0.3
+
+            path.move(to: CGPoint(x: startX, y: centerY - verticalOffset))
+            path.addLine(to: CGPoint(x: endX, y: centerY + verticalOffset))
+        }
+        .stroke(color, lineWidth: 2)
+        .shadow(color: .black.opacity(0.3), radius: 1, x: 1, y: 1)
+    }
+}
+
+struct ImpactZoneIndicator: View {
+    let geometry: GeometryProxy
+    let clubSpeed: Double
+
+    var body: some View {
+        Circle()
+            .fill(Color.red.opacity(0.6))
+            .frame(width: max(20, clubSpeed / 5), height: max(20, clubSpeed / 5))
+            .position(x: geometry.size.width * 0.6, y: geometry.size.height * 0.7)
+            .overlay(
+                Circle()
+                    .stroke(Color.red, lineWidth: 2)
+                    .frame(width: max(20, clubSpeed / 5), height: max(20, clubSpeed / 5))
+                    .position(x: geometry.size.width * 0.6, y: geometry.size.height * 0.7)
+            )
+    }
+}
+
+struct AngleMeasurementLabel: View {
+    let title: String
+    let value: Double
+    let unit: String
+    let color: Color
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(title)
+                .font(.system(size: 10, weight: .medium))
+                .foregroundColor(.white)
+            Text("\(String(format: "%.1f", value))\(unit)")
+                .font(.system(size: 12, weight: .bold))
+                .foregroundColor(.white)
+        }
+        .padding(.horizontal, 8)
+        .padding(.vertical, 4)
+        .background(
+            RoundedRectangle(cornerRadius: 6)
+                .fill(color.opacity(0.8))
+                .shadow(color: .black.opacity(0.3), radius: 2, x: 1, y: 1)
+        )
+    }
+}
+
+struct InteractiveVideoPlaceholder: View {
+    var body: some View {
+        VStack(spacing: 16) {
+            RoundedRectangle(cornerRadius: 12)
+                .fill(Color(.systemGray6))
+                .frame(height: 200)
+                .overlay(
+                    VStack(spacing: 12) {
+                        Image(systemName: "video.circle")
+                            .font(.system(size: 48))
+                            .foregroundColor(.blue.opacity(0.6))
+
+                        VStack(spacing: 8) {
+                            Text("Interactive Video Analysis")
+                                .font(.system(size: 18, weight: .semibold))
+                                .foregroundColor(.primary)
+
+                            Text("Upload and analyze a swing video to see\nangle measurements at key positions")
+                                .font(.system(size: 14))
+                                .foregroundColor(.secondary)
+                                .multilineTextAlignment(.center)
+                        }
+                    }
+                )
+
+            // Feature Preview
+            HStack(spacing: 12) {
+                FeaturePreviewItem(
+                    icon: "pause.circle",
+                    title: "Pause & Analyze",
+                    description: "See angles at key positions"
+                )
+
+                FeaturePreviewItem(
+                    icon: "ruler",
+                    title: "Angle Overlays",
+                    description: "Visual measurement guides"
+                )
+
+                FeaturePreviewItem(
+                    icon: "play.circle",
+                    title: "Step Through",
+                    description: "Navigate swing phases"
+                )
+            }
+        }
+        .padding()
+        .background(Color(.systemGray6))
+        .cornerRadius(16)
+    }
+}
+
+struct FeaturePreviewItem: View {
+    let icon: String
+    let title: String
+    let description: String
+
+    var body: some View {
+        VStack(spacing: 6) {
+            Image(systemName: icon)
+                .font(.system(size: 20))
+                .foregroundColor(.blue)
+
+            Text(title)
+                .font(.system(size: 12, weight: .medium))
+                .foregroundColor(.primary)
+
+            Text(description)
+                .font(.system(size: 10))
+                .foregroundColor(.secondary)
+                .multilineTextAlignment(.center)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 8)
+    }
+}
+
+struct InteractiveVideoInfoView: View {
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationView {
+            VStack(spacing: 20) {
+                // Header
+                VStack(spacing: 12) {
+                    Image(systemName: "video.circle.fill")
+                        .font(.system(size: 60))
+                        .foregroundColor(.blue)
+
+                    Text("Interactive Video Analysis")
+                        .font(.title2.bold())
+                        .multilineTextAlignment(.center)
+
+                    Text("Learn how to use video overlays and angle measurements to improve your golf swing")
+                        .font(.body)
+                        .foregroundColor(.secondary)
+                        .multilineTextAlignment(.center)
+                }
+                .padding(.top)
+
+                ScrollView {
+                    VStack(spacing: 24) {
+                        // Key Features
+                        VStack(alignment: .leading, spacing: 16) {
+                            Text("Key Features")
+                                .font(.headline)
+
+                            FeatureExplanation(
+                                icon: "play.circle.fill",
+                                title: "Step-by-Step Analysis",
+                                description: "Navigate through key swing positions: Address, Backswing, Top, Downswing, Impact, and Follow Through."
+                            )
+
+                            FeatureExplanation(
+                                icon: "ruler.fill",
+                                title: "Real-Time Angle Measurements",
+                                description: "See spine angle, shoulder rotation, swing plane, and other critical measurements overlaid on your video."
+                            )
+
+                            FeatureExplanation(
+                                icon: "eye.fill",
+                                title: "Visual Guides",
+                                description: "Toggle angle overlays on/off to see exactly where measurements are taken on your swing."
+                            )
+
+                            FeatureExplanation(
+                                icon: "pause.circle.fill",
+                                title: "Pause & Study",
+                                description: "Automatically pause at each swing phase to study your form and understand the measurements."
+                            )
+                        }
+
+                        Divider()
+
+                        // How to Use
+                        VStack(alignment: .leading, spacing: 16) {
+                            Text("How to Use")
+                                .font(.headline)
+
+                            VStack(alignment: .leading, spacing: 12) {
+                                HowToStep(number: 1, text: "Upload and analyze a swing video")
+                                HowToStep(number: 2, text: "Tap any swing phase button to jump to that moment")
+                                HowToStep(number: 3, text: "Use the play/pause button to control playback")
+                                HowToStep(number: 4, text: "Toggle 'Angles' to show/hide measurement overlays")
+                                HowToStep(number: 5, text: "Review specific measurements for each phase")
+                            }
+                        }
+
+                        Divider()
+
+                        // Understanding Measurements
+                        VStack(alignment: .leading, spacing: 16) {
+                            Text("Understanding the Measurements")
+                                .font(.headline)
+
+                            VStack(alignment: .leading, spacing: 12) {
+                                MeasurementExplanation(
+                                    phase: "Address",
+                                    measurement: "Spine Angle",
+                                    description: "Your posture setup - should be tilted forward from hips",
+                                    color: .green
+                                )
+
+                                MeasurementExplanation(
+                                    phase: "Backswing",
+                                    measurement: "Shoulder Turn",
+                                    description: "How much your shoulders rotate - aim for 90-100°",
+                                    color: .blue
+                                )
+
+                                MeasurementExplanation(
+                                    phase: "Top",
+                                    measurement: "Swing Plane",
+                                    description: "The angle of your swing path - key for consistent strikes",
+                                    color: .purple
+                                )
+
+                                MeasurementExplanation(
+                                    phase: "Impact",
+                                    measurement: "Club Speed",
+                                    description: "Your clubhead speed at contact - higher speed = more distance",
+                                    color: .red
+                                )
+                            }
+                        }
+                    }
+                    .padding(.horizontal)
+                }
+            }
+            .navigationTitle("Interactive Analysis")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Done") {
+                        dismiss()
+                    }
+                }
+            }
+        }
+    }
+}
+
+struct FeatureExplanation: View {
+    let icon: String
+    let title: String
+    let description: String
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 12) {
+            Image(systemName: icon)
+                .font(.system(size: 20))
+                .foregroundColor(.blue)
+                .frame(width: 24)
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text(title)
+                    .font(.subheadline.bold())
+
+                Text(description)
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+            }
+        }
+    }
+}
+
+struct HowToStep: View {
+    let number: Int
+    let text: String
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 12) {
+            Circle()
+                .fill(Color.blue)
+                .frame(width: 24, height: 24)
+                .overlay(
+                    Text("\(number)")
+                        .font(.system(size: 12, weight: .bold))
+                        .foregroundColor(.white)
+                )
+
+            Text(text)
+                .font(.subheadline)
+        }
+    }
+}
+
+struct MeasurementExplanation: View {
+    let phase: String
+    let measurement: String
+    let description: String
+    let color: Color
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 12) {
+            Circle()
+                .fill(color)
+                .frame(width: 12, height: 12)
+                .padding(.top, 4)
+
+            VStack(alignment: .leading, spacing: 4) {
+                HStack {
+                    Text(phase)
+                        .font(.subheadline.bold())
+                    Text("•")
+                        .foregroundColor(.secondary)
+                    Text(measurement)
+                        .font(.subheadline.bold())
+                        .foregroundColor(color)
+                }
+
+                Text(description)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+        }
     }
 }
 
