@@ -1742,7 +1742,7 @@ struct PhysicsEngineView: View {
                 }
 
                 // Real Biomechanics Analysis
-                RealBiomechanicsAnalysisView(analysisResult: videoAnalyzer.currentAnalysis)
+                RealBiomechanicsAnalysisView(analysisResult: videoAnalyzer.currentAnalysis, showingInfo: $showingInfo)
                     .padding(.horizontal, 24)
 
                 // Export Button (only show when analysis is complete)
@@ -2184,6 +2184,7 @@ struct PhysicsTabButton: View {
 // MARK: - Real Biomechanics Analysis View (AI-Backed Only)
 struct RealBiomechanicsAnalysisView: View {
     let analysisResult: PhysicsSwingAnalysisResult?
+    @Binding var showingInfo: Bool
 
     var body: some View {
         VStack(spacing: 20) {
@@ -2375,11 +2376,6 @@ struct RealMetricCard: View {
                 Spacer()
 
                 HStack(spacing: 8) {
-                    Button(action: { showingInfo = true }) {
-                        Image(systemName: "info.circle")
-                            .font(.system(size: 14, weight: .medium))
-                            .foregroundColor(.secondary)
-                    }
 
                     Image(systemName: trend.icon)
                         .font(.system(size: 12, weight: .medium))
@@ -4473,8 +4469,8 @@ struct InteractiveSwingVideoPlayer: View {
         player?.actionAtItemEnd = .pause
 
         // Add time observer
-        player?.addPeriodicTimeObserver(forInterval: CMTime(seconds: 0.1, preferredTimescale: 600), queue: .main) { time in
-            currentTime = time.seconds
+        player?.addPeriodicTimeObserver(forInterval: CMTime(seconds: 0.1, preferredTimescale: 600), queue: .main) { [weak self] time in
+            self?.currentTime = time.seconds
         }
     }
 
@@ -4499,7 +4495,7 @@ struct InteractiveSwingVideoPlayer: View {
     private func getPhaseAngleMeasurement() -> String {
         switch selectedPhase {
         case .address:
-            return "Spine: \(String(format: "%.1f", analysisResult.bodyKinematics.spineAngle.addressAngle))°"
+            return "Spine: \(String(format: "%.1f", analysisResult.bodyKinematics.spineAngle.spineAngleAtAddress))°"
         case .backswing:
             return "Shoulder: \(String(format: "%.1f", analysisResult.bodyKinematics.shoulderRotation.maxRotation))°"
         case .top:
@@ -4509,7 +4505,7 @@ struct InteractiveSwingVideoPlayer: View {
         case .impact:
             return "Club Speed: \(String(format: "%.1f", analysisResult.clubHeadSpeed.speedAtImpact)) mph"
         case .followThrough:
-            return "Weight Shift: \(String(format: "%.1f", analysisResult.bodyKinematics.weightShift.percentage * 100))%"
+            return "Weight Shift: \(String(format: "%.1f", analysisResult.bodyKinematics.weightShift.weightTransferSpeed))%"
         }
     }
 }
@@ -4603,11 +4599,11 @@ struct AngleMeasurementOverlay: View {
     private func getSpineAngle() -> Double {
         switch currentPhase {
         case .address:
-            return analysisResult.bodyKinematics.spineAngle.addressAngle
+            return analysisResult.bodyKinematics.spineAngle.spineAngleAtAddress
         case .top:
-            return analysisResult.bodyKinematics.spineAngle.topAngle
+            return analysisResult.bodyKinematics.spineAngle.spineAngleAtTop
         default:
-            return analysisResult.bodyKinematics.spineAngle.addressAngle
+            return analysisResult.bodyKinematics.spineAngle.spineAngleAtAddress
         }
     }
 
@@ -4624,12 +4620,12 @@ struct AngleMeasurementOverlay: View {
 
     private func getAngleValue() -> Double {
         switch currentPhase {
-        case .address: return analysisResult.bodyKinematics.spineAngle.addressAngle
+        case .address: return analysisResult.bodyKinematics.spineAngle.spineAngleAtAddress
         case .backswing: return analysisResult.bodyKinematics.shoulderRotation.maxRotation
         case .top: return analysisResult.swingPlane.planeAngle
         case .downswing: return analysisResult.bodyKinematics.hipRotation.maxRotation
         case .impact: return analysisResult.clubHeadSpeed.speedAtImpact
-        case .followThrough: return analysisResult.bodyKinematics.weightShift.percentage * 100
+        case .followThrough: return analysisResult.bodyKinematics.weightShift.weightTransferSpeed
         }
     }
 
