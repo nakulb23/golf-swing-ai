@@ -60,7 +60,10 @@ class VideoManager: ObservableObject {
     }
     
     private func loadExistingVideos() {
-        let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+        guard let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else {
+            print("❌ Could not access documents directory")
+            return
+        }
 
         do {
             let fileURLs = try FileManager.default.contentsOfDirectory(at: documentsPath, includingPropertiesForKeys: [.fileSizeKey, .contentModificationDateKey], options: .skipsHiddenFiles)
@@ -750,8 +753,12 @@ struct VideoPickerView: View {
             // Load video as Data
             if let movie = try await item.loadTransferable(type: Data.self) {
                 // Save to documents directory
-                let documentsPath = FileManager.default.urls(for: .documentDirectory,
-                                                            in: .userDomainMask).first!
+                guard let documentsPath = FileManager.default.urls(for: .documentDirectory,
+                                                            in: .userDomainMask).first else {
+                    errorMessage = "Could not access documents directory"
+                    print("❌ Could not access documents directory")
+                    return
+                }
                 let fileName = "swing_\(Date().timeIntervalSince1970).mov"
                 let fileURL = documentsPath.appendingPathComponent(fileName)
 
@@ -817,8 +824,12 @@ struct VideoCameraView: UIViewControllerRepresentable {
                                   didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
             if let videoURL = info[.mediaURL] as? URL {
                 // Save video to documents directory
-                let documentsPath = FileManager.default.urls(for: .documentDirectory,
-                                                            in: .userDomainMask).first!
+                guard let documentsPath = FileManager.default.urls(for: .documentDirectory,
+                                                            in: .userDomainMask).first else {
+                    print("❌ Could not access documents directory")
+                    picker.dismiss(animated: true)
+                    return
+                }
                 let fileName = "recorded_swing_\(Date().timeIntervalSince1970).mov"
                 let destinationURL = documentsPath.appendingPathComponent(fileName)
 
