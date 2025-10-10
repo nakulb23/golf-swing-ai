@@ -27,9 +27,12 @@ Testing branch: https://github.com/nakulb23/golf-swing-ai/tree/testing
 ```
 This is a Golf Swing AI iOS app built with SwiftUI. I previously lost 2 weeks of work due to an AI assistant making changes that broke the app. The app currently works and builds properly. Be extremely careful with:
 - AuthenticationManager.swift (threading issues)
-- Swift 6 concurrency patterns  
+- Swift 6 concurrency patterns
 - Google Sign-In integration
 - Camera management
+- LocalBallTracker.swift (intensive video processing, memory sensitive)
+- LocalAIManager.swift club analysis (depends on pose detection)
+- Core ML model integration with fallback mechanisms
 Always use feature branches and test changes.
 ```
 
@@ -54,8 +57,12 @@ git checkout -b feature/new-attempt
 
 ## Key Files to Protect
 - `frontend/ios/Golf Swing AI/Services/AuthenticationManager.swift`
-- `frontend/ios/Golf Swing AI/Services/CameraManager.swift`  
+- `frontend/ios/Golf Swing AI/Services/CameraManager.swift`
+- `frontend/ios/Golf Swing AI/Services/LocalBallTracker.swift` (NEW - Complex video processing)
+- `frontend/ios/Golf Swing AI/Services/LocalAIManager.swift` (Includes club analysis)
 - `frontend/ios/Golf Swing AI/Views/LoginView.swift`
+- `frontend/ios/Golf Swing AI/Views/PhysicsEngineView.swift` (NEW - Physics-based analysis)
+- `frontend/ios/Golf Swing AI/Models/APIModels.swift` (Ball & club tracking models)
 - `frontend/ios/Golf Swing AI.xcodeproj/project.pbxproj`
 
 ## Testing Commands

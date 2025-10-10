@@ -542,7 +542,8 @@ class LocalSwingAnalyzer: ObservableObject {
             recommendations: recommendations,
             overall_score: overallScore,
             analysis_type: "golf_ai_local",
-            model_version: "golf_ai_v1.0"
+            model_version: "golf_ai_v1.0",
+            ball_flight: nil
         )
     }
     
@@ -679,7 +680,8 @@ class LocalSwingAnalyzer: ObservableObject {
             club_path: clubPath,
             grip_analysis: gripAnalysis,
             club_face_analysis: createClubFaceAnalysis(avgClubfaceAngle),
-            club_speed_analysis: createClubSpeedAnalysis(clubPath)
+            club_speed_analysis: createClubSpeedAnalysis(clubPath),
+            ball_flight: nil
         )
     }
     
@@ -844,7 +846,8 @@ class LocalSwingAnalyzer: ObservableObject {
                 hand_separation: 0.1
             ),
             club_face_analysis: nil,
-            club_speed_analysis: nil
+            club_speed_analysis: nil,
+            ball_flight: nil
         )
     }
     

@@ -17,10 +17,21 @@ Brief description of what this PR accomplishes.
 - [ ] Core features still work (login, camera, etc.)
 - [ ] No crashes during basic app flow
 
+### Ball Tracking & Club Analysis Testing (if applicable)
+- [ ] Ball tracking completes without memory issues (test with 5-10 second videos)
+- [ ] Manual ball selection fallback works when automatic detection fails
+- [ ] Trajectory analysis produces valid metrics (launch angle, speed, height)
+- [ ] Club analysis detects club face angle and speed correctly
+- [ ] Club analysis fallback works when pose detection is incomplete
+- [ ] Video compression and frame extraction work efficiently
+- [ ] No crashes during intensive video processing
+- [ ] Core ML model loading works (with and without model files)
+
 ## 🚨 Risk Assessment
 - [ ] Low risk - minor UI changes, documentation
 - [ ] Medium risk - new feature, refactoring
 - [ ] High risk - changes to authentication, camera, core services
+- [ ] Very high risk - changes to ball tracking, club analysis, video processing, Core ML integration
 
 ## 🎬 Demo/Screenshots
 (If applicable, add screenshots or describe what changed visually)

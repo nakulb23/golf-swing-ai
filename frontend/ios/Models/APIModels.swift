@@ -13,6 +13,7 @@ struct LocalGolfAnalysisResult: Codable {
     let overall_score: Double
     let analysis_type: String // Always "golf_ai_local"
     let model_version: String
+    let ball_flight: FlightAnalysis?
     
     // Compatibility with existing SwingAnalysisResponse
     var asSwingAnalysisResponse: SwingAnalysisResponse {
@@ -36,7 +37,8 @@ struct LocalGolfAnalysisResult: Codable {
             plane_angle: biomechanics.swing_plane_angle,
             tempo_ratio: biomechanics.tempo_ratio,
             shoulder_tilt: biomechanics.shoulder_rotation,
-            video_duration_seconds: biomechanics.video_duration
+            video_duration_seconds: biomechanics.video_duration,
+            ball_flight: ball_flight ?? club_analysis.ball_flight
         )
     }
     
@@ -104,10 +106,13 @@ struct GolfClubAnalysisData: Codable {
     let club_face_angle: Double
     let club_path: [GolfPoint]
     let grip_analysis: GolfGripAnalysis
-    
+
     // Premium club analysis features
     let club_face_analysis: ClubFaceAnalysis?
     let club_speed_analysis: ClubSpeedAnalysis?
+
+    // Ball flight integration
+    let ball_flight: FlightAnalysis?
 }
 
 struct GolfGripAnalysis: Codable {
@@ -210,7 +215,10 @@ struct GolfRecommendation: Codable {
       let club_face_analysis: ClubFaceAnalysis?
       let club_speed_analysis: ClubSpeedAnalysis?
       let premium_features_available: Bool?
-      
+
+      // Ball flight integration
+      let ball_flight: FlightAnalysis?
+
       // Physics insights - support both old and new formats
       private let _physics_insights: PhysicsInsightsWrapper
       let angle_insights: String?
@@ -236,15 +244,16 @@ struct GolfRecommendation: Codable {
       }
       
       // Custom initializer for new format with premium features
-      init(predicted_label: String, confidence: Double, confidence_gap: Double, 
-           all_probabilities: [String: Double], camera_angle: String?, 
+      init(predicted_label: String, confidence: Double, confidence_gap: Double,
+           all_probabilities: [String: Double], camera_angle: String?,
            angle_confidence: Double?, feature_reliability: [String: Double]?,
            club_face_analysis: ClubFaceAnalysis?, club_speed_analysis: ClubSpeedAnalysis?,
-           premium_features_available: Bool?, physics_insights: String, angle_insights: String?, 
+           premium_features_available: Bool?, physics_insights: String, angle_insights: String?,
            recommendations: [String]?, extraction_status: String,
            analysis_type: String?, model_version: String?,
-           plane_angle: Double? = nil, tempo_ratio: Double? = nil, 
-           shoulder_tilt: Double? = nil, video_duration_seconds: Double? = nil) {
+           plane_angle: Double? = nil, tempo_ratio: Double? = nil,
+           shoulder_tilt: Double? = nil, video_duration_seconds: Double? = nil,
+           ball_flight: FlightAnalysis? = nil) {
           self.predicted_label = predicted_label
           self.confidence = confidence
           self.confidence_gap = confidence_gap
@@ -272,6 +281,7 @@ struct GolfRecommendation: Codable {
           self.club_face_analysis = club_face_analysis
           self.club_speed_analysis = club_speed_analysis
           self.premium_features_available = premium_features_available
+          self.ball_flight = ball_flight
           self._physics_insights = .string(physics_insights)
           self.angle_insights = angle_insights
           self.recommendations = recommendations
@@ -311,6 +321,7 @@ struct GolfRecommendation: Codable {
           self.club_face_analysis = nil
           self.club_speed_analysis = nil
           self.premium_features_available = false
+          self.ball_flight = nil
           self._physics_insights = .object(physics_insights)
           self.angle_insights = nil
           self.recommendations = nil
@@ -358,6 +369,7 @@ struct GolfRecommendation: Codable {
           case feature_dimension_ok, quality_score
           case detailed_biomechanics, priority_flaws, pose_sequence, optimal_reference, comparison_data, has_detailed_analysis
           case club_face_analysis, club_speed_analysis, premium_features_available
+          case ball_flight
           case _physics_insights = "physics_insights"
           case angle_insights, recommendations, extraction_status
           case analysis_type, model_version
@@ -401,7 +413,10 @@ struct GolfRecommendation: Codable {
           club_face_analysis = try container.decodeIfPresent(ClubFaceAnalysis.self, forKey: .club_face_analysis)
           club_speed_analysis = try container.decodeIfPresent(ClubSpeedAnalysis.self, forKey: .club_speed_analysis)
           premium_features_available = try container.decodeIfPresent(Bool.self, forKey: .premium_features_available) ?? false
-          
+
+          // Ball flight integration
+          ball_flight = try container.decodeIfPresent(FlightAnalysis.self, forKey: .ball_flight)
+
           angle_insights = try container.decodeIfPresent(String.self, forKey: .angle_insights)
           recommendations = try container.decodeIfPresent([String].self, forKey: .recommendations)
           analysis_type = try container.decodeIfPresent(String.self, forKey: .analysis_type)
@@ -444,7 +459,10 @@ struct GolfRecommendation: Codable {
           try container.encodeIfPresent(club_face_analysis, forKey: .club_face_analysis)
           try container.encodeIfPresent(club_speed_analysis, forKey: .club_speed_analysis)
           try container.encodeIfPresent(premium_features_available, forKey: .premium_features_available)
-          
+
+          // Ball flight integration
+          try container.encodeIfPresent(ball_flight, forKey: .ball_flight)
+
           try container.encodeIfPresent(angle_insights, forKey: .angle_insights)
           try container.encodeIfPresent(recommendations, forKey: .recommendations)
           try container.encodeIfPresent(analysis_type, forKey: .analysis_type)

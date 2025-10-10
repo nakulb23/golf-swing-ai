@@ -43,14 +43,17 @@ Golf Swing AI/
 │   │   │   ├── AuthenticationManager.swift    # Google Sign-In - threading sensitive
 │   │   │   ├── CameraManager.swift           # AVFoundation camera handling
 │   │   │   ├── EnhancedGolfChat.swift        # AI chat service
-│   │   │   ├── LocalAIManager.swift          # Core ML integration
-│   │   │   └── LocalCaddieChat.swift         # Local AI responses
+│   │   │   ├── LocalAIManager.swift          # Core ML integration - includes club analysis
+│   │   │   ├── LocalCaddieChat.swift         # Local AI responses
+│   │   │   └── LocalBallTracker.swift        # Ball tracking & trajectory analysis (NEW)
 │   │   ├── Views/             # SwiftUI views
 │   │   │   ├── LoginView.swift               # Authentication UI
 │   │   │   ├── HomeView.swift                # Main dashboard
 │   │   │   ├── CameraView.swift              # Video capture
-│   │   │   └── ChatView.swift                # AI chat interface
+│   │   │   ├── ChatView.swift                # AI chat interface
+│   │   │   └── PhysicsEngineView.swift       # Physics-based swing analysis (NEW)
 │   │   ├── Models/            # Data models
+│   │   │   └── APIModels.swift               # Includes ball tracking & club analysis models
 │   │   └── Utils/             # Helper utilities
 │   └── Golf Swing AI.xcodeproj # Xcode project file
 ├── backend/                   # Python backend services
@@ -108,6 +111,23 @@ private func configureGoogleSignIn() {
 - Python backend with Flask API
 - Local LLM (Phi-2/similar) for chat functionality
 
+### 5. Ball Tracking & Club Analysis (NEW FEATURES)
+- **LocalBallTracker.swift**: Advanced ball tracking with Core ML integration
+  - Automatic ball detection using computer vision
+  - Manual ball selection fallback when automatic detection fails
+  - Trajectory analysis with flight metrics (launch speed, angle, max height)
+  - Video compression and optimized frame extraction for performance
+  - Batch processing for efficient ball detection
+- **Club Analysis in LocalAIManager.swift**: Comprehensive club tracking
+  - Club face angle detection and analysis
+  - Club speed analysis with tempo measurements
+  - Grip analysis (strength, position, consistency)
+  - Ball flight data integration with trajectory predictions
+- **GolfClubAnalysisData Model**: Structured data for club metrics
+  - Club type detection, shaft angle, face angle
+  - Club path tracking through swing phases
+  - Premium features: smash factor, impact position, distance potential
+
 ## 🔧 Safe Development Workflow
 
 ### Phase 1: Analysis (ALWAYS DO FIRST)
@@ -163,7 +183,7 @@ git push origin feature/your-task-description
 - **Rule**: Never modify async/await patterns without deep understanding
 - **Test**: Always test sign-in flow after changes
 
-### 2. CameraManager.swift  
+### 2. CameraManager.swift
 - **Issue**: AVFoundation session conflicts
 - **Rule**: Don't modify session setup/teardown without testing
 - **Test**: Camera preview must work in app
@@ -177,6 +197,26 @@ git push origin feature/your-task-description
 - **Issue**: Configuration timing causes app termination
 - **Rule**: Keep background configuration pattern
 - **Test**: Sign-in must work without crashes
+
+### 5. LocalBallTracker.swift (NEW - COMPLEX)
+- **Issue**: Intensive video processing can cause memory issues
+- **Rule**: Always test with various video lengths and resolutions
+- **Pattern**: Uses batch processing and video compression to optimize performance
+- **Test**: Ball tracking must complete without crashing or excessive memory usage
+- **Critical Functions**:
+  - `trackBall(from:)` - Main tracking entry point with progress updates
+  - `processManualSelections(from:videoFrames:)` - Manual ball selection fallback
+  - `detectBallInBatches(frames:)` - Concurrent frame processing
+  - `GolfBallDetector.detectBall(in:)` - Core ML model integration with fallback
+
+### 6. LocalAIManager.swift - Club Analysis
+- **Issue**: Complex biomechanics calculations with pose detection
+- **Rule**: Club analysis depends on valid pose detection - always check for nil poses
+- **Pattern**: Uses `GolfClubAnalysisData` model for structured club metrics
+- **Test**: Verify club analysis works with different camera angles
+- **Critical Functions**:
+  - `analyzeClubData(_:videoURL:frames:)` - Main club analysis logic
+  - `createDefaultClubAnalysis()` - Fallback when club detection fails
 
 ## 📋 Pre-Change Validation Checklist
 
@@ -249,6 +289,9 @@ xcodebuild build 2>&1 | grep -i concurrency
 5. **Not testing before merging** → Every merge to main must be tested
 6. **Threading violations** → Understand Swift 6 concurrency rules
 7. **Duplicate code** → Check for existing implementations first
+8. **Modifying ball tracking without testing with real videos** → LocalBallTracker processes video frames intensively
+9. **Breaking Core ML model fallback logic** → Both ball tracking and club analysis have fallback mechanisms
+10. **Ignoring memory warnings during video processing** → Video compression and batch processing are critical for performance
 
 ## 📞 When in Doubt
 

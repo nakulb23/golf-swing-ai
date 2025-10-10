@@ -221,9 +221,14 @@ git push origin main
 
 ### Branch Naming Convention
 - `feature/description` - New features or improvements
+  - Example: `feature/ball-tracking-optimization`
+  - Example: `feature/club-analysis-enhancements`
 - `fix/description` - Bug fixes
+  - Example: `fix/ball-tracker-memory-leak`
+  - Example: `fix/club-detection-fallback`
 - `hotfix/description` - Critical urgent fixes
 - `experiment/description` - Experimental work that might not work
+  - Example: `experiment/new-coreml-model`
 
 ### Safe Development Workflow
 ```bash
