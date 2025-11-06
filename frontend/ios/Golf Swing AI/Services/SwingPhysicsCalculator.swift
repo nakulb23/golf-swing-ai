@@ -23,10 +23,10 @@ class SwingPhysicsCalculator {
         
         // Calculate hip center
         let hipCenter = CGPoint(x: (leftHip.x + rightHip.x) / 2, y: (leftHip.y + rightHip.y) / 2)
-        
+
         // Calculate spine angle from vertical
-        let deltaX = abs(head.x - hipCenter.x)
-        let deltaY = abs(head.y - hipCenter.y)
+        let deltaX = Swift.abs(Double(head.x) - Double(hipCenter.x))
+        let deltaY = Swift.abs(Double(head.y) - Double(hipCenter.y))
         let angle = atan2(deltaX, deltaY) * 180 / .pi
         
         return max(5, min(45, angle)) // Clamp to reasonable range
@@ -66,7 +66,7 @@ class SwingPhysicsCalculator {
         let feetCenter = hipCenter // Approximation
         
         // Weight distribution based on shoulder position relative to feet
-        let weightRatio = (shoulderCenter.x - feetCenter.x) / abs(leftHip.x - rightHip.x)
+        let weightRatio = (shoulderCenter.x - feetCenter.x) / Swift.abs(Double(leftHip.x) - Double(rightHip.x))
         return max(0, min(1, 0.5 + weightRatio))
     }
     
@@ -75,9 +75,9 @@ class SwingPhysicsCalculator {
               let leftElbow = pose.keypoints.first(where: { $0.type == .leftElbow })?.position else {
             return 90.0 // Default arm hang
         }
-        
-        let deltaX = abs(leftElbow.x - leftShoulder.x)
-        let deltaY = abs(leftElbow.y - leftShoulder.y)
+
+        let deltaX = Swift.abs(Double(leftElbow.x) - Double(leftShoulder.x))
+        let deltaY = Swift.abs(Double(leftElbow.y) - Double(leftShoulder.y))
         let angle = atan2(deltaX, deltaY) * 180 / .pi
         
         return max(45, min(135, angle))
@@ -88,8 +88,8 @@ class SwingPhysicsCalculator {
               let rightHip = pose.keypoints.first(where: { $0.type == .rightHip })?.position else {
             return 0.3 // Default stance width
         }
-        
-        let stanceWidth = abs(leftHip.x - rightHip.x)
+
+        let stanceWidth = Swift.abs(Double(leftHip.x) - Double(rightHip.x))
         return max(0.2, min(0.6, stanceWidth)) // Normalize to reasonable range
     }
     
@@ -121,12 +121,12 @@ class SwingPhysicsCalculator {
         }
         
         // Calculate rotation based on shoulder line angle
-        let deltaX = rightShoulder.x - leftShoulder.x
-        let deltaY = rightShoulder.y - leftShoulder.y
+        let deltaX = Double(rightShoulder.x - leftShoulder.x)
+        let deltaY = Double(rightShoulder.y - leftShoulder.y)
         let angle = atan2(deltaY, deltaX) * 180 / .pi
-        
+
         // Convert to rotation magnitude
-        let rotation = abs(angle)
+        let rotation = Swift.abs(angle)
         return max(0, min(120, rotation))
     }
     
@@ -136,11 +136,11 @@ class SwingPhysicsCalculator {
             return 30.0
         }
         
-        let deltaX = rightHip.x - leftHip.x
-        let deltaY = rightHip.y - leftHip.y
+        let deltaX = Double(rightHip.x - leftHip.x)
+        let deltaY = Double(rightHip.y - leftHip.y)
         let angle = atan2(deltaY, deltaX) * 180 / .pi
-        let rotation = abs(angle)
-        
+        let rotation = Swift.abs(angle)
+
         return max(0, min(90, rotation))
     }
     
@@ -203,22 +203,22 @@ class SwingPhysicsCalculator {
         print("🔍 Top position: (\(String(format: "%.3f", topPos.x)), \(String(format: "%.3f", topPos.y)))")
         
         // Calculate movement vectors
-        let deltaX = topPos.x - addressPos.x
-        let deltaY = topPos.y - addressPos.y
+        let deltaX = Double(topPos.x - addressPos.x)
+        let deltaY = Double(topPos.y - addressPos.y)
         
         print("🔍 Raw Delta X: \(String(format: "%.3f", deltaX)), Raw Delta Y: \(String(format: "%.3f", deltaY))")
-        
+
         // Check for minimal movement (not a real swing)
         let totalMovement = sqrt(deltaX * deltaX + deltaY * deltaY)
         guard totalMovement > 0.05 else { // 5% of screen movement minimum
             print("❌ SwingPlane: Total movement too small (\(String(format: "%.3f", totalMovement))) - not a swing")
             return 0.0
         }
-        
+
         // Calculate swing plane angle - use the actual movement vector
         // For golf swing: horizontal movement is backswing width, vertical shows plane angle
-        let horizontalDistance = abs(deltaX)
-        let verticalDistance = abs(deltaY)
+        let horizontalDistance = Swift.abs(deltaX)
+        let verticalDistance = Swift.abs(deltaY)
         
         // Determine if this looks like a backswing (hand moves back and up typically)
         let isBackswingMotion = deltaX < 0 && deltaY < 0 // Moving left and up in screen coordinates
@@ -231,7 +231,7 @@ class SwingPhysicsCalculator {
         } else {
             planeAngle = 90.0 // Purely vertical movement
         }
-        
+
         print("🔍 Calculated plane angle: \(String(format: "%.2f", planeAngle))°")
         
         // Ensure reasonable golf swing plane angle
@@ -268,8 +268,8 @@ class SwingPhysicsCalculator {
         
         let addressWeight = calculateWeightDistribution(pose: poses.first!)
         let topWeight = calculateWeightDistribution(pose: poses[poses.count / 2])
-        
-        return abs(topWeight - addressWeight)
+
+        return Swift.abs(topWeight - addressWeight)
     }
     
     static func calculateWristHinge(poses: [PoseData]) -> Double {
@@ -281,10 +281,10 @@ class SwingPhysicsCalculator {
               let leftWrist = topPose.keypoints.first(where: { $0.type == .leftWrist })?.position else {
             return 90.0
         }
-        
+
         // Simplified wrist hinge calculation
-        let deltaY = abs(leftWrist.y - leftElbow.y)
-        let deltaX = abs(leftWrist.x - leftElbow.x)
+        let deltaY = Swift.abs(Double(leftWrist.y) - Double(leftElbow.y))
+        let deltaX = Swift.abs(Double(leftWrist.x) - Double(leftElbow.x))
         let angle = atan2(deltaY, deltaX) * 180 / .pi
         
         return max(45, min(135, angle))
@@ -349,8 +349,8 @@ class SwingPhysicsCalculator {
         
         let firstWeight = calculateWeightDistribution(pose: poses.first!)
         let lastWeight = calculateWeightDistribution(pose: poses.last!)
-        
-        let transferRate = abs(lastWeight - firstWeight) / Double(poses.count)
+
+        let transferRate = Swift.abs(lastWeight - firstWeight) / Double(poses.count)
         return max(0, min(1, transferRate * 10)) // Scale appropriately
     }
     
@@ -375,7 +375,7 @@ class SwingPhysicsCalculator {
         for i in 1..<poses.count {
             let prevRotation = calculateHipRotation(pose: poses[i-1])
             let currRotation = calculateHipRotation(pose: poses[i])
-            rotationSpeed += abs(currRotation - prevRotation)
+            rotationSpeed += Swift.abs(currRotation - prevRotation)
         }
         
         let avgSpeed = rotationSpeed / Double(poses.count - 1)
@@ -389,7 +389,7 @@ class SwingPhysicsCalculator {
         for i in 1..<poses.count {
             let prevRotation = calculateShoulderRotation(pose: poses[i-1])
             let currRotation = calculateShoulderRotation(pose: poses[i])
-            rotationSpeed += abs(currRotation - prevRotation)
+            rotationSpeed += Swift.abs(currRotation - prevRotation)
         }
         
         let avgSpeed = rotationSpeed / Double(poses.count - 1)
@@ -422,8 +422,8 @@ class SwingPhysicsCalculator {
             return -2.0
         }
         
-        let deltaY = impactWrist.y - midWrist.y
-        let deltaX = abs(impactWrist.x - midWrist.x)
+        let deltaY = Double(impactWrist.y - midWrist.y)
+        let deltaX = Swift.abs(Double(impactWrist.x) - Double(midWrist.x))
         let attackAngle = atan2(deltaY, deltaX) * 180 / .pi
         
         return max(-15, min(10, attackAngle)) // Typical attack angle range
@@ -569,7 +569,7 @@ class SwingPhysicsCalculator {
         for i in 1..<poses.count {
             let prevRotation = calculateShoulderRotation(pose: poses[i-1])
             let currRotation = calculateShoulderRotation(pose: poses[i])
-            let velocity = abs(currRotation - prevRotation)
+            let velocity = Swift.abs(currRotation - prevRotation)
             rotationVelocities.append(velocity)
         }
         
@@ -616,7 +616,7 @@ class SwingPhysicsCalculator {
         for i in 1..<poses.count {
             let prevShoulderRotation = calculateShoulderRotation(pose: poses[i-1])
             let currShoulderRotation = calculateShoulderRotation(pose: poses[i])
-            let velocity = abs(currShoulderRotation - prevShoulderRotation)
+            let velocity = Swift.abs(currShoulderRotation - prevShoulderRotation)
             velocities.append(velocity)
         }
         
@@ -633,7 +633,7 @@ class SwingPhysicsCalculator {
     
     static func calculateSwingEfficiency(poses: [PoseData]) -> Double {
         // Overall swing efficiency score
-        let tempoScore = abs(calculateOverallTempo(poses: poses) - 3.0) / 3.0 // Ideal tempo is 3:1
+        let tempoScore = Swift.abs(calculateOverallTempo(poses: poses) - 3.0) / 3.0 // Ideal tempo is 3:1
         let rhythmScore = calculateRhythmConsistency(poses: poses)
         let sequenceScore = 0.8 // Simplified sequence score
         
@@ -711,23 +711,23 @@ class SwingPhysicsCalculator {
         }
         
         // Calculate movement vectors from the selected reference points
-        let deltaX = topPos.x - addressPos.x
-        let deltaY = topPos.y - addressPos.y
+        let deltaX = Double(topPos.x - addressPos.x)
+        let deltaY = Double(topPos.y - addressPos.y)
         let totalMovement = sqrt(deltaX * deltaX + deltaY * deltaY)
-        
+
         print("🔍 BackView movement analysis:")
         print("   Address position: (\(String(format: "%.3f", addressPos.x)), \(String(format: "%.3f", addressPos.y)))")
         print("   Top position: (\(String(format: "%.3f", topPos.x)), \(String(format: "%.3f", topPos.y)))")
         print("   Total movement: \(String(format: "%.3f", totalMovement))")
-        
+
         guard totalMovement > 0.02 else { // Minimum movement threshold
             print("❌ BackView: Insufficient movement detected for swing analysis")
             return 0.0
         }
-        
+
         // Calculate vertical and horizontal movement components
-        let verticalMovement = abs(deltaY)
-        let horizontalMovement = abs(deltaX)
+        let verticalMovement = Swift.abs(deltaY)
+        let horizontalMovement = Swift.abs(deltaX)
         
         // For back view, calculate swing plane based on movement pattern
         // In back view, lateral movement indicates turn/rotation while vertical shows arc
@@ -742,11 +742,11 @@ class SwingPhysicsCalculator {
            let topLeftShoulder = topPose.keypoints.first(where: { $0.type == .leftShoulder })?.position,
            let topRightShoulder = topPose.keypoints.first(where: { $0.type == .rightShoulder })?.position {
             
-            let addressShoulderAngle = atan2(addressRightShoulder.y - addressLeftShoulder.y, 
-                                            addressRightShoulder.x - addressLeftShoulder.x)
-            let topShoulderAngle = atan2(topRightShoulder.y - topLeftShoulder.y,
-                                        topRightShoulder.x - topLeftShoulder.x)
-            shoulderRotationComponent = abs(topShoulderAngle - addressShoulderAngle) * 180 / .pi
+            let addressShoulderAngle = atan2(Double(addressRightShoulder.y - addressLeftShoulder.y),
+                                            Double(addressRightShoulder.x - addressLeftShoulder.x))
+            let topShoulderAngle = atan2(Double(topRightShoulder.y - topLeftShoulder.y),
+                                        Double(topRightShoulder.x - topLeftShoulder.x))
+            shoulderRotationComponent = Swift.abs(topShoulderAngle - addressShoulderAngle) * 180 / .pi
         }
         
         // Combine movement angle with shoulder rotation for more accurate plane estimation
@@ -770,8 +770,8 @@ class SwingPhysicsCalculator {
     // MARK: - Utility Functions
     
     private static func distance(from point1: CGPoint, to point2: CGPoint) -> Double {
-        let dx = point1.x - point2.x
-        let dy = point1.y - point2.y
+        let dx = Double(point1.x - point2.x)
+        let dy = Double(point1.y - point2.y)
         return sqrt(dx * dx + dy * dy)
     }
 }
