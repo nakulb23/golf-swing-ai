@@ -162,7 +162,7 @@ class VisionPoseDetector: ObservableObject {
         for i in 0..<frameCount {
             let timestamp = Double(i) / frameRate
             let time = CMTime(seconds: min(timestamp, totalSeconds - 0.1), preferredTimescale: 600)
-            if !timePoints.contains(where: { abs(CMTimeGetSeconds($0) - timestamp) < 0.1 }) {
+            if !timePoints.contains(where: { Swift.abs(Double(CMTimeGetSeconds($0)) - timestamp) < 0.1 }) {
                 timePoints.append(time)
             }
         }
@@ -186,7 +186,7 @@ class VisionPoseDetector: ObservableObject {
                     let image = UIImage(cgImage: cgImage)
                     
                     print("📱 Frame size: \(image.size.width)x\(image.size.height), CGImage: \(cgImage.width)x\(cgImage.height)")
-                    let colorSpaceName = cgImage.colorSpace?.name.map { String($0) } ?? "unknown"
+                    let colorSpaceName = cgImage.colorSpace?.name.map { (name: CFString) -> String in String(name) } ?? "unknown"
                     print("📱 Color space: \(colorSpaceName)")
                     print("📱 Bits per component: \(cgImage.bitsPerComponent), Bits per pixel: \(cgImage.bitsPerPixel)")
                     
@@ -397,10 +397,10 @@ class VisionPoseDetector: ObservableObject {
            let rightShoulder = firstPose.landmarks.first(where: { $0.name == "right_shoulder" }),
            let leftHip = firstPose.landmarks.first(where: { $0.name == "left_hip" }),
            let rightHip = firstPose.landmarks.first(where: { $0.name == "right_hip" }) {
-            
+
             // Calculate horizontal spread of shoulders and hips
-            let shoulderSpread = abs(rightShoulder.position.x - leftShoulder.position.x)
-            let hipSpread = abs(rightHip.position.x - leftHip.position.x)
+            let shoulderSpread = Swift.abs(Double(rightShoulder.position.x) - Double(leftShoulder.position.x))
+            let hipSpread = Swift.abs(Double(rightHip.position.x) - Double(leftHip.position.x))
             
             print("📐 Camera angle analysis:")
             print("  → Shoulder spread: \(String(format: "%.3f", shoulderSpread))")

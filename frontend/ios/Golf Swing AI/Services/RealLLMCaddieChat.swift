@@ -347,7 +347,7 @@ class LLMContext {
 
         // Set up context parameters
         var ctxParams = llama_context_default_params()
-        ctxParams.n_ctx = UInt32(Int32(contextSize))
+        ctxParams.n_ctx = UInt32(clamping: contextSize)
         ctxParams.n_threads = Int32(threads)
         ctxParams.n_threads_batch = Int32(threads)
 
@@ -387,7 +387,7 @@ class LLMContext {
         print("📝 Tokenized prompt: \(tokens.count) tokens")
 
         // Create batch for processing
-        var batch = llama_batch_init(Int32(tokens.count), 0, 1)
+        var batch = llama_batch_init(Int32(tokens.count), Int32(0), Int32(1))
         defer { llama_batch_free(batch) }
 
         // Add tokens to batch
@@ -762,7 +762,7 @@ class LLMContext {
         }
 
         // Create and process batch
-        var batch = llama_batch_init(Int32(tokens.count), 0, 1)
+        var batch = llama_batch_init(Int32(tokens.count), Int32(0), Int32(1))
         defer { llama_batch_free(batch) }
 
         for (i, token) in tokens.enumerated() {
