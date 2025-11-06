@@ -337,7 +337,7 @@ class LLMContext {
 
         // Set up model parameters
         var modelParams = llama_model_default_params()
-        modelParams.n_gpu_layers = Int32(gpuLayers)
+        modelParams.n_gpu_layers = UInt32(clamping: gpuLayers)
 
         // Load the model
         guard let loadedModel = llama_load_model_from_file(modelPath, modelParams) else {
@@ -455,7 +455,7 @@ class LLMContext {
         var tokens = [llama_token](repeating: 0, count: utf8Count + (addBos ? 1 : 0) + 1)
 
         let tokenCount = text.withCString { cString in
-            llama_tokenize(model, cString, Int32(utf8Count), &tokens, Int32(tokens.count), addBos, false)
+            llama_tokenize(model, cString, UInt32(clamping: utf8Count), &tokens, UInt32(clamping: tokens.count), addBos, false)
         }
 
         guard tokenCount >= 0 else { return [] }
