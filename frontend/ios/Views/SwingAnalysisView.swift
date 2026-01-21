@@ -327,35 +327,54 @@ struct SwingAnalysisView: View {
                         VStack(spacing: 30) {
                             // Header Section
                             SwingAnalysisHeader(showHistory: $viewModel.showHistory)
-                            
-                            // Video Input Section
-                            VideoInputSection(
-                                viewModel: viewModel
-                            )
-                            
-                            // Recent History Preview Section
-                            RecentAnalysisPreview(showFullHistory: $viewModel.showHistory)
-                            
-                            // Analysis Status
+
+                            // Analysis Status - MOVED TO TOP when analyzing
                             if viewModel.isAnalyzing {
                                 SwingAnalysisProgressView(
                                     progress: viewModel.analysisProgress,
                                     currentStage: viewModel.currentAnalysisStage
                                 )
                             }
-                            
+
                             // Error Display
                             if let error = viewModel.errorMessage {
                                 ErrorBanner(message: error) {
                                     viewModel.clearError()
                                 }
                             }
+
+                            // Video Input Section
+                            VideoInputSection(
+                                viewModel: viewModel
+                            )
+
+                            // Recent History Preview Section
+                            RecentAnalysisPreview(showFullHistory: $viewModel.showHistory)
                         }
                         .padding(.horizontal)
                     }
                 }
             }
             .navigationBarHidden(viewModel.analysisResult != nil)
+            .overlay {
+                if viewModel.showProcessingPopup {
+                    Color.black.opacity(0.3)
+                        .ignoresSafeArea()
+
+                    VStack(spacing: 16) {
+                        ProgressView()
+                            .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                            .scaleEffect(1.5)
+
+                        Text("Processing video...")
+                            .font(.system(size: 16, weight: .medium))
+                            .foregroundColor(.white)
+                    }
+                    .padding(32)
+                    .background(Color.black.opacity(0.8))
+                    .cornerRadius(16)
+                }
+            }
         }
         .preferredColorScheme(.dark)
         .sheet(isPresented: $viewModel.showCamera) {
@@ -401,6 +420,7 @@ class SwingAnalysisViewModel: ObservableObject {
     @Published var showPhotoPicker = false
     @Published var showHistory = false
     @Published var analysisMode: AnalysisMode = .local
+    @Published var showProcessingPopup = false
     
     // Services
     private let apiService = APIService.shared
@@ -419,6 +439,7 @@ class SwingAnalysisViewModel: ObservableObject {
     }
     
     func handleVideoSelection(_ item: PhotosPickerItem) async {
+        showProcessingPopup = true
         do {
             if let data = try await item.loadTransferable(type: Data.self) {
                 videoData = data
@@ -426,6 +447,7 @@ class SwingAnalysisViewModel: ObservableObject {
             }
         } catch {
             errorMessage = "Failed to load video: \(error.localizedDescription)"
+            showProcessingPopup = false
         }
     }
     
@@ -434,6 +456,7 @@ class SwingAnalysisViewModel: ObservableObject {
             errorMessage = "Failed to capture video"
             return
         }
+        showProcessingPopup = true
         videoData = data
         Task {
             await analyzeVideo(data)
@@ -444,11 +467,12 @@ class SwingAnalysisViewModel: ObservableObject {
         isAnalyzing = true
         analysisProgress = 0.0
         errorMessage = nil
-        
+
         do {
             // Stage 1: Preprocessing
             currentAnalysisStage = .preprocessing
             analysisProgress = 0.1
+            showProcessingPopup = false // Hide popup now that detailed progress is showing
             try await Task.sleep(nanoseconds: 500_000_000)
             
             // Stage 2: Local AI Analysis
@@ -477,8 +501,9 @@ class SwingAnalysisViewModel: ObservableObject {
             
         } catch {
             errorMessage = createDetailedErrorMessage(from: error)
+            showProcessingPopup = false // Hide popup on error
         }
-        
+
         isAnalyzing = false
     }
     
@@ -800,6 +825,7 @@ class SwingAnalysisViewModel: ObservableObject {
         isAnalyzing = false
         analysisProgress = 0.0
         currentAnalysisStage = .idle
+        showProcessingPopup = false
     }
     
     func clearError() {
@@ -1173,8 +1199,10 @@ struct SimpleCameraView: View {
                     Button(action: {
                         if cameraManager.isRecording {
                             cameraManager.stopRecording { videoData in
-                                onVideoRecorded(videoData)
-                                dismiss()
+                                Task { @MainActor in
+                                    onVideoRecorded(videoData)
+                                    dismiss()
+                                }
                             }
                         } else {
                             cameraManager.startRecording()
@@ -1399,8 +1427,10 @@ struct ComprehensiveResultsView: View {
         }
         .fullScreenCover(isPresented: $showingVideoPlayer) {
             if let videoURL = videoURL {
-                VideoPlayerView(videoURL: videoURL) {
-                    showingVideoPlayer = false
+                VideoPlayerView(videoURL: videoURL) { [self] in
+                    Task { @MainActor in
+                        self.showingVideoPlayer = false
+                    }
                 }
             }
         }
@@ -1547,15 +1577,15 @@ struct ResultsHeader: View {
         // Calculate swing score based on plane angle and tempo
         if let tempoRatio = result.tempo_ratio {
             // Combine plane angle and tempo for overall score
-            let idealAngle = 45.0
-            let planeDeviation = abs(planeAngle - idealAngle)
+            let idealAngle: Double = 45.0
+            let planeDeviation = Swift.abs(planeAngle - idealAngle)
             let planeScore = max(0, 100 - (planeDeviation * 2))
             let tempoScore = max(0, min(100, tempoRatio * 100))
             swingScore = Int((planeScore + tempoScore) / 2)
         } else {
             // Calculate score based on plane angle only (ideal is around 45 degrees)
-            let idealAngle = 45.0
-            let deviation = abs(planeAngle - idealAngle)
+            let idealAngle: Double = 45.0
+            let deviation = Swift.abs(planeAngle - idealAngle)
             swingScore = Int(max(0, min(100, 100 - (deviation * 2))))
         }
         
@@ -1764,160 +1794,151 @@ struct VideoReplaySection: View {
 // MARK: - Video Player View
 struct VideoPlayerView: View {
     let videoURL: URL
-    let onDismiss: () -> Void
-    
-    @State private var player: AVPlayer?
-    @State private var isPlaying = true
-    @State private var showControls = true
-    
+    let onDismiss: @Sendable () -> Void
+
     var body: some View {
         ZStack {
             Color.black.ignoresSafeArea()
-            
-            // Video Player
-            if let player = player {
-                VideoPlayer(player: player) {
-                    // Custom overlay controls
-                    Color.clear
-                }
+
+            // Use AVPlayerViewController wrapper for reliable playback
+            AVPlayerViewControllerWrapper(videoURL: videoURL, onDismiss: onDismiss)
                 .ignoresSafeArea()
-                .onTapGesture {
-                    showControls.toggle()
-                }
-            } else {
-                // Loading state
-                VStack(spacing: 20) {
-                    ProgressView()
-                        .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                        .scaleEffect(1.5)
-                    
-                    Text("Loading video...")
-                        .foregroundColor(.white)
-                        .font(.headline)
-                }
-            }
-            
-            // Control Overlay
-            if showControls {
-                VStack {
-                    // Top bar with back button
-                    HStack {
-                        Button(action: onDismiss) {
-                            HStack(spacing: 8) {
-                                Image(systemName: "chevron.left")
-                                    .font(.system(size: 20, weight: .medium))
-                                Text("Back")
-                                    .font(.system(size: 18, weight: .medium))
-                            }
-                            .foregroundColor(.white)
-                            .padding(.horizontal, 16)
-                            .padding(.vertical, 10)
-                            .background(Color.black.opacity(0.7))
-                            .cornerRadius(25)
-                        }
-                        
-                        Spacer()
-                    }
-                    .padding()
-                    .background(
-                        LinearGradient(
-                            colors: [Color.black.opacity(0.8), Color.clear],
-                            startPoint: .top,
-                            endPoint: .bottom
-                        )
-                        .frame(height: 100)
-                        .ignoresSafeArea()
-                    )
-                    
-                    Spacer()
-                    
-                    // Bottom play/pause control
-                    HStack {
-                        Button(action: {
-                            if isPlaying {
-                                player?.pause()
-                            } else {
-                                player?.play()
-                            }
-                            isPlaying.toggle()
-                        }) {
-                            Image(systemName: isPlaying ? "pause.circle.fill" : "play.circle.fill")
-                                .font(.system(size: 70))
-                                .foregroundColor(.white)
-                                .background(
-                                    Circle()
-                                        .fill(Color.black.opacity(0.5))
-                                        .frame(width: 80, height: 80)
-                                )
-                        }
-                    }
-                    .padding(.bottom, 50)
-                }
-                .transition(.opacity)
-                .animation(.easeInOut(duration: 0.3), value: showControls)
-            }
-        }
-        .onAppear {
-            setupPlayer()
-        }
-        .onDisappear {
-            cleanupPlayer()
         }
     }
-    
-    private func setupPlayer() {
-        print("🎬 Setting up video player with URL: \(videoURL)")
-        
-        // Configure audio session for video playback
+}
+
+// MARK: - AVPlayerViewController Wrapper
+struct AVPlayerViewControllerWrapper: UIViewControllerRepresentable {
+    let videoURL: URL
+    let onDismiss: @Sendable () -> Void
+
+    func makeUIViewController(context: Context) -> AVPlayerViewController {
+        print("🎬 Creating AVPlayerViewController with URL: \(videoURL)")
+
+        // Configure audio session
         do {
             try AVAudioSession.sharedInstance().setCategory(.playback, mode: .moviePlayback)
             try AVAudioSession.sharedInstance().setActive(true)
         } catch {
             print("⚠️ Failed to set audio session: \(error)")
         }
-        
-        // Check if file exists
-        guard FileManager.default.fileExists(atPath: videoURL.path) else {
-            print("❌ Video file does not exist at path: \(videoURL.path)")
-            return
+
+        // Create player and player item
+        let player = AVPlayer(url: videoURL)
+        player.automaticallyWaitsToMinimizeStalling = false
+        player.volume = 1.0
+
+        // Create player view controller
+        let playerViewController = AVPlayerViewController()
+        playerViewController.player = player
+        playerViewController.allowsPictureInPicturePlayback = true
+        playerViewController.showsPlaybackControls = true
+        playerViewController.videoGravity = .resizeAspect
+
+        // Store reference in coordinator for looping
+        context.coordinator.playerViewController = playerViewController
+
+        // Set delegate to handle dismissal
+        playerViewController.delegate = context.coordinator
+
+        // Add custom close button overlay
+        let closeButton = UIButton(type: .system)
+        closeButton.setImage(UIImage(systemName: "xmark.circle.fill"), for: .normal)
+        closeButton.tintColor = .white
+        closeButton.backgroundColor = UIColor.black.withAlphaComponent(0.5)
+        closeButton.layer.cornerRadius = 20
+        closeButton.translatesAutoresizingMaskIntoConstraints = false
+        closeButton.addTarget(context.coordinator, action: #selector(Coordinator.closeButtonTapped), for: .touchUpInside)
+
+        playerViewController.contentOverlayView?.addSubview(closeButton)
+
+        NSLayoutConstraint.activate([
+            closeButton.topAnchor.constraint(equalTo: playerViewController.contentOverlayView!.topAnchor, constant: 50),
+            closeButton.leadingAnchor.constraint(equalTo: playerViewController.contentOverlayView!.leadingAnchor, constant: 20),
+            closeButton.widthAnchor.constraint(equalToConstant: 40),
+            closeButton.heightAnchor.constraint(equalToConstant: 40)
+        ])
+
+        // Start playing when ready
+        player.addObserver(context.coordinator, forKeyPath: "status", options: [.new], context: nil)
+
+        // Loop video when it ends
+        NotificationCenter.default.addObserver(
+            context.coordinator,
+            selector: #selector(Coordinator.playerDidFinishPlaying),
+            name: .AVPlayerItemDidPlayToEndTime,
+            object: player.currentItem
+        )
+
+        print("✅ AVPlayerViewController setup complete")
+
+        return playerViewController
+    }
+
+    func updateUIViewController(_ uiViewController: AVPlayerViewController, context: Context) {
+        // No updates needed
+    }
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(videoURL: videoURL, onDismiss: onDismiss)
+    }
+
+    class Coordinator: NSObject, AVPlayerViewControllerDelegate, @unchecked Sendable {
+        let videoURL: URL
+        let onDismiss: @Sendable () -> Void
+        var playerViewController: AVPlayerViewController?
+
+        init(videoURL: URL, onDismiss: @escaping @Sendable () -> Void) {
+            self.videoURL = videoURL
+            self.onDismiss = onDismiss
         }
-        
-        print("✅ Video file exists, creating player...")
-        
-        // Create player with the URL directly
-        DispatchQueue.main.async {
-            let playerItem = AVPlayerItem(url: videoURL)
-            let newPlayer = AVPlayer(playerItem: playerItem)
-            
-            // Set player properties
-            newPlayer.automaticallyWaitsToMinimizeStalling = true
-            newPlayer.volume = 1.0
-            
-            // Assign and play
-            self.player = newPlayer
-            newPlayer.play()
-            self.isPlaying = true
-            
-            print("▶️ Video should be playing now")
-            
-            // Add notification observer for when video ends
-            NotificationCenter.default.addObserver(
-                forName: .AVPlayerItemDidPlayToEndTime,
-                object: playerItem,
-                queue: .main
-            ) { _ in
-                // Loop the video
-                newPlayer.seek(to: .zero)
-                newPlayer.play()
+
+        @objc func closeButtonTapped() {
+            print("🔙 Close button tapped")
+            onDismiss()
+        }
+
+        @objc func playerDidFinishPlaying(notification: NSNotification) {
+            print("🔄 Video finished, looping...")
+            if let playerItem = notification.object as? AVPlayerItem {
+                playerItem.seek(to: .zero) { finished in
+                    if finished {
+                        // Get the player from the playerViewController and replay
+                        DispatchQueue.main.async {
+                            if let player = self.playerViewController?.player {
+                                player.play()
+                            }
+                        }
+                    }
+                }
             }
         }
+
+        override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
+            if keyPath == "status", let player = object as? AVPlayer {
+                DispatchQueue.main.async {
+                    if player.status == .readyToPlay {
+                        print("✅ Player ready to play, starting playback")
+                        player.play()
+                    } else if player.status == .failed {
+                        print("❌ Player failed: \(player.error?.localizedDescription ?? "Unknown error")")
+                    }
+                }
+            }
+        }
+
+        deinit {
+            print("🧹 Cleaning up video player coordinator")
+            NotificationCenter.default.removeObserver(self)
+        }
     }
-    
-    private func cleanupPlayer() {
-        player?.pause()
-        player = nil
-        NotificationCenter.default.removeObserver(self)
-        
+
+    static func dismantleUIViewController(_ uiViewController: AVPlayerViewController, coordinator: Coordinator) {
+        print("🧹 Dismantling video player")
+        uiViewController.player?.pause()
+        uiViewController.player?.removeObserver(coordinator, forKeyPath: "status")
+        uiViewController.player = nil
+
         // Reset audio session
         try? AVAudioSession.sharedInstance().setActive(false)
     }

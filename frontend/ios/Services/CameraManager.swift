@@ -95,17 +95,17 @@ class CameraManager: NSObject, ObservableObject, @unchecked Sendable {
             
         case .notDetermined:
             print("❓ Requesting camera permission...")
-            AVCaptureDevice.requestAccess(for: .video) { @Sendable [weak self] granted in
-                guard let self = self else { return }
+            AVCaptureDevice.requestAccess(for: .video) { [weak self] granted in
                 print("🎥 Permission request result: \(granted)")
                 Task { @MainActor [weak self] in
-                    self?.hasPermission = granted
+                    guard let self = self else { return }
+                    self.hasPermission = granted
                     if granted {
                         print("✅ Permission granted, setting up camera...")
-                        self?.setupSession()
+                        self.setupSession()
                         // Start session after setup when permission is newly granted
                         try? await Task.sleep(nanoseconds: 500_000_000)
-                        self?.startSession()
+                        self.startSession()
                     } else {
                         print("❌ Camera permission denied")
                     }
@@ -337,8 +337,8 @@ class CameraManager: NSObject, ObservableObject, @unchecked Sendable {
         
         // Start timer
         recordingTime = 0
-        recordingTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { @Sendable _ in
-            Task { @MainActor [weak self] in
+        recordingTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
+            Task { @MainActor in
                 guard let self = self else { return }
                 self.recordingTime += 0.1
             }
@@ -347,24 +347,27 @@ class CameraManager: NSObject, ObservableObject, @unchecked Sendable {
         self.isRecording = true
     }
     
-    func stopRecording(completion: @escaping (Data?) -> Void) {
+    func stopRecording(completion: @escaping @Sendable (Data?) -> Void) {
         guard let videoOutput = videoOutput, videoOutput.isRecording else {
-            completion(nil)
+            Task { @MainActor in
+                completion(nil)
+            }
             return
         }
-        
+
         videoOutput.stopRecording()
         recordingTimer?.invalidate()
         recordingTimer = nil
-        
+
         self.isRecording = false
         self.recordingTime = 0
-        
-        // Store completion for use in delegate
-        self.recordingCompletion = completion
+
+        // Store completion for use in delegate - capture it safely
+        let safeCompletion = completion
+        self.recordingCompletion = safeCompletion
     }
-    
-    private var recordingCompletion: ((Data?) -> Void)?
+
+    private var recordingCompletion: (@Sendable (Data?) -> Void)?
 }
 
 // MARK: - AVCaptureFileOutputRecordingDelegate

@@ -91,6 +91,9 @@ class AuthenticationManager: NSObject, ObservableObject {
     }
     
     func signOut() {
+        // Clear chat history from memory
+        ChatHistoryManager.shared.clearUserData()
+
         currentUser = nil
         isAuthenticated = false
         clearUserFromStorage()
@@ -215,15 +218,15 @@ class AuthenticationManager: NSObject, ObservableObject {
                     switch gidError.code {
                     case .canceled:
                         print("🔴 Google Sign-In: User cancelled")
-                                // User cancelled - don't show error, just stop loading
-                                break
-                            case .keychain:
-                                print("🔴 Google Sign-In: Keychain error")
-                                self.errorMessage = "Keychain error occurred."
-                            default:
-                                print("🔴 Google Sign-In: Other error: \(gidError.code)")
-                                self.errorMessage = "Google Sign-In failed: \(error.localizedDescription)"
-                            }
+                        // User cancelled - don't show error, just stop loading
+                        break
+                    case .keychain:
+                        print("🔴 Google Sign-In: Keychain error")
+                        self.errorMessage = "Keychain error occurred."
+                    default:
+                        print("🔴 Google Sign-In: Other error: \(gidError.code)")
+                        self.errorMessage = "Google Sign-In failed: \(error.localizedDescription)"
+                    }
                         } else {
                             print("🔴 Google Sign-In: Non-GID error: \(error)")
                             self.errorMessage = "Google Sign-In failed: \(error.localizedDescription)"
@@ -405,7 +408,7 @@ extension AuthenticationManager: ASAuthorizationControllerDelegate {
                     self.errorMessage = "Apple Sign-In credential import error."
                 case .credentialExport:
                     self.errorMessage = "Apple Sign-In credential export error."
-                @unknown default:
+                default:
                     self.errorMessage = "Apple Sign-In encountered an unexpected error."
                 }
             } else {
