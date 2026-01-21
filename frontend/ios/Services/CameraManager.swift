@@ -347,11 +347,9 @@ class CameraManager: NSObject, ObservableObject, @unchecked Sendable {
         self.isRecording = true
     }
     
-    func stopRecording(completion: @escaping @Sendable (Data?) -> Void) {
+    func stopRecording(completion: @escaping (Data?) -> Void) {
         guard let videoOutput = videoOutput, videoOutput.isRecording else {
-            Task { @MainActor in
-                completion(nil)
-            }
+            completion(nil)
             return
         }
 
@@ -362,12 +360,11 @@ class CameraManager: NSObject, ObservableObject, @unchecked Sendable {
         self.isRecording = false
         self.recordingTime = 0
 
-        // Store completion for use in delegate - capture it safely
-        let safeCompletion = completion
-        self.recordingCompletion = safeCompletion
+        // Store completion for use in delegate
+        self.recordingCompletion = completion
     }
 
-    private var recordingCompletion: (@Sendable (Data?) -> Void)?
+    private nonisolated(unsafe) var recordingCompletion: ((Data?) -> Void)?
 }
 
 // MARK: - AVCaptureFileOutputRecordingDelegate
@@ -376,7 +373,7 @@ extension CameraManager: AVCaptureFileOutputRecordingDelegate {
     nonisolated func fileOutput(_ output: AVCaptureFileOutput, didFinishRecordingTo outputFileURL: URL, from connections: [AVCaptureConnection], error: Error?) {
         if let error = error {
             print("❌ Recording error: \(error)")
-            Task { @MainActor in
+            DispatchQueue.main.async { [self] in
                 recordingCompletion?(nil)
             }
         } else {
@@ -410,7 +407,7 @@ extension CameraManager: AVCaptureFileOutputRecordingDelegate {
                     }
                 }
                 
-                Task { @MainActor in
+                DispatchQueue.main.async { [self] in
                     recordingCompletion?(videoData)
                 }
                 

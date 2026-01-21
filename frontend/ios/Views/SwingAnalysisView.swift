@@ -1823,8 +1823,11 @@ struct AVPlayerViewControllerWrapper: UIViewControllerRepresentable {
             print("⚠️ Failed to set audio session: \(error)")
         }
 
-        // Create player and player item
-        let player = AVPlayer(url: videoURL)
+        // Create player item first for better loading
+        let playerItem = AVPlayerItem(url: videoURL)
+
+        // Create player with the item
+        let player = AVPlayer(playerItem: playerItem)
         player.automaticallyWaitsToMinimizeStalling = false
         player.volume = 1.0
 
@@ -1837,6 +1840,7 @@ struct AVPlayerViewControllerWrapper: UIViewControllerRepresentable {
 
         // Store reference in coordinator for looping
         context.coordinator.playerViewController = playerViewController
+        context.coordinator.player = player
 
         // Set delegate to handle dismissal
         playerViewController.delegate = context.coordinator
@@ -1859,7 +1863,7 @@ struct AVPlayerViewControllerWrapper: UIViewControllerRepresentable {
             closeButton.heightAnchor.constraint(equalToConstant: 40)
         ])
 
-        // Start playing when ready
+        // Observe player status for readiness
         player.addObserver(context.coordinator, forKeyPath: "status", options: [.new], context: nil)
 
         // Loop video when it ends
@@ -1867,8 +1871,16 @@ struct AVPlayerViewControllerWrapper: UIViewControllerRepresentable {
             context.coordinator,
             selector: #selector(Coordinator.playerDidFinishPlaying),
             name: .AVPlayerItemDidPlayToEndTime,
-            object: player.currentItem
+            object: playerItem
         )
+
+        // Delay playback start to allow view to fully appear
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            if player.status == .readyToPlay {
+                print("✅ Starting delayed playback")
+                player.play()
+            }
+        }
 
         print("✅ AVPlayerViewController setup complete")
 
@@ -1887,6 +1899,7 @@ struct AVPlayerViewControllerWrapper: UIViewControllerRepresentable {
         let videoURL: URL
         let onDismiss: @Sendable () -> Void
         var playerViewController: AVPlayerViewController?
+        var player: AVPlayer?
 
         init(videoURL: URL, onDismiss: @escaping @Sendable () -> Void) {
             self.videoURL = videoURL
@@ -1935,9 +1948,12 @@ struct AVPlayerViewControllerWrapper: UIViewControllerRepresentable {
 
     static func dismantleUIViewController(_ uiViewController: AVPlayerViewController, coordinator: Coordinator) {
         print("🧹 Dismantling video player")
-        uiViewController.player?.pause()
-        uiViewController.player?.removeObserver(coordinator, forKeyPath: "status")
+        coordinator.player?.pause()
+        if let player = coordinator.player {
+            player.removeObserver(coordinator, forKeyPath: "status")
+        }
         uiViewController.player = nil
+        coordinator.player = nil
 
         // Reset audio session
         try? AVAudioSession.sharedInstance().setActive(false)
