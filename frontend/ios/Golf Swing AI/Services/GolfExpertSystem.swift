@@ -223,7 +223,15 @@ Your question has been logged - I'm always learning!
             for pattern in category.patterns {
                 if lowercased.contains(pattern) {
                     if let response = category.responses.first(where: { resp in
-                        resp.triggers.contains(where: { lowercased.contains($0) })
+                        // Require a qualifying trigger to match.
+                        // Single-word triggers are only accepted when 2+ of them match
+                        // (avoids returning a canned answer for vaguely-related questions).
+                        // Multi-word triggers (containing a space) are precise enough on their own.
+                        let matchingTriggers = resp.triggers.filter { lowercased.contains($0) }
+                        guard !matchingTriggers.isEmpty else { return false }
+                        let hasMultiWordMatch = matchingTriggers.contains { $0.contains(" ") }
+                        let singleWordMatchCount = matchingTriggers.filter { !$0.contains(" ") }.count
+                        return hasMultiWordMatch || singleWordMatchCount >= 2
                     }) {
                         feedbackManager.logSuccessfulMatch(
                             question: query, pattern: pattern, category: category.category)
@@ -518,7 +526,10 @@ Fat shots = hitting ground before ball.
 struct GolfEquipmentResponses {
     static let all: [GolfResponse] = [
         GolfResponse(
-            triggers: ["wedge", "loft", "degree"],
+            // Multi-word triggers: only fires when question is specifically about wedge loft/degrees
+            triggers: ["wedge loft", "wedge degrees", "lob wedge", "gap wedge", "sand wedge",
+                       "pitching wedge", "bounce angle", "wedge setup", "how many wedges",
+                       "wedge gapping", "wedge gap"],
             answer: """
 **Standard Wedge Lofts**:
 
@@ -540,7 +551,10 @@ struct GolfEquipmentResponses {
         ),
 
         GolfResponse(
-            triggers: ["driver", "loft", "shaft"],
+            // Multi-word triggers: only fires for questions specifically about driver loft or shaft flex selection
+            triggers: ["driver loft", "shaft flex", "what loft driver", "driver shaft flex",
+                       "swing speed driver", "driver fitting", "which loft", "loft for driver",
+                       "stiff or regular", "regular or stiff", "what flex"],
             answer: """
 **Driver Specifications**:
 
@@ -562,7 +576,10 @@ struct GolfEquipmentResponses {
         ),
 
         GolfResponse(
-            triggers: ["iron", "distance", "club selection"],
+            // Multi-word triggers: only fires for distance questions about specific irons
+            triggers: ["iron distance", "how far iron", "7 iron distance", "8 iron distance",
+                       "9 iron distance", "6 iron distance", "5 iron distance", "how far do",
+                       "iron yardage", "club distances", "how many yards"],
             answer: """
 **Average Iron Distances** (recreational):
 
@@ -582,7 +599,10 @@ struct GolfEquipmentResponses {
         ),
 
         GolfResponse(
-            triggers: ["beginner clubs", "game improvement", "equipment"],
+            // Multi-word triggers: only fires for explicit beginner equipment questions
+            triggers: ["beginner clubs", "game improvement", "starter clubs", "first clubs",
+                       "what clubs to buy", "clubs for beginners", "starting out clubs",
+                       "new golfer clubs", "what clubs should i get"],
             answer: """
 **Equipment for Beginners**:
 
