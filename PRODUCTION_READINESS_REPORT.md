@@ -1,254 +1,229 @@
-# Golf Swing AI - Production Readiness Assessment
+# Golf Swing AI — Production Readiness Report
 
-## 🎯 Executive Summary
-
-**Status: PRODUCTION READY** ✅
-
-The Golf Swing AI app is now fully production-ready with comprehensive AI models, robust fallback systems, and no placeholders remaining. All components have been audited and verified for production deployment.
-
-## 📊 Model Status Overview
-
-### ✅ iOS CoreML Models (Production Ready)
-- **SwingAnalysisModel**: ✅ Properly loaded with fallback handling
-- **BallTrackingModel**: ✅ Properly loaded with computer vision fallback
-- **GolfPoseDetector**: ✅ Custom golf-specific pose detection with Vision framework fallback
-- **GolfClubDetector**: ✅ Club detection with pose-based estimation fallback
-
-### ✅ Backend AI Models (Production Ready)
-- **physics_based_model.pt**: ✅ PyTorch model for swing classification (23.9KB)
-- **physics_scaler.pkl**: ✅ Feature scaler for normalization (1.4KB)
-- **physics_label_encoder.pkl**: ✅ Label encoder for classes (435B)
-- **Enhanced LSTM Model**: ✅ Temporal analysis with incremental learning
-- **Multi-angle Model**: ✅ Camera angle detection and view-invariant analysis
-
-## 🔧 System Architecture
-
-### iOS App (Local-First Architecture)
-```
-📱 iOS Frontend
-├── 🏌️ GolfPoseDetector (Custom AI + Vision fallback)
-├── 🎾 LocalBallTracker (CoreML + Computer Vision)
-├── 💬 LocalCaddieChat (Local Q&A system)
-├── 📊 SwingAnalysisModel (CoreML wrapper)
-└── 🔄 Graceful fallback systems
-```
-
-### Backend API (Python FastAPI)
-```
-🐍 Python Backend
-├── 🔬 Physics-based analysis (PyTorch)
-├── 🧠 Enhanced LSTM temporal analysis
-├── 📐 Multi-angle camera detection
-├── ⚾ Ball tracking algorithms
-├── 💬 Golf chatbot with PGA data
-└── 📈 Incremental learning system
-```
-
-## 🚀 Production-Ready Features
-
-### 1. Robust Model Loading
-- **Multiple format support**: .mlmodel, .mlmodelc, .mlpackage
-- **Graceful degradation**: Automatic fallback to alternative models
-- **Error handling**: Comprehensive error messages and recovery
-- **Performance optimization**: Compiled model preference for speed
-
-### 2. Golf-Specific AI Analysis
-- **Custom pose detection**: Golf-optimized keypoint detection
-- **Biomechanics analysis**: Spine angle, hip rotation, weight transfer
-- **Club detection**: Shaft angle, clubface position, grip analysis
-- **Swing phase detection**: Address, backswing, transition, downswing, impact, follow-through
-- **Temporal analysis**: LSTM-based sequence learning
-
-### 3. Advanced Camera Support
-- **Multi-angle detection**: Side-view, front-view, back-view automatic detection
-- **View-invariant features**: Analysis adapts to camera perspective
-- **Quality assessment**: Automatic video quality validation
-- **Recording guidance**: Real-time camera positioning feedback
-
-### 4. Ball Tracking System
-- **High-precision tracking**: 60fps frame analysis
-- **Trajectory physics**: Launch angle, spin rate, carry distance estimation
-- **ML-enhanced detection**: CoreML model with computer vision fallback
-- **Visualization**: Real-time trajectory plotting
-
-### 5. Incremental Learning
-- **Community contributions**: Anonymous user data collection
-- **Model improvement**: Automatic LSTM retraining with new data
-- **GDPR compliance**: Privacy-first data handling
-- **Quality assurance**: Professional verification support
-
-## 🛡️ Fallback Systems
-
-### Primary → Fallback Chain
-1. **Golf Pose Detection**:
-   - GolfPoseDetector (Custom CoreML) → Vision Framework → Static Template
-
-2. **Swing Analysis**:
-   - SwingAnalysisModel (CoreML) → Physics Rules → Basic Classification
-
-3. **Ball Tracking**:
-   - BallTrackingModel (CoreML) → Computer Vision → Template Tracking
-
-4. **Backend Analysis**:
-   - Enhanced LSTM → Multi-angle Model → Physics Model → Rule-based
-
-## 📈 Performance Characteristics
-
-### iOS Performance
-- **Model loading**: < 2 seconds for all models
-- **Frame processing**: 30-60 FPS real-time analysis
-- **Memory usage**: Optimized for iOS device constraints
-- **Battery efficiency**: On-device processing minimizes network usage
-
-### Backend Performance
-- **API response time**: < 5 seconds for full analysis
-- **Concurrent users**: Scalable FastAPI architecture
-- **Model accuracy**: 85%+ classification accuracy
-- **Feature extraction**: 35 physics-based features per swing
-
-## 🔒 Privacy & Security
-
-### Local-First Design
-- **On-device processing**: Primary analysis runs locally on iOS
-- **Optional cloud analysis**: Advanced features via secure API
-- **No data collection**: User consent required for any data sharing
-- **Anonymous contributions**: Privacy-preserving model improvement
-
-### Data Protection
-- **GDPR compliant**: Explicit consent and data anonymization
-- **Secure transmission**: HTTPS/TLS for all API communications
-- **Local storage**: Sensitive data never leaves device without permission
-- **User control**: Complete data deletion and consent management
-
-## ⚡ Real-World Testing Results
-
-### Video Compatibility
-- ✅ iPhone recorded videos (.mov, .mp4)
-- ✅ Various lighting conditions
-- ✅ Multiple camera angles (side, front, back)
-- ✅ Different golfer body types and swing styles
-- ✅ Indoor and outdoor environments
-
-### Analysis Accuracy
-- ✅ Swing plane detection: 90%+ accuracy
-- ✅ Pose keypoint detection: 85%+ confidence
-- ✅ Camera angle detection: 95%+ accuracy
-- ✅ Ball tracking: 80%+ successful tracks
-- ✅ Biomechanics analysis: Professional-grade insights
-
-## 🎯 Production Deployment Checklist
-
-### ✅ Completed Items
-- [x] All AI models loaded and tested
-- [x] Fallback systems implemented and tested
-- [x] Error handling comprehensive
-- [x] Performance optimized for mobile devices
-- [x] Privacy compliance implemented
-- [x] API endpoints fully functional
-- [x] Local analysis working offline
-- [x] Model file dependencies resolved
-- [x] Production logging implemented
-- [x] User feedback collection system
-
-### 📋 Deployment Prerequisites
-- [x] Xcode project configured with proper model targets
-- [x] Python backend dependencies installed
-- [x] CoreML models compiled for target devices
-- [x] API server configured for production
-- [x] SSL certificates and domain setup
-- [x] App Store metadata and screenshots prepared
-
-## 🚀 Deployment Commands
-
-### iOS App Deployment
-```bash
-# Build for release
-xcodebuild -workspace "Golf Swing AI.xcworkspace" \
-           -scheme "Golf Swing AI" \
-           -configuration Release \
-           -archivePath "Golf Swing AI.xcarchive" \
-           archive
-```
-
-### Backend Deployment
-```bash
-# Install dependencies
-pip install -r requirements.txt
-
-# Start production server
-python run_api.py
-
-# Or with Gunicorn
-gunicorn -w 4 -k uvicorn.workers.UvicornWorker backend.core.api:app
-```
-
-## 📊 Monitoring & Analytics
-
-### Health Checks
-- Model loading success rates
-- API response times and errors
-- User analysis completion rates
-- Device compatibility statistics
-
-### Performance Metrics
-- Average analysis time per video
-- Model inference latency
-- Memory usage patterns
-- Battery impact measurements
-
-## 🎓 Training Data Sources
-
-### Professional Golf Data
-- PGA Tour swing analysis
-- Teaching professional verified swings
-- Golf instruction video libraries
-- Biomechanics research datasets
-
-### Community Contributions
-- Anonymous user swing submissions
-- Crowd-sourced swing classifications
-- Professional instructor corrections
-- Elite player reference swings
-
-## 🔄 Continuous Improvement
-
-### Automated Model Updates
-- Incremental LSTM training with new data
-- A/B testing for model improvements
-- Feature importance analysis
-- Performance regression monitoring
-
-### User Feedback Integration
-- In-app feedback collection
-- Accuracy rating system
-- Professional instructor validation
-- Community-driven improvements
+**Date:** February 24, 2026
+**Scope:** iOS App — Full architecture audit prior to App Store go-live
+**Verdict:** ⚠️ CONDITIONAL GO — 1 critical blocker, 4 high-priority issues, and several medium/low items to address
 
 ---
 
-## 🎉 Conclusion
+## Executive Summary
 
-The Golf Swing AI app is **PRODUCTION READY** with:
-
-✅ **100% Real AI Models** - No placeholders remaining  
-✅ **Robust Fallback Systems** - Works even when models fail  
-✅ **Professional-Grade Analysis** - Golf-specific biomechanics  
-✅ **Privacy-First Design** - Local processing with optional cloud  
-✅ **Scalable Architecture** - Supports thousands of concurrent users  
-✅ **Continuous Learning** - Improves automatically with community data  
-
-The app can be deployed immediately to the App Store and production servers with confidence in its stability, accuracy, and user experience.
-
-**Recommended Next Steps:**
-1. Deploy to TestFlight for beta testing
-2. Configure production backend infrastructure
-3. Submit to App Store review
-4. Launch marketing campaign
-5. Monitor performance metrics
-6. Collect user feedback for future improvements
+The app is well-structured for a v1.0 launch. The StoreKit 2 paywall, round-logging data model, and tab navigation are solid. However, **one line of code will ship the app in Apple-reviewer mode to real users** if not changed, and there are several areas where features are scaffolded but not actually implemented (authentication, settings toggles, reset password). These must be understood and intentionally accepted before going live.
 
 ---
 
-*Report generated on: $(date)*  
-*Golf Swing AI Version: 3.0 Production*  
-*Assessment Status: ✅ APPROVED FOR PRODUCTION*
+## 🔴 CRITICAL BLOCKER
+
+### 1. `autoEnableReviewMode` is set to `true`
+
+**File:** `AppBuildConfig.swift`, line 28
+
+```swift
+static let autoEnableReviewMode: Bool = true  // ⚠️ MUST BE false BEFORE GO-LIVE
+```
+
+**Impact:** Every user who downloads your app from the App Store will automatically get all premium features for free. Revenue will be $0. The paywall will never appear.
+
+**Fix:** Before archiving for the final go-live submission:
+1. Set `autoEnableReviewMode = false`
+2. `Product → Clean Build Folder (⌘⇧K)`
+3. Archive and distribute
+
+This is the single most important change before launch. Everything else is lower priority.
+
+---
+
+## 🟠 HIGH PRIORITY
+
+### 2. Authentication is Entirely Simulated — No Real Backend
+
+**File:** `AuthenticationManager.swift`
+
+The email/password sign-in flow creates a user object locally without contacting any server. The code even has a comment acknowledging this:
+
+```swift
+// TODO: Replace with actual backend authentication
+```
+
+**What this means in practice:**
+- Any email address + any 8-character password will "sign in" successfully
+- Passwords are never stored or verified anywhere
+- `resetPassword` is a fake 3-second delay — it sends no email and resets nothing
+- All user data lives in `UserDefaults`, which is wiped on app reinstall
+- If a user reinstalls the app, they lose all data and must "create an account" again
+
+**Decision required:** Is this intentional for v1.0? If yes, consider:
+- Removing the email/password login UI entirely and using Apple Sign-In only (more honest UX)
+- Showing a "local account" warning in Settings so users understand their data isn't backed up
+- If not intentional, a real auth backend (Firebase Auth, Supabase, etc.) is needed before launch
+
+### 3. Settings Toggles Are Not Wired to Anything
+
+**File:** `SettingsView.swift`
+
+The Notifications, Haptic Feedback, and Auto-Save Videos toggles use `@State` variables that are not:
+- Persisted across app restarts
+- Connected to iOS notification permissions (`UNUserNotificationCenter`)
+- Connected to `UIImpactFeedbackGenerator`
+- Connected to any video-saving logic
+
+**Impact:** Users will toggle these settings and nothing will change. The next time they open the app, the toggles will reset to default. This is a trust-damaging UX bug.
+
+**Fix options:**
+- Persist to `UserPreferences` and wire to actual system APIs before launch, **or**
+- Remove these toggles from the UI until they are implemented
+
+### 4. `subscriptionExpiryDate` is Not Implemented
+
+**File:** `PremiumManager.swift`
+
+```swift
+var subscriptionExpiryDate: Date? {
+    // TODO: Implement proper expiration date retrieval
+    return nil
+}
+```
+
+If any part of the UI shows "expires on…" or uses this value for logic, it will silently fail or show nothing. Verify no UI surfaces this value. If it does, remove the display or implement it via `Transaction.currentEntitlements`.
+
+### 5. Google Sign-In Configured on a Background Thread
+
+**File:** `Golf_Swing_AIApp.swift`
+
+```swift
+DispatchQueue.global(qos: .background).async {
+    GIDSignIn.sharedInstance.configuration = GIDConfiguration(clientID: clientID)
+}
+```
+
+If the app is opened via a Google OAuth redirect URL before this background block completes, `GIDSignIn` will not have its configuration and the redirect will silently fail.
+
+**Fix:** Move Google Sign-In configuration to the main thread synchronously during app init:
+```swift
+GIDSignIn.sharedInstance.configuration = GIDConfiguration(clientID: clientID)
+```
+
+---
+
+## 🟡 MEDIUM PRIORITY
+
+### 6. Round Log Data Has No Backup or Size Limit
+
+**File:** `RoundLogManager.swift`
+
+All round log data is stored in `UserDefaults` under key `"golf_round_log_v1"`. There is no:
+- Maximum size limit (heavy users logging every round for years could accumulate MBs in UserDefaults, which is not designed for large data)
+- iCloud or CloudKit backup
+- Export feature
+
+**Recommendation:** Consider migrating to a file-based store (JSON file in the Documents directory) or adding a CloudKit path for v1.1. For launch, add a note in the UI or Privacy section that data is stored locally only.
+
+### 7. Analytics Are Local-Only (Never Transmitted)
+
+**File:** `SimpleAnalytics.swift`
+
+The analytics system stores events in `UserDefaults` with a 500-event cap but never sends them anywhere. You have no visibility into how users are using the app post-launch.
+
+**Recommendation:** Before launch, decide whether to:
+- Wire up a lightweight analytics service (PostHog, Mixpanel, Amplitude — all have free tiers and strong privacy practices)
+- Or remove `SimpleAnalytics` references entirely and accept launching without usage data
+
+### 8. Launch Screen Has a 3-Second Fake Progress Bar
+
+**File:** `MinimalLaunchScreen.swift`
+
+```swift
+DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
+    withAnimation { isActive = true }
+}
+```
+
+The 3-second delay is hardcoded and not tied to any real initialization work. This adds unnecessary friction on every cold launch. Consider reducing to 1.0–1.5 seconds or replacing with a real completion callback from your async setup work.
+
+### 9. Hardcoded Fallback Prices in PremiumManager
+
+**File:** `PremiumManager.swift`
+
+```swift
+var monthlyPrice: String { product?.displayPrice ?? "$1.99" }
+var annualPrice: String  { product?.displayPrice ?? "$21.99" }
+```
+
+If StoreKit fails to load products (first launch, poor connectivity, or sandbox issues), the UI will show "$1.99" and "$21.99" as hardcoded strings. These won't reflect international pricing or future price changes.
+
+**Recommendation:** Show "—" or a loading indicator as the fallback rather than a hardcoded dollar amount. Add a retry path if products fail to load.
+
+### 10. Google Sign-In Produces Unfriendly Usernames
+
+**File:** `AuthenticationManager.swift`
+
+```swift
+let username = "google_user_\(Date().timeIntervalSince1970)"
+```
+
+Users who sign in with Google get a username like `google_user_1740235412.3`. This appears in Settings and any UI that surfaces the username. Use the user's Google display name (`GIDGoogleUser.profile?.name`) or email prefix instead.
+
+---
+
+## 🔵 LOW PRIORITY / POLISH
+
+### 11. Dead Code: `SwingAnalysisView_OLD.swift`
+
+A file named `SwingAnalysisView_OLD.swift` exists in the project. If it's compiled into the main target, it increases binary size and creates confusion during future maintenance. Remove it from the target or delete the file entirely.
+
+### 12. Test File May Be in Main Target
+
+**File:** `LocalAIValidationTest.swift`
+
+If this file is compiled into the main app target (rather than a test target), it increases binary size and could expose debug-only code paths. Verify it belongs to the test target only.
+
+### 13. Excessive `print` Statements in PremiumManager
+
+`PremiumManager.swift` contains many diagnostic `print()` calls for StoreKit debugging. These ship to production and appear in device console logs, which is information leakage. Wrap them in `#if DEBUG` or use `os.Logger` with a subsystem that compiles out in release builds.
+
+### 14. Privacy View Has Hardcoded App Version
+
+**File:** `SimplePrivacyView.swift`
+
+The data deletion email template hardcodes `"1.0.0"` as the app version. Use `AppBuildConfig.appVersion` instead so it stays accurate automatically across future updates.
+
+### 15. Analytics `sessionId` Never Rotates
+
+**File:** `SimpleAnalytics.swift`
+
+The `sessionId` is a persistent UUID stored in `UserDefaults` that never changes. All analytics events from the same device are permanently tied to the same ID. Consider generating a new session ID per app launch to limit long-term user profiling, even if the data stays local.
+
+---
+
+## ✅ What's Working Well
+
+- **StoreKit 2 integration** — `Product.products(for:)`, `Transaction.currentEntitlements`, `Transaction.updates` listener, and `AppStore.sync()` are all correctly implemented
+- **`canAccessPhysicsEngine` gating** — correctly excludes `isDevelopmentMode` from Release builds via `#if DEBUG`; review mode gating is sound and won't leak to real users once the flag is flipped
+- **`AppBuildConfig` architecture** — single source of truth for build flags is a great pattern; the go-live checklist in the file header is clear and actionable
+- **Data models** — `GolfRound`, `HoleEntry`, `ShotEntry` are well-structured, `Codable`/`Identifiable`/`Sendable`, and the scoring calculations handle edge cases correctly (e.g., `scoreRelativeToPar` excludes unplayed holes)
+- **`RoundLogManager`** — clean `@MainActor` singleton with proper CRUD; thread-safe design
+- **Hidden 5-tap review mode gesture** — elegant escape hatch for Apple reviewers that doesn't require a code change; correctly guarded to Release builds only
+- **`GolfClub.grouped`** — correct category grouping; the `DisclosureGroup` bug fix in `HoleEntryView` makes club selection fully functional
+- **Apple Sign-In** — implemented via `ASAuthorizationController`; the right primary auth path for an iOS app
+
+---
+
+## Go-Live Checklist
+
+```
+□ [MUST DO]  AppBuildConfig.swift: set autoEnableReviewMode = false
+□ [MUST DO]  Verify settings toggles either work or are removed from UI
+□ [SHOULD]   Move Google Sign-In config to main thread (remove DispatchQueue.global)
+□ [SHOULD]   Replace hardcoded fallback prices with "—" loading placeholder
+□ [SHOULD]   Fix Google username to use GIDGoogleUser.profile?.name
+□ [SHOULD]   Remove SwingAnalysisView_OLD.swift from target
+□ [SHOULD]   Wrap PremiumManager print() calls in #if DEBUG
+□ [SHOULD]   Fix SimplePrivacyView to use AppBuildConfig.appVersion
+□ [DECIDE]   Auth is local-only — intentional for v1.0 or needs a real backend?
+□ [DECIDE]   Analytics are local-only — add a service or remove entirely?
+□ [ACCEPT]   Round log data is device-local with no backup — document this for users
+```
+
+---
+
+*Files reviewed: AppBuildConfig.swift, Golf_Swing_AIApp.swift, PremiumManager.swift, RoundLogManager.swift, ContentView.swift, SimpleAnalytics.swift, AuthenticationManager.swift, UserPreferences.swift, MinimalLaunchScreen.swift, SimplePrivacyView.swift, RoundLogModels.swift, SettingsView.swift, HoleEntryView.swift, RoundLogModels.swift*

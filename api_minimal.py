@@ -31,6 +31,15 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Mount authentication router
+try:
+    from backend.auth import router as auth_router, init_db as auth_init_db
+    auth_init_db()
+    app.include_router(auth_router)
+    print("✅ Auth module loaded — endpoints available at /auth/*")
+except Exception as e:
+    print(f"⚠️  Auth module not loaded: {e}")
+
 @app.get("/")
 async def root():
     return {

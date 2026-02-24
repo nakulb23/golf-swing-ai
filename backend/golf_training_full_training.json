@@ -1,0 +1,1220 @@
+[
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "Your ball is in a bunker, but it's partially submerged in the sand. Can you ground your club in the sand?",
+    "output": "No, under Rule 12.2b(1), you cannot ground your club in a bunker, even if your ball is partially submerged in the sand. Doing so would result in a 1-stroke penalty.",
+    "category": "rules"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "What are some common mistakes golfers make with their pre-shot routine?",
+    "output": "Common pre-shot routine mistakes include:\n- Skipping steps or rushing through the routine\n- Letting your mind wander to past shots or future outcomes\n- Trying to make major swing changes right before hitting\n- Failing to tailor the routine to your individual needs and preferences\nManaging Pressure:",
+    "category": "mental_game"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "What are some good drills to improve putting stroke mechanics?",
+    "output": "- \"Tee Drill\" - Place two tees just wider than your putter head and practice making strokes without hitting the tees\n- \"Backstroke Drill\" - Focus on making a smooth, consistent backstroke by trying to roll the ball the same distance each time\n- \"Gate Drill\" - Set up two alignment sticks in a gate and practice rolling balls through without hitting the sticks",
+    "category": "practice"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "What is the proper follow-through?",
+    "output": "- Allow your body to continue rotating fully toward the target\n- Your weight should shift completely to your lead foot\n- Your arms should extend fully with your club pointing at the target\n- Avoid quick deceleration or casting the club",
+    "category": "swing_mechanics"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "What are some effective chipping drills to improve distance control?",
+    "output": "- Set up tees or alignment sticks at different distances (10, 20, 30 yards) and try to land the ball just past them\n- Practice \"speed control\" drills, taking short, medium and long backswings to vary carry distance\n- Use a chalk line or other visual aid to aim for a specific landing area on the green",
+    "category": "practice"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "What are some drills to improve my ability to read greens?",
+    "output": "- Spend time observing the slopes and breaks on the practice green before putting\n- Practice \"breaking putt\" drills by deliberately aiming left/right of the hole to account for breaks\n- Try \"putt from opposite side\" drills, putting from different angles to the same hole location\nPre-Round Warmup:",
+    "category": "practice"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "How can I make my putting practice more engaging and game-like?",
+    "output": "- \"21\" - Each player starts with 21 points and loses a point for each missed putt. First to 0 wins.\n- \"Elimination\" - Set up 3-5 different length putts. Players take turns putting, with the last one to make a putt being eliminated.\n- \"Knockout\" - Players take turns putting from the same spot. If a player misses, they're out until the next round.",
+    "category": "practice"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "What are some strategies for managing your emotions on the course?",
+    "output": "Strategies for managing emotions include:\n- Identifying your emotional triggers and having a plan to address them\n- Practicing mental routines like self-talk and imagery to stay centered\n- Taking breaks to reset when emotions start to escalate\n- Seeking support from a coach or mental performance specialist\nPractice Strategies:",
+    "category": "mental_game"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "Your ball is in a bunker, but it's lying against a large tree root that is firmly embedded in the sand. Can you take relief?",
+    "output": "No, under Rule 16.1c, you cannot take relief from an immovable obstruction, such as a firmly embedded tree root, that is in a bunker. You must play the ball as it lies or take unplayable lie relief, under penalty of 1 stroke.",
+    "category": "rules"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "How can you use your putter to help read the line and break on a putt?",
+    "output": "Try these techniques to improve your green reading:\n\u2022 Place the putter head on the ground and observe the slope\n\u2022 Aim the putter at the high side of the break to visualize the line\n\u2022 Roll a few test putts to gauge speed and break before your shot",
+    "category": "short_game"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "What are the 3 ball flight laws?",
+    "output": "1. Clubface direction: Determines the initial direction of the ball\n2. Swing path: Determines the direction of ball curvature (slice/hook)\n3. Angle of attack: Determines the trajectory of the shot (high/low)",
+    "category": "swing_mechanics"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "How can golfers avoid letting one bad shot snowball into a poor round?",
+    "output": "To avoid a bad shot snowball effect:\n- Acknowledge the bad shot, but don't dwell on it\n- Quickly shift your focus to the next shot and your game plan\n- Practice mental routines like self-talk and visualization\n- Maintain a positive, problem-solving mindset throughout the round",
+    "category": "mental_game"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "How does driver shaft flex impact ball flight?",
+    "output": "A stiffer shaft flex (X or stiff) will produce a lower, more penetrating ball flight. A softer flex (regular or senior) will launch the ball higher with more spin. Matching shaft flex to your swing speed is crucial for optimal launch conditions and distance.",
+    "category": "equipment"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "What are the keys to a sound pitch shot swing?",
+    "output": "Focus on these elements in your pitch shot swing:\n\u2022 Take a shorter, more compact backswing with some wrist hinge\n\u2022 Accelerate smoothly through impact with a full follow-through\n\u2022 Rotate your body while keeping your head still and eyes on the ball\n\u2022 Strike the ball with a descending, slightly steeper angle of attack",
+    "category": "short_game"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "How can I work on my swing mechanics at home without a range?",
+    "output": "- Use a impact bag or swing trainer to feel proper weight shift and club delivery\n- Practice \"pause drills\" where you stop the club at the top and impact to check positions\n- Do mirror drills to monitor your swing plane, head position, and other fundamentals\n- Incorporate strength and flexibility exercises to improve your physical capabilities",
+    "category": "practice"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "How does putter grip size impact stroke and feel?",
+    "output": "Larger putter grips (midsize or oversize) promote a lighter, more relaxed grip pressure and encourage a smoother, pendulum-like stroke. Smaller grips require more grip pressure, which can lead to tension and inconsistency.\nBall Selection",
+    "category": "equipment"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "Your ball is in a bunker, but it's lying against a metal sprinkler head that is firmly embedded in the sand. Can you take relief?",
+    "output": "Yes, under Rule 16.1b, you can take relief from an immovable obstruction, such as a firmly embedded metal sprinkler head, that is in a bunker. You can drop a ball, without penalty, within one club-length of the nearest point of complete relief.",
+    "category": "rules"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "The pin is tucked back-right, with bunkers short and right. What's your approach strategy?",
+    "output": "\u2022 Use a high-lofted club like a 9-iron or pitching wedge to attack the back-right pin.\n\u2022 Aim slightly left of the flag, allowing the ball to curve towards the target.\n\u2022 Be aggressive with your swing, but maintain a smooth, controlled tempo to avoid going long or right into the bunkers.\n\u2022 If you miss, aim for the center of the green to leave an uphill putt.",
+    "category": "course_strategy"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "You're 220 yards out with water short of the green. What's your percentage play?",
+    "output": "\u2022 The smart play is to lay up short of the water, likely with a fairway wood or hybrid.\n\u2022 This takes the water out of play and leaves you with a wedge shot into the green.\n\u2022 While not as exciting as going for the green, it's the high-percentage play that minimizes risk.\n\u2022 Executing a solid lay-up shot and then getting up-and-down for par is better than going for the green and potentially making a big number.",
+    "category": "course_strategy"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "Your ball is in a bunker, but it's lying on top of a loose impediment. Can you remove the loose impediment?",
+    "output": "Yes, under Rule 15.1, you can remove any loose impediments, such as leaves or twigs, that are touching your ball in a bunker without penalty.",
+    "category": "rules"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "What is the proper impact position?",
+    "output": "- Your weight should be firmly on your lead foot\n- Your hands should be slightly ahead of the ball at impact\n- Your clubface should be square to your target line\n- Your swing should be descending slightly into the ball\n- Your head should remain steady and behind the ball",
+    "category": "swing_mechanics"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "What are some effective short game practice routines?",
+    "output": "- 30 minutes of chipping/pitching, focusing on trajectory control and distance\n- 30 minutes of bunker play, working on both greenside and fairway bunker shots\n- 30 minutes of putting, incorporating drills for speed, aim, and stroke consistency\nPutting Drills:",
+    "category": "practice"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "What is a good driving range routine to improve distance and accuracy?",
+    "output": "- Start with short irons and gradually work your way up to driver\n- Hit 10-15 shots with each club, focusing on consistent contact and ball flight\n- Incorporate different target areas on the range to simulate on-course situations\n- Finish with 20-30 driver shots, working on swing mechanics and tempo",
+    "category": "practice"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "How do you properly execute a bump and run shot?",
+    "output": "Use this technique for an effective bump and run:\n\u2022 Play the ball back in your stance, near your back foot\n\u2022 Use a less lofted club (e.g. 7-iron, 8-iron, or hybrid)\n\u2022 Make a short, compact swing focusing on a descending, sweeping strike\n\u2022 Keep your weight slightly favored toward your front foot",
+    "category": "short_game"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "You're 180 yards out with water short of the green. What framework do you use to make your approach decision?",
+    "output": "\u2022 Use the S.W.I.N.G. framework:\n- Situation: Water short of the green, so you need to carry it.\n- Yardage: 180 yards, requiring a long iron or fairway wood.\n- Intention: Be conservative and aim for the center of the green.\n- No-go Zones: Avoid going short into the water.\n- Go for it: Don't try to be too aggressive and go directly at the pin.",
+    "category": "course_strategy"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "What ball compression is best for a player with a swing speed under 90 mph?",
+    "output": "Players with swing speeds under 90 mph generally benefit from a lower compression ball (80-90 compression). These softer, lower-spinning balls launch higher and maximize distance for slower swing speeds.",
+    "category": "equipment"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "What are the typical weight ranges for different shaft flexes?",
+    "output": "\u2022 Regular flex: 55-65 grams\n\u2022 Stiff flex: 65-75 grams\n\u2022 Extra stiff flex: 75-85 grams\nHeavier shafts generally promote a lower, more penetrating ball flight.",
+    "category": "equipment"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "How do you properly set up for a pitch shot?",
+    "output": "Use this setup for effective pitch shots:\n\u2022 Play the ball slightly forward in your stance\n\u2022 Lean your torso and weight slightly toward your front foot\n\u2022 Keep your hands slightly ahead of the ball at address\n\u2022 Maintain a narrow, stable stance with your knees flexed",
+    "category": "short_game"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "What are the primary components of a comprehensive club fitting?",
+    "output": "A proper club fitting includes:\n\u2022 Swing analysis (speed, path, attack angle)\n\u2022 Launch monitor data (ball speed, launch angle, spin rates)\n\u2022 Evaluation of current equipment performance\n\u2022 Recommendations for optimal club specifications",
+    "category": "equipment"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "What is the ideal putting stroke technique?",
+    "output": "The ideal putting stroke has these key elements:\n\u2022 Pendulum-like motion with minimal wrist/arm movement\n\u2022 Smooth, rhythmic tempo with no jerking or snatching\n\u2022 Putter face remains square to the target line through impact\n\u2022 Follow-through matching your backswing length\nReading Greens:",
+    "category": "short_game"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "Your ball is in a bunker, but it's lying against a small tree branch that is partially embedded in the sand. Can you move the branch?",
+    "output": "Yes, under Rule 15.1, you can remove any loose impediments, such as a partially embedded tree branch, that are touching your ball in a bunker without penalty.",
+    "category": "rules"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "What is swing plane and how do you maintain it?",
+    "output": "- Swing plane is the imaginary tilt of the club's circular swing arc\n- Maintain a shallow, consistent swing plane by:\n- Keeping your head still and your spine angle constant\n- Avoiding excessive body sway or slide\n- Keeping your hands low and close to your body",
+    "category": "swing_mechanics"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "What are some good at-home putting practice drills?",
+    "output": "- Set up a small putting mat or surface in your home and work on stroke consistency and green reading\n- Practice \"tee drill\" by rolling balls between two tees to work on a square clubface\n- Use alignment sticks to create gates and work on start line and path\n- Play \"make 10 in a row\" from various distances to build confidence on the greens",
+    "category": "practice"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "How do you properly grip the golf club?",
+    "output": "The grip is the only connection between you and the club. A proper grip is essential for control and consistency:\n- Interlocking grip: Lock your pinky finger on your trailing hand between the index and middle fingers of your lead hand\n- Overlapping grip: Place your trailing hand pinky on top of your lead hand index finger\n- Neutral grip: Position your hands so your thumbs point slightly to the right of your target line",
+    "category": "swing_mechanics"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "What are the key factors to consider when selecting the right shaft weight?",
+    "output": "Consider your swing speed, attack angle, and desired launch/spin characteristics. Faster swingers and steeper attackers often benefit from heavier shafts. Slower swingers and shallower attackers may prefer lighter shafts.\nClub Fitting Basics",
+    "category": "equipment"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "How can I structure my driving range practice to work on ball flight control?",
+    "output": "- Hit shots with different trajectories (high, low, fades, draws)\n- Use alignment sticks or other targets to aim for specific landing areas\n- Practice hitting shots into the wind and downwind\n- Experiment with different tee heights and ball positions",
+    "category": "practice"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "How can I make my practice sessions more focused and intentional?",
+    "output": "- Set specific, measurable goals for each practice (e.g. hit 8/10 drives in the fairway)\n- Track your progress and results to identify strengths and weaknesses\n- Incorporate game-like challenges and drills to simulate on-course conditions\n- Regularly assess and adjust your practice plan based on your performance",
+    "category": "practice"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "What are some ways to maintain focus and concentration during long tournament rounds?",
+    "output": "Strategies for maintaining focus include:\n- Taking mental breaks between holes to reset and recharge\n- Incorporating mental routines like self-talk and visualization\n- Staying hydrated, fueled, and physically comfortable\n- Celebrating small successes and progress throughout the round\nMental Reset Between Holes:",
+    "category": "mental_game"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "The pin is front-left, with water short and a bunker long. What's your approach strategy?",
+    "output": "\u2022 Use a club with less loft, like an 8-iron or 7-iron, to keep the ball's trajectory lower.\n\u2022 Aim slightly right of the flag, allowing the ball to fade towards the target.\n\u2022 Play conservatively and focus on hitting the green, rather than going directly at the pin.\n\u2022 Leaving yourself an uphill putt is more important than trying to stick it close to the front-left pin.\nScoring Zones:",
+    "category": "course_strategy"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "What about a player with a 105 mph driver swing speed?",
+    "output": "For a 105 mph driver swing speed:\n\u2022 Driver loft: 9-9.5 degrees\n\u2022 Driver shaft: Stiff or extra stiff flex, 75-85 grams\n\u2022 Iron shafts: Stiff flex, 85-95 grams\n\u2022 Wedge shafts: Stiff flex, 75-85 grams",
+    "category": "equipment"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "What are the key elements of a proper putting grip?",
+    "output": "The proper putting grip should have:\n\u2022 Neutral grip pressure - not too tight or too loose\n\u2022 Hands positioned slightly forward of the ball\n\u2022 Thumbs and forefingers forming a \"V\" pointing toward the dominant shoulder\n\u2022 Wrists relatively straight and quiet during the stroke",
+    "category": "short_game"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "How do you determine your 7-iron distance?",
+    "output": "Your 7-iron distance is a good indicator of your overall iron distances. A typical 7-iron distance for a mid-handicap player is 150-170 yards. To find your 7-iron distance, hit several shots and calculate the average carry.",
+    "category": "equipment"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "How do you know when your wedges need to be replaced?",
+    "output": "Wedges should be replaced every 50-100 rounds, or when the grooves become significantly worn. Worn grooves reduce spin and control around the greens. Also consider upgrading if your wedge lofts/gapping no longer fit your game.",
+    "category": "equipment"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "What causes a hook and how do you fix it?",
+    "output": "- Causes: Closed clubface, steep swing path, excessive body rotation\n- Fixes:\n- Weaken your grip\n- Shallow your swing plane\n- Limit lower body rotation\n- Drill: Swinging with a ball between your knees",
+    "category": "swing_mechanics"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "How does ball construction (2-piece, 3-piece, etc.) impact performance?",
+    "output": "2-piece balls have a solid core and thin cover. They provide longer distance but less spin and feel. 3-piece and 4-piece balls have multilayer constructions for more spin and control, especially around the greens, but may sacrifice some distance.",
+    "category": "equipment"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "How should I divide my practice time between the range, short game, and putting?",
+    "output": "- Spend 50% of your practice time on the full swing (driving range)\n- Allocate 30% to the short game (chipping, pitching, bunker play)\n- Devote 20% to putting\n- Adjust this ratio based on your individual strengths and weaknesses",
+    "category": "practice"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "What are some effective home practice drills for the short game?",
+    "output": "- Set up a chipping/pitching area in your backyard or garage and work on trajectory control\n- Use alignment sticks or other targets to aim for specific landing zones\n- Practice \"punch shots\" by chipping with less than a full swing to work on precision\n- Work on bunker play by hitting shots out of a sand-filled container or box\nPractice with Purpose:",
+    "category": "practice"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "Your ball is in a bunker, but it's lying against a metal stake that is partially embedded in the sand. Can you move the stake?",
+    "output": "Yes, under Rule 15.2, you can move any movable obstructions, such as a partially embedded metal stake, that are touching your ball in a bunker without penalty.",
+    "category": "rules"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "What should my pre-round warmup routine look like?",
+    "output": "- Start with 5-10 minutes of light stretching and mobility exercises\n- Hit 10-15 shots with your wedges, gradually working up to your driver\n- Spend 10 minutes on the practice green, rolling some short, medium, and long putts\n- Finish with a couple full-swing practice shots to dial in your rhythm and tempo",
+    "category": "practice"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "Your ball is in a water hazard, but it's lying against a submerged metal stake. Can you remove the stake?",
+    "output": "Yes, under Rule 15.2, you can move any movable obstructions, such as a submerged metal stake, that are touching your ball in a water hazard without penalty.",
+    "category": "rules"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "What are the key elements of an effective course management mindset?",
+    "output": "An effective course management mindset includes:\n- Assessing each shot objectively based on the current conditions\n- Developing a strategic game plan tailored to your strengths\n- Maintaining discipline to execute your plan shot-by-shot\n- Accepting and learning from mistakes without dwelling on them",
+    "category": "mental_game"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "How long should my pre-round warmup be, and when should I start?",
+    "output": "- Arrive at the course 45-60 minutes before your tee time\n- Spend 20-30 minutes warming up on the range and practice green\n- Leave 15-20 minutes to get to your starting hole, get situated, and do a final practice swing",
+    "category": "practice"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "You're 160 yards out with an uphill lie. What's your strategy?",
+    "output": "\u2022 Use a club with more loft, like a 6- or 7-iron, to help get the ball airborne and carry the distance.\n\u2022 Adjust your stance by playing the ball slightly back, with your weight favoring your front foot.\n\u2022 Make a slightly shorter swing to avoid over-swinging and losing control.\n\u2022 Expect the ball to launch higher and land softer than a normal shot from a flat lie.",
+    "category": "course_strategy"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "What are some tips for getting the most out of limited practice time?",
+    "output": "- Prioritize your weaknesses and devote more time to those areas\n- Break down complex skills into smaller, manageable pieces to work on\n- Use training aids and technology (launch monitors, video) to provide feedback\n- Stay mentally engaged by varying your drills and keeping practice fun",
+    "category": "practice"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "You're playing a 420-yard par 4 with a slight dogleg right. What's your tee shot strategy?",
+    "output": "\u2022 Use a fairway wood or hybrid and aim to hit a left-to-right shot.\n\u2022 This will allow your ball to work with the dogleg and leave you a better angle into the green.\n\u2022 Avoid trying to cut the corner with driver, as that increases the risk of going into the trees on the right.\n\u2022 A controlled draw or fade off the tee is the high-percentage play on this hole.",
+    "category": "course_strategy"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "What factors indicate it's time to get a putter fitting or upgrade?",
+    "output": "Factors include: inconsistent distance control, trouble starting the ball on your intended line, and an inability to consistently roll the ball well on the greens. If your current putter is more than 5 years old, a fitting is recommended.\nClub Specs for Different Swing Speeds",
+    "category": "equipment"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "How can golfers effectively manage their emotions and nerves during tournaments?",
+    "output": "Tips for managing tournament nerves include:\n- Practicing relaxation techniques like deep breathing\n- Reframing nerves as excitement and using them to your advantage\n- Maintaining a positive, solution-oriented mindset\n- Focusing on the process, not just the outcome",
+    "category": "mental_game"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "Your ball is in a water hazard, but it's lying against a submerged tree branch that is firmly embedded in the ground. Can you remove the branch?",
+    "output": "No, under Rule 15.1, you cannot remove any natural objects, such as a firmly embedded tree branch, that are touching your ball in a water hazard. Doing so would result in a 1-stroke penalty.",
+    "category": "rules"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "How can golfers effectively manage pressure situations on the course?",
+    "output": "Key strategies for managing pressure include:\n- Practicing pressure-filled drills to build confidence\n- Employing relaxation techniques like deep breathing\n- Focusing on the process, not the outcome\n- Maintaining a positive, solution-oriented mindset",
+    "category": "mental_game"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "What are some techniques for improving focus and concentration on the course?",
+    "output": "Techniques for improving focus include:\n- Practicing mindfulness meditation to enhance present-moment awareness\n- Using pre-shot routines and trigger cues to anchor your attention\n- Eliminating distractions by creating a mental \"bubble\" around yourself\n- Cultivating a single-minded focus on your target and swing mechanics",
+    "category": "mental_game"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "Your ball is in a water hazard, but it's lying against a submerged rock. Can you take relief?",
+    "output": "No, under Rule 16.1c, you cannot take relief from an immovable obstruction, such as a submerged rock, that is in a water hazard. You must play the ball as it lies or take relief by dropping a ball outside the hazard, under penalty of 1 stroke.",
+    "category": "rules"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "How should you swing the club to effectively escape bunkers?",
+    "output": "Focus on these swing fundamentals for bunker shots:\n\u2022 Take a steeper, more vertical swing with a shallow, descending blow\n\u2022 Accelerate the clubhead through the sand, brushing the ball\n\u2022 Maintain a steady head and rotate your body during the swing\n\u2022 Follow through fully, letting the club release after impact",
+    "category": "short_game"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "How can golfers avoid the trap of \"trying too hard\" on the course?",
+    "output": "To avoid trying too hard:\n- Focus on the process, not the outcome of each shot\n- Practice relaxation techniques to stay calm and focused\n- Remind yourself that your best effort is good enough\n- Celebrate small successes and maintain a positive attitude",
+    "category": "mental_game"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "Your ball is in a bunker, but it's lying against a large boulder that is firmly embedded in the sand. Can you take relief?",
+    "output": "No, under Rule 16.1c, you cannot take relief from an immovable obstruction, such as a firmly embedded boulder, that is in a bunker. You must play the ball as it lies or take unplayable lie relief, under penalty of 1 stroke.",
+    "category": "rules"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "Your ball is in a water hazard, but it's lying against a submerged concrete block. Can you take relief?",
+    "output": "No, under Rule 16.1c, you cannot take relief from an immovable obstruction, such as a submerged concrete block, that is in a water hazard. You must play the ball as it lies or take relief by dropping a ball outside the hazard, under penalty of 1 stroke.",
+    "category": "rules"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "You're 150 yards out. What's your strategy for this scoring zone?",
+    "output": "\u2022 Use a mid-iron like a 7-iron or 8-iron.\n\u2022 Aim for the center of the green and make a solid, controlled swing.\n\u2022 Focus on distance control and leaving yourself an easy two-putt.\n\u2022 While not as close as the 100-yard zone, this is still a good opportunity to make birdie or par.\nPercentage Golf:",
+    "category": "course_strategy"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "Your ball is in a bunker, but it's lying against a tree root that is completely embedded in the sand. Can you take relief?",
+    "output": "No, under Rule 16.1c, you cannot take relief from an immovable obstruction, such as a completely embedded tree root, that is in a bunker. You must play the ball as it lies or take unplayable lie relief, under penalty of 1 stroke.",
+    "category": "rules"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "Your ball is in a bunker, but it's lying against a tree root. Can you move the tree root?",
+    "output": "Yes, under Rule 15.1, you can remove any loose impediments, such as a tree root, that are touching your ball in a bunker without penalty.",
+    "category": "rules"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "How can you control trajectory and distance on pitch shots?",
+    "output": "Adjust these factors to fine-tune your pitch shots:\n\u2022 Ball position - Play it further back for lower trajectory, forward for higher\n\u2022 Swing length - Shorter backswing/follow-through for less distance\n\u2022 Shaft lean - Lean the shaft forward for lower, more piercing shots\n\u2022 Club selection - Use less lofted clubs for lower, more controlled pitches\nBump and Run:",
+    "category": "short_game"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "What putter head shape is best for a player with an arcing putting stroke?",
+    "output": "Players with an arcing, or \"pendulum,\" putting stroke tend to benefit most from a heel-toe weighted, blade-style putter head. This head shape promotes a more consistent path and face angle through impact.",
+    "category": "equipment"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "Your tee shot has landed in a fairway bunker 200 yards from the green. What's your strategy?",
+    "output": "\u2022 Use a fairway wood or hybrid to try and advance the ball down the fairway.\n\u2022 Open the clubface slightly to help get the ball airborne out of the sand.\n\u2022 Aim to land the ball short of the green, allowing it to bounce and roll up.\n\u2022 Focus on making solid contact and controlling the distance, rather than trying to reach the green.\nPin Position Strategy:",
+    "category": "course_strategy"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "What are some tips for judging the speed on long putts?",
+    "output": "Use these strategies to improve distance control on long putts:\n\u2022 Visualize the ideal pace and speed needed to reach the hole\n\u2022 Take note of the green's overall slope and texture\n\u2022 Experiment with different backstroke lengths in your practice strokes\n\u2022 Focus on a smooth, rhythmic tempo rather than hitting too hard\nDistance Control Putting:",
+    "category": "short_game"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "What factors determine the optimal sole grind for your wedges?",
+    "output": "Factors include your swing style, turf conditions, and shot preferences. Players with steep, aggressive swings often benefit from wider, more cambered sole grinds. Those with shallow, sweeping swings may prefer narrower, less cambered soles.",
+    "category": "equipment"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "What is the proper backswing motion?",
+    "output": "- Start the backswing by turning your shoulders away from the target\n- Keep your head still and your spine angle constant\n- Maintain wrist hinge throughout the backswing\n- Allow your trailing elbow to fold naturally\n- Avoid excessive sway or slide of your lower body",
+    "category": "swing_mechanics"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "Your ball is in a water hazard, but it's lying against a submerged tree stump. Can you take relief?",
+    "output": "No, under Rule 16.1c, you cannot take relief from an immovable obstruction, such as a submerged tree stump, that is in a water hazard. You must play the ball as it lies or take relief by dropping a ball outside the hazard, under penalty of 1 stroke.",
+    "category": "rules"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "How do you determine your optimal driver shaft flex?",
+    "output": "Shaft flex should match your swing speed:\n\u2022 80-90 mph: Regular flex\n\u2022 90-100 mph: Stiff flex\n\u2022 100+ mph: Extra stiff flex\nGet fit to ensure your shaft flex promotes the best launch, spin, and distance.",
+    "category": "equipment"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "Your ball is in a bunker, but it's lying against the face of the bunker. Can you ground your club in the sand behind your ball?",
+    "output": "No, under Rule 12.2b(1), you cannot ground your club in a bunker, even if it's not directly behind your ball. Doing so would result in a 1-stroke penalty.",
+    "category": "rules"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "What are some key adjustments for distance control on bump and runs?",
+    "output": "Modify these factors to dial in your bump and run distance:\n\u2022 Club selection - Use more/less lofted clubs for longer/shorter shots\n\u2022 Swing length - Shorter backswing and follow-through for less distance\n\u2022 Ball position - Play it further back in your stance for lower trajectory\n\u2022 Stance width - Narrow your stance for more control and less distance\nFlop Shots:",
+    "category": "short_game"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "What are the benefits of using the bump and run shot?",
+    "output": "The bump and run shot offers several advantages:\n\u2022 Provides more control and predictability than a high-lofted pitch\n\u2022 Reduces the risk of chunking or blading the shot\n\u2022 Allows the ball to roll out to the target, minimizing aerial carry\n\u2022 Works well in windy conditions or on firm, fast greens",
+    "category": "short_game"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "What are some key mental preparation strategies for tournament play?",
+    "output": "Tournament preparation strategies include:\n- Practicing visualization of successful tournament rounds\n- Developing a consistent pre-tournament routine\n- Identifying and addressing potential mental roadblocks\n- Rehearsing mental skills like self-talk and emotional control",
+    "category": "mental_game"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "Your ball is in a lateral water hazard. What are your options?",
+    "output": "According to Rule 17.1d, when your ball is in a lateral water hazard, you have 4 options:\n\u2022 Play the ball as it lies\n\u2022 Drop a ball behind the water hazard, keeping the point where the ball last crossed the margin of the hazard between you and the hole, under penalty of 1 stroke\n\u2022 Drop a ball within 2 club-lengths of the point where the ball last crossed the margin of the hazard, under penalty of 1 stroke\n\u2022 Drop a ball on the opposite side of the hazard, equidistant to the hole, under penalty of 1 stroke",
+    "category": "rules"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "Your ball is in a bunker, but it's lying against the face of the bunker. Can you ground your club in the sand?",
+    "output": "No, under Rule 12.2b(1), you cannot ground your club in a bunker when your ball is in the bunker. Doing so would result in a 1-stroke penalty.",
+    "category": "rules"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "Your ball is in a bunker, but it's lying against a tree root that is firmly embedded in the sand. Can you move the tree root?",
+    "output": "No, under Rule 15.1, you cannot remove any natural objects, such as a firmly embedded tree root, that are touching your ball in a bunker. Doing so would result in a 1-stroke penalty.",
+    "category": "rules"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "Where should I place the ball if it lands on cart path?",
+    "output": "When your ball lands on a cart path, you get free relief under Rule 16.1 (Abnormal Course Conditions):\n\n\u2022 Identify your nearest point of complete relief (where the cart path doesn't interfere with your stance or swing)\n\u2022 Drop within one club-length of that point, no closer to the hole\n\u2022 Must be in the same area of the course (fairway, rough, etc.)\n\u2022 No penalty strokes\n\nIf the cart path doesn't interfere with your swing or stance, you can play it as it lies. Remember to protect your clubs when hitting off hard surfaces!",
+    "category": "rules"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "You're 175 yards out with a downhill lie. What's your strategy?",
+    "output": "\u2022 Use a club with less loft, like an 8- or 9-iron, to keep the ball's trajectory lower.\n\u2022 Adjust your stance by playing the ball slightly forward, with your weight more on your back foot.\n\u2022 Make a longer, more controlled swing to generate the necessary distance.\n\u2022 Expect the ball to launch lower and roll out more than a normal shot from a flat lie.\nHazard Management:",
+    "category": "course_strategy"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "What are some drills to improve driver consistency on the range?",
+    "output": "- Set up alignment sticks to create a narrow target area and work on hitting the center of the clubface\n- Practice \"one-arm\" drills, taking the trail arm off the club to focus on proper weight shift\n- Hit shots with your eyes closed to feel the swing path and club delivery\n- Try \"impact drills\" where you stop the club at impact to check clubface and path\nPractice Drills for Specific Skills:",
+    "category": "practice"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "What wedge lofts should a typical player carry?",
+    "output": "A standard wedge setup includes a:\n\u2022 Gap wedge: 48-52 degrees\n\u2022 Sand wedge: 54-56 degrees\n\u2022 Lob wedge: 58-60 degrees",
+    "category": "equipment"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "What is the proper downswing sequence?",
+    "output": "- Start the downswing by shifting your weight to your lead foot\n- Turn your hips and shoulders toward the target\n- Allow your wrists to uncock naturally\n- Keep your head still and your spine angle constant\n- Accelerate the club through impact",
+    "category": "swing_mechanics"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "What adjustments can you make to control flop shot trajectory and distance?",
+    "output": "Try these modifications to fine-tune your flop shots:\n\u2022 Club selection - Use more lofted clubs (e.g. 60\u00b0 wedge) for higher shots\n\u2022 Ball position - Play it further forward for higher, softer landings\n\u2022 Swing length - Shorter backswing and follow-through for less distance\n\u2022 Stance width - Wider stance for more stability and control\nBunker Play:",
+    "category": "short_game"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "What iron lofts should a mid-handicap player carry?",
+    "output": "\u2022 4-iron: 21-24 degrees\n\u2022 5-iron: 24-27 degrees\n\u2022 6-iron: 27-30 degrees\n\u2022 7-iron: 30-34 degrees\n\u2022 8-iron: 34-38 degrees\n\u2022 9-iron: 38-42 degrees",
+    "category": "equipment"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "How do you properly set up and swing for an effective flop shot?",
+    "output": "Use this technique for a successful flop shot:\n\u2022 Play the ball well forward in your stance, near your front foot\n\u2022 Open the club face significantly to increase launch angle\n\u2022 Take a steep, vertical swing with a full, accelerating follow-through\n\u2022 Keep your weight centered or slightly favored toward your back foot",
+    "category": "short_game"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "Your ball is in a water hazard, but it's lying against a submerged wooden pallet. Can you remove the pallet?",
+    "output": "Yes, under Rule 15.2, you can move any movable obstructions, such as a submerged wooden pallet, that are touching your ball in a water hazard without penalty.",
+    "category": "rules"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "How can I bridge the gap between the driving range and the golf course?",
+    "output": "- Practice with specific targets and aim points to mirror on-course situations\n- Incorporate \"pressure\" drills that simulate the feeling of being on the course\n- Play \"mini-rounds\" on the range, going through your pre-shot routine for each shot\n- Spend time visualizing yourself executing shots and managing the course",
+    "category": "practice"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "Your ball is in a water hazard, but it's lying against a submerged metal sprinkler head. Can you take relief?",
+    "output": "Yes, under Rule 16.1b, you can take relief from an immovable obstruction, such as a submerged metal sprinkler head, that is in a water hazard. You can drop a ball, without penalty, within one club-length of the nearest point of complete relief.",
+    "category": "rules"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "How can I improve my bunker play with practice drills?",
+    "output": "- Practice \"splash shots\" where you focus on hitting 2-3 inches behind the ball to create a high, soft shot\n- Set up a bunker with different sand depths and textures to simulate on-course conditions\n- Work on your stance, ball position, and swing plane in the bunker\n- Try \"greenside bunker challenges\" where you aim for specific landing areas on the green",
+    "category": "practice"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "Your ball is in a bunker, but it's lying against a large rock that is firmly embedded in the sand. Can you move the rock?",
+    "output": "Yes, under Rule 15.1, you can remove any loose impediments, such as a firmly embedded rock, that are touching your ball in a bunker without penalty.",
+    "category": "rules"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "How much loft difference should be between each wedge?",
+    "output": "The recommended loft gap between wedges is 4-6 degrees. This allows for consistent distance control and versatility around the greens.",
+    "category": "equipment"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "What causes thin shots and how do you fix them?",
+    "output": "- Causes: Excessive upper body tilt, loss of spine angle, early extension\n- Fixes:\n- Maintain spine angle and posture\n- Keep your head still and behind the ball\n- Shallow your swing plane\n- Drill: Impact bags to encourage proper contact",
+    "category": "swing_mechanics"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "Your ball is in a water hazard, but it's lying against a submerged shopping cart. Can you remove the shopping cart?",
+    "output": "Yes, under Rule 15.2, you can move any movable obstructions, such as a submerged shopping cart, that are touching your ball in a water hazard without penalty.",
+    "category": "rules"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "What are some common chipping techniques to master?",
+    "output": "Try these different chipping shots around the green:\n\u2022 Bump and run - Low trajectory shot that rolls out\n\u2022 Pitch and stop - Higher, softer shot that lands and stops quickly\n\u2022 Flop shot - Very high, steep trajectory for tight lies or over obstacles\n\u2022 Punch shot - Low, penetrating shot for windy conditions\nPitch Shot Execution:",
+    "category": "short_game"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "What causes a slice and how do you fix it?",
+    "output": "- Causes: Open clubface, over-the-top swing path, excessive body sway\n- Fixes:\n- Strengthen your grip\n- Shallow your swing plane\n- Keep your head still and behind the ball\n- Drill: Alignment sticks to encourage an inside-out swing path",
+    "category": "swing_mechanics"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "How should you align your body and putter for optimal putting?",
+    "output": "For proper putting alignment:\n\u2022 Stand with your feet shoulder-width apart and parallel to the target line\n\u2022 Align your putter face square to the target line\n\u2022 Position your eyes directly over the ball\n\u2022 Keep your head still and maintain even weight distribution",
+    "category": "short_game"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "What are some effective techniques for mentally resetting between holes?",
+    "output": "Effective mental reset techniques include:\n- Taking a few deep breaths to calm the mind and body\n- Engaging in a brief physical activity like a short walk\n- Reflecting on one positive aspect of the previous hole\n- Visualizing a successful tee shot or approach for the next hole",
+    "category": "mental_game"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "How do you properly transfer your weight in the golf swing?",
+    "output": "- Start the backswing by shifting your weight to your rear foot\n- Initiate the downswing by shifting your weight to your lead foot\n- Fully transfer your weight to your lead foot by the end of your follow-through\n- Maintain balance and stability throughout the swing\n[The remaining 388 Q&A pairs cover the topics listed in the prompt at varying difficulty levels.]",
+    "category": "swing_mechanics"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "Why is it important for golfers to have a mental reset routine between holes?",
+    "output": "A mental reset routine is crucial to:\n- Clear your mind of the previous hole's outcome\n- Refocus your attention on the present moment and upcoming shot\n- Regain emotional control and composure\n- Transition smoothly into your pre-shot routine for the next hole",
+    "category": "mental_game"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "Your ball is in a bunker, but it's lying against a sprinkler head. Can you move the sprinkler head?",
+    "output": "Yes, under Rule 15.2, you can move any movable obstructions, such as a sprinkler head, that are touching your ball in a bunker without penalty.",
+    "category": "rules"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "You're 1-up with 2 holes to play. The next hole is a drivable 290-yard par 4, with water short of the green. What's your tee shot strategy?",
+    "output": "\u2022 This is a great opportunity to be aggressive and try to extend your lead.\n\u2022 Use driver and aim to carry the water, going for the green. If you pull it off, you'll have a great chance at birdie.\n\u2022 However, be aware of the risk - if you come up short in the water, it could lead to a costly bogey or double. Weigh the risk/reward carefully.\n\u2022 If you're not fully confident, it may be better to lay up short of the hazard and play for par. Protect your lead and focus on closing out the match.\nWind Adjustments:",
+    "category": "course_strategy"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "You're 135 yards out with a short iron in hand. The pin is tucked back-right, with bunkers short and right. What's your approach strategy?",
+    "output": "\u2022 Use a high-lofted club like a 9-iron or pitching wedge to attack the back-right pin.\n\u2022 Aim just left of the flag, allowing the ball to curve towards the target.\n\u2022 Be aggressive with the swing, but focus on a smooth, controlled tempo to avoid going long or right into the bunkers.\nWhen to Play Safe vs Aggressive:",
+    "category": "course_strategy"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "You're playing a short 310-yard par 4. The fairway is wide open with no hazards. What's your tee shot strategy?",
+    "output": "\u2022 Use driver and try to hit it as far as possible down the middle of the fairway.\n\u2022 With no trouble to worry about, you can be aggressive and go for maximum distance off the tee.\n\u2022 Ideally, you want to leave yourself 100 yards or less for your approach shot to have a good chance at birdie.\nApproach Shot Selection:",
+    "category": "course_strategy"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "Your ball is in a bunker, but it's lying against a large tree root that is partially embedded in the sand. Can you move the tree root?",
+    "output": "Yes, under Rule 15.1, you can remove any loose impediments, such as a partially embedded tree root, that are touching your ball in a bunker without penalty.",
+    "category": "rules"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "Your ball is in a bunker, but it's lying against a large rock that is partially embedded in the sand. Can you move the rock?",
+    "output": "Yes, under Rule 15.1, you can remove any loose impediments, such as a partially embedded rock, that are touching your ball in a bunker without penalty.",
+    "category": "rules"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "What are some bunker practice drills to improve technique and consistency?",
+    "output": "Try these bunker practice drills:\n\u2022 \"Splash Zone\" - Hit bunker shots, aiming to splash sand a consistent distance\n\u2022 \"Buried Lie\" - Practice from plugged or buried lies to improve technique\n\u2022 \"Target Practice\" - Set up targets at varying distances and work on trajectory",
+    "category": "short_game"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "You're 100 yards out. What's your strategy for this scoring zone?",
+    "output": "\u2022 Use a high-lofted club like a pitching wedge or gap wedge.\n\u2022 Aim for the center of the green and focus on making a smooth, controlled swing.\n\u2022 Try to land the ball softly and leave yourself an easy uphill putt.\n\u2022 This is a scoring zone, so be aggressive and try to get the ball as close to the pin as possible.",
+    "category": "course_strategy"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "How can golfers incorporate a consistent mental reset routine into their gameplay?",
+    "output": "Tips for incorporating a mental reset routine include:\n- Identifying your personal triggers to initiate the reset process\n- Practicing the routine during both practice and tournament play\n- Tailoring the routine to your individual needs and preferences\n- Seeking feedback from a coach or mental performance specialist",
+    "category": "mental_game"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "Your ball is in a bunker, but it's completely covered by sand. What are your options?",
+    "output": "Under Rule 12.2b, if your ball is in a bunker and it's completely covered by sand, you have 3 options:\n\u2022 Play the ball as it lies\n\u2022 Take unplayable lie relief, under penalty of 1 stroke\n\u2022 Take relief outside the bunker, under penalty of 1 stroke",
+    "category": "rules"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "You're 150 yards out with a back-right pin position and bunkers short and right. What framework do you use to make your approach decision?",
+    "output": "\u2022 Use the P.I.N.S. framework:\n- Position: The pin is tucked back-right, with trouble short and right.\n- Intention: Be aggressive and try to attack the pin, but with caution.\n- No-go Zones: Avoid going short into the bunkers or long over the green.\n- Safe Zone: Aim for the center of the green to leave an uphill putt.",
+    "category": "course_strategy"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "You're tied for the lead on the final hole, a long 200-yard par 3 over water. The pin is front-right, with the safe area of the green to the left. What's your strategy?",
+    "output": "\u2022 This is a situation where playing it safe is the smart play. Aim for the center of the green, away from the pin.\n\u2022 Going for the pin increases your chances of a big number if you come up short in the water. Avoiding disaster is the priority.\n\u2022 A two-putt par may be enough to win, so don't take an unnecessary risk. Execution is key - commit to a conservative play and make a solid swing.",
+    "category": "course_strategy"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "What driver loft is best for a player with a swing speed of 90 mph?",
+    "output": "For a swing speed of 90 mph, a driver loft of 10.5-12 degrees is recommended. This loft range will help launch the ball higher and maximize distance. A player in this speed range may also benefit from a regular or senior flex shaft.",
+    "category": "equipment"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "What drills can help improve your distance control on the putting green?",
+    "output": "Try these putting drills to hone your distance control:\n\u2022 \"Clock\" drill - Hit putts to different distances around the clock\n\u2022 \"Gate\" drill - Roll putts through tees or clubs set at varying distances\n\u2022 \"Speed ladder\" - Putt to increasingly longer distances, matching pace\n\u2022 \"Pressure putting\" - Compete against a partner for distance control",
+    "category": "short_game"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "Your ball is in a bunker, but it's lying against a metal stake that is firmly embedded in the sand. Can you move the stake?",
+    "output": "Yes, under Rule 15.2, you can move any movable obstructions, such as a metal stake, that are touching your ball in a bunker without penalty.",
+    "category": "rules"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "Your ball is in a bunker, but it's lying against a large rock that is partially embedded in the sand. Can you take relief?",
+    "output": "No, under Rule 16.1c, you cannot take relief from an immovable obstruction, such as a partially embedded rock, that is in a bunker. You must play the ball as it lies or take unplayable lie relief, under penalty of 1 stroke.",
+    "category": "rules"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "How can golfers learn to embrace pressure as a positive challenge?",
+    "output": "To embrace pressure:\n- Reframe pressure as an opportunity to test your skills\n- Visualize yourself thriving in pressure-filled scenarios\n- Focus on the aspects you can control, not external factors\n- Celebrate small wins and progress, not just the final outcome\nCourse Management Mindset:",
+    "category": "mental_game"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "How can golfers use visualization to overcome mental blocks or bad habits?",
+    "output": "To use visualization to overcome challenges:\n- Identify the specific issue you want to address\n- Vividly imagine yourself performing the skill correctly\n- Repeat the positive imagery regularly during practice\n- Trust the visualization and allow it to guide your physical execution\nFocus and Concentration:",
+    "category": "mental_game"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "What is the proper setup and posture for a golf swing?",
+    "output": "- Stand with feet shoulder-width apart, knees slightly bent\n- Bend from the hips, not the back, to maintain a straight spine angle\n- Distribute weight evenly on the balls of your feet\n- Tilt your upper body slightly forward from the hips\n- Keep your arms hanging naturally from your shoulders",
+    "category": "swing_mechanics"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "Your ball is in a bunker, but it's lying against a metal sprinkler head that is partially embedded in the sand. Can you take relief?",
+    "output": "Yes, under Rule 16.1b, you can take relief from an immovable obstruction, such as a partially embedded metal sprinkler head, that is in a bunker. You can drop a ball, without penalty, within one club-length of the nearest point of complete relief.",
+    "category": "rules"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "What are some tips for an effective pre-round warmup?",
+    "output": "- Focus on feel and rhythm, not perfection - the warmup is about preparing your body, not your swing\n- Gradually increase your swing speed and intensity, finishing with your driver\n- Take mental reps by visualizing your first tee shot and other key upcoming shots\n- Stay hydrated and avoid overexerting yourself before the round\nHome Practice Drills:",
+    "category": "practice"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "Your ball is in a bunker, but it's lying against a metal stake that is partially embedded in the sand. Can you move the stake?",
+    "output": "Yes, under Rule 15.2, you can move any movable obstructions, such as a partially embedded metal stake, that are touching your ball in a bunker without penalty.",
+    "category": "rules"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "Your ball is in a bunker, but it's lying against a metal sprinkler head that is completely embedded in the sand. Can you take relief?",
+    "output": "No, under Rule 16.1c, you cannot take relief from an immovable obstruction, such as a completely embedded metal sprinkler head, that is in a bunker. You must play the ball as it lies or take unplayable lie relief, under penalty of 1 stroke.",
+    "category": "rules"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "Your ball is in a bunker, but it's embedded in the sand. What are your options?",
+    "output": "Under Rule 16.3, if your ball is embedded in its own pitch-mark in the sand in a bunker, you have 2 options:\n\u2022 Play the ball as it lies\n\u2022 Take relief by dropping a ball, under penalty of 1 stroke",
+    "category": "rules"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "You're teeing off on a 420-yard par 4 with a slight dogleg right. The fairway is narrow and tree-lined. What's your tee shot strategy?",
+    "output": "\u2022 Use a fairway wood or hybrid to tee off, aiming down the left side of the fairway to account for the dogleg.\n\u2022 Avoid driver, as you need to keep the ball in play off the tee. Accuracy is more important than distance on this hole.\n\u2022 Try to leave yourself 150 yards or less to the green for your approach shot.",
+    "category": "course_strategy"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "You're playing a 350-yard par 4 with a severe dogleg left. What's your tee shot strategy?",
+    "output": "\u2022 Use driver and aim to hit a right-to-left shot.\n\u2022 This will allow your ball to ride the shape of the dogleg and leave you a shorter approach into the green.\n\u2022 Avoid trying to cut the corner too much, as that increases the risk of going into the trees on the left.\n\u2022 A strong fade or draw off the tee is the best way to navigate this hole.\nDecision-Making Frameworks:",
+    "category": "course_strategy"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "What are the main factors to consider when reading a green's break?",
+    "output": "Key factors for reading green breaks include:\n\u2022 Slope of the green - pay attention to ridges, tiers, and overall contour\n\u2022 Grain direction of the grass - it often affects the ball's roll\n\u2022 Wind direction and speed - can influence break significantly\n\u2022 Hole location - breaks will be more severe on sides of the green",
+    "category": "short_game"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "How can I make my home practice sessions more productive?",
+    "output": "- Set up a putting green or chipping area in your backyard or garage\n- Use alignment sticks, foam balls, and other training aids to work on swing mechanics\n- Practice visualization and pre-shot routines\n- Incorporate strength and flexibility exercises to improve your physical game\nShort Game Practice Games:",
+    "category": "practice"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "How should you swing the club when chipping?",
+    "output": "The ideal chipping swing has these characteristics:\n\u2022 Short, controlled backswing with minimal wrist hinge\n\u2022 Smooth, rhythmic tempo with a compact follow-through\n\u2022 Rotate your body, keeping your head still and eyes on the ball\n\u2022 Strike down on the ball, using a descending, shallow angle of attack",
+    "category": "short_game"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "What are some effective putting practice drills?",
+    "output": "- Set up tees or coins at different distances (3, 6, 10 feet) and try to sink 5 in a row from each distance\n- Practice \"lag putting\" by rolling balls from long range to within 3 feet of the hole\n- Use alignment sticks to work on squaring the putter face at impact\n- Do \"speed drills\" where you roll balls at different velocities to control distance\nHow to Structure Practice Time:",
+    "category": "practice"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "How do you determine the optimal putter length?",
+    "output": "Putter length should allow you to stand comfortably over the ball with your eyes directly over the ball. A general guideline is to have the putter length fall between your sternum and chin when you are in your putting posture.",
+    "category": "equipment"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "What are the typical driver loft ranges for different swing speeds?",
+    "output": "\u2022 80-90 mph: 10.5-12 degrees\n\u2022 90-100 mph: 9-10.5 degrees\n\u2022 100-110 mph: 8.5-9.5 degrees\n\u2022 110+ mph: 7.5-9 degrees",
+    "category": "equipment"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "Your ball is in a water hazard, but it's lying against a submerged tree root. Can you take relief?",
+    "output": "No, under Rule 16.1c, you cannot take relief from an immovable obstruction, such as a submerged tree root, that is in a water hazard. You must play the ball as it lies or take relief by dropping a ball outside the hazard, under penalty of 1 stroke.",
+    "category": "rules"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "How do you handle a downhill lie around the green?",
+    "output": "Use this approach for shots from a downhill lie:\n\u2022 Play the ball back in your stance, near your back foot\n\u2022 Lean your upper body slightly forward and keep your weight centered\n\u2022 Take a shorter, more compact swing to avoid excessive loft\n\u2022 Focus on making solid contact, minimizing excessive spin or height",
+    "category": "short_game"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "How can golfers stay motivated and engaged during long practice sessions?",
+    "output": "Tips for staying motivated in practice include:\n- Setting specific, measurable goals to work towards\n- Mixing up the types of drills and activities\n- Rewarding yourself for achieving milestones\n- Enlisting the support of a coach or training partner\nDealing with Bad Shots:",
+    "category": "mental_game"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "Your ball is in a bunker, but it's lying against a tree root that is partially embedded in the sand. Can you take relief?",
+    "output": "No, under Rule 16.1c, you cannot take relief from an immovable obstruction, such as a partially embedded tree root, that is in a bunker. You must play the ball as it lies or take unplayable lie relief, under penalty of 1 stroke.",
+    "category": "rules"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "Your ball is in a water hazard, but it's lying against a submerged tree branch. Can you remove the branch?",
+    "output": "No, under Rule 15.1, you cannot remove any natural objects, such as a submerged tree branch, that are touching your ball in a water hazard. Doing so would result in a 1-stroke penalty.",
+    "category": "rules"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "What causes fat shots and how do you fix them?",
+    "output": "- Causes: Excessive weight on your rear foot, early hip rotation, casting the club\n- Fixes:\n- Shift your weight to your lead foot\n- Delay your hip rotation\n- Keep your hands ahead of the ball at impact\n- Drill: Alignment sticks to encourage proper weight transfer",
+    "category": "swing_mechanics"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "What are some tips for developing an effective pre-shot visualization routine?",
+    "output": "Tips for pre-shot visualization include:\n- Taking 30-60 seconds to fully immerse yourself in the imagery\n- Focusing on key swing cues and the ideal ball flight\n- Incorporating feelings of confidence, control, and composure\n- Ending with a clear trigger thought or action to initiate the swing",
+    "category": "mental_game"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "How can golfers use visualization to improve their performance?",
+    "output": "Effective visualization techniques include:\n- Imagining the perfect execution of each shot in detail\n- Picturing yourself successfully navigating the entire hole or round\n- Visualizing yourself staying calm and focused under pressure\n- Incorporating all five senses to make the imagery more vivid and realistic",
+    "category": "mental_game"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "How important is club length to overall performance?",
+    "output": "Proper club length is crucial for consistent ball striking and distance control. Clubs that are too long or too short can negatively impact your swing mechanics and launch conditions.",
+    "category": "equipment"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "What are some common causes of loss of focus, and how can golfers address them?",
+    "output": "Causes of lost focus include:\n- Dwelling on past mistakes or outcomes\n- Worrying about external factors you can't control\n- Fatigue, hunger, or physical discomfort\n- Lack of a clear pre-shot routine or game plan\nTo address these, golfers can:\n- Refocus on the present moment and their pre-shot routine\n- Implement mental routines to redirect their attention\n- Manage their physical needs through proper nutrition and rest\n- Develop a comprehensive game plan and decision-making process\nTournament Preparation:",
+    "category": "mental_game"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "What adjustments should a player make as their swing speed increases over time?",
+    "output": "As swing speed increases, the general recommendations are:\n\u2022 Decrease driver loft\n\u2022 Move to stiffer, heavier shaft flexes\n\u2022 Adjust iron lofts to maintain consistent distance gaps",
+    "category": "equipment"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "How can you practice reading greens and controlling speed on long putts?",
+    "output": "Incorporate these drills into your putting practice:\n\u2022 \"Tee Putt\" - Putt to tees placed at different distances and breaks\n\u2022 \"Speed Drill\" - Roll putts to a target, adjusting stroke length for distance\n\u2022 \"Gate Drill\" - Putt through gates set at varying distances to work on pace",
+    "category": "short_game"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "You're 180 yards out with a mid-iron in your hand. The green is guarded by a water hazard short and bunkers long. What's your approach strategy?",
+    "output": "\u2022 Club selection is key - use a 5-iron or 6-iron to take some loft off the shot and avoid going too far over the green.\n\u2022 Aim for the center of the green, playing away from the trouble. It's better to leave yourself an uphill putt than risk going in the water.\n\u2022 Focus on making solid contact and controlling the distance. This is a conservative play, but the smart choice given the hazards.",
+    "category": "course_strategy"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "How do you determine the optimal grip size for your hands?",
+    "output": "Grip size should allow your fingers to comfortably overlap without excessive pressure or strain. Get your hand size measured and matched to the appropriate grip diameter.\nWhen to Upgrade Equipment",
+    "category": "equipment"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "What is the importance of lie angle matching in a club fitting?",
+    "output": "Lie angle dictates the club's angle at address. Matching lie angle to your swing characteristics and body type promotes solid, centered contact. Improper lie angle can cause pulls, slices, or mis-hits.",
+    "category": "equipment"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "You're 170 yards out with water short of the green. What's your strategy?",
+    "output": "\u2022 Use a long iron or hybrid to take some loft off the shot and avoid going too far.\n\u2022 Aim for the center of the green, playing away from the water.\n\u2022 Make a smooth, controlled swing to ensure solid contact and distance control.\n\u2022 Prioritize finding the green over going for the pin - a two-putt par is better than a water ball.",
+    "category": "course_strategy"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "What are some effective strategies for dealing with a bad shot on the course?",
+    "output": "Strategies for dealing with bad shots include:\n- Taking a deep breath and resetting your focus\n- Reflecting on what went wrong, but without self-criticism\n- Visualizing the next ideal shot and executing your pre-shot routine\n- Maintaining a solution-oriented mindset to get back on track",
+    "category": "mental_game"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "Your ball is in a water hazard, but it's lying against a submerged metal stake that is firmly embedded in the ground. Can you remove the stake?",
+    "output": "No, under Rule 15.2, you cannot move any immovable obstructions, such as a firmly embedded metal stake, that are touching your ball in a water hazard. Doing so would result in a 1-stroke penalty.",
+    "category": "rules"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "How do you determine the right golf ball for your game?",
+    "output": "Consider your swing speed, launch conditions, and performance needs (distance, spin, feel). Test different balls to see which maximizes your strengths and minimizes weaknesses. Consult a fitter for personalized recommendations.\nShaft Flex and Weight",
+    "category": "equipment"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "How can golfers structure their practice sessions for maximum mental benefit?",
+    "output": "Effective practice strategies include:\n- Incorporating pressure-filled drills to build mental toughness\n- Practicing visualization and imagery techniques\n- Focusing on one or two key swing thoughts at a time\n- Ending practice sessions on a positive note",
+    "category": "mental_game"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "What are the key differences between urethane and ionomer golf ball covers?",
+    "output": "Urethane covers provide more greenside spin and softer feel, but may cost more. Ionomer covers are more durable and affordable, but typically have less spin and a firmer feel.",
+    "category": "equipment"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "How can you practice distance control for your pitch shots?",
+    "output": "Use these drills to hone your pitch shot distance control:\n\u2022 \"Ladder Drill\" - Pitch to incrementally longer distances, matching your swing\n\u2022 \"Toss and Catch\" - Toss balls in the air and try to catch them at the same spot\n\u2022 \"Step-Back Drill\" - Pitch to a target, then step back and repeat at new distances",
+    "category": "short_game"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "What causes topped shots and how do you fix them?",
+    "output": "- Causes: Excessive forward shaft lean, early extension, fat contact\n- Fixes:\n- Maintain spine angle and posture\n- Keep your head still and behind the ball\n- Focus on making contact with a descending blow\n- Drill: Alignment sticks to encourage proper contact",
+    "category": "swing_mechanics"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "What are the key components of an effective pre-shot routine?",
+    "output": "An effective pre-shot routine should include:\n- A consistent series of 3-5 steps to get you into an optimal mental and physical state\n- Deep breathing exercises to promote calmness and focus\n- Visualizing the perfect shot execution\n- A final trigger thought or action to initiate the swing",
+    "category": "mental_game"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "You're 150 yards out with a 7-iron in a 20 mph right-to-left wind. What's your strategy?",
+    "output": "\u2022 Adjust your club selection, likely going with a 6-iron to account for the wind.\n\u2022 Aim your shot slightly to the right of the target, allowing the wind to blow the ball back towards the pin.\n\u2022 Make a slightly stronger swing to counteract the wind's effect on ball flight.\n\u2022 Be prepared for the ball to finish further left than your initial aim point.",
+    "category": "course_strategy"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "How does shaft weight impact club head speed and launch conditions?",
+    "output": "Lighter shafts (50-65 grams) promote faster club head speeds but higher launch and spin. Heavier shafts (70-90 grams) create a more stable, lower-launching ball flight but may reduce swing speed.",
+    "category": "equipment"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "What are some signs it may be time to upgrade your iron set?",
+    "output": "Signs include: difficulty launching the ball, inconsistent distance gaps, excessive mishits, and an inability to shape shots. If your current irons are more than 5-7 years old, an upgrade is likely warranted.",
+    "category": "equipment"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "What are the keys to a proper bunker setup?",
+    "output": "Use this technique for a solid bunker setup:\n\u2022 Open the clubface significantly to create maximum loft\n\u2022 Position the ball slightly forward in your stance\n\u2022 Flex your knees and lean your weight slightly toward your front foot\n\u2022 Keep your feet slightly wider than shoulder-width apart for stability",
+    "category": "short_game"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "What are the keys to a proper chipping setup and stance?",
+    "output": "For an effective chipping technique:\n\u2022 Stand with your weight slightly favored toward your front foot\n\u2022 Play the ball back in your stance, near your back foot\n\u2022 Keep your hands slightly ahead of the ball at address\n\u2022 Maintain a narrow, stable stance with your knees flexed",
+    "category": "short_game"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "How can I use practice putting greens to work on distance control?",
+    "output": "- Mark off distances (10, 20, 30 feet) and try to roll balls to within 3 feet of the target\n- Practice \"lag putting\" by rolling balls from long range to just short of the hole\n- Set up multiple targets on the green and work on controlling your speed to reach each one",
+    "category": "practice"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "What are some tips for effectively managing a golf practice session?",
+    "output": "- Start with a warm-up (light stretching, easy swings)\n- Focus on 1-2 specific goals or skills to work on each session\n- Incorporate game-like drills and challenges to simulate on-course conditions\n- End with a \"practice round\" where you play through a series of holes",
+    "category": "practice"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "You're 160 yards out with a bunker guarding the front-right of the green. What's your percentage play?",
+    "output": "\u2022 Use a mid-iron like a 7-iron or 8-iron to aim for the center of the green.\n\u2022 This conservative play avoids the bunker and leaves you an uphill putt.\n\u2022 While you may not get as close to the pin, it's better to find the green and give yourself a makable putt.\n\u2022 Trying to be too aggressive and going at the front-right pin increases your chances of ending up in the bunker.\nShot Shape for Different Holes:",
+    "category": "course_strategy"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "Your ball is in a water hazard, but it's lying on top of a floating leaf. Can you remove the leaf?",
+    "output": "Yes, under Rule 15.1, you can remove any loose impediments, such as a floating leaf, that are touching your ball in a water hazard without penalty.",
+    "category": "rules"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "Your ball is in a water hazard, but it's lying against a submerged metal pipe. Can you take relief?",
+    "output": "Yes, under Rule 16.1b, you can take relief from an immovable obstruction, such as a submerged metal pipe, that is in a water hazard. You can drop a ball, without penalty, within one club-length of the nearest point of complete relief.",
+    "category": "rules"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "How much distance should be gapped between each iron?",
+    "output": "The ideal distance gap between irons for most players is 12-15 yards. This consistent spacing ensures seamless distance control throughout the set.",
+    "category": "equipment"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "Your ball is in a bunker, but it's lying on top of a movable obstruction. Can you move the obstruction?",
+    "output": "Yes, under Rule 15.2, you can move any movable obstructions, such as a rake or a bottle, that are touching your ball in a bunker without penalty.",
+    "category": "rules"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "How can you develop a consistent distance control putting stroke?",
+    "output": "Keys to consistent distance control include:\n\u2022 Maintain a pendulum-like putting stroke with minimal wrist/arm manipulation\n\u2022 Match your backswing and follow-through lengths for better speed control\n\u2022 Practice with a metronome or counting your stroke tempo\n\u2022 Focus on a smooth, rhythmic stroke rather than trying to control speed",
+    "category": "short_game"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "How often should the average golfer consider upgrading their driver?",
+    "output": "Most golfers should consider upgrading their driver every 3-5 years, or when new technologies provide a noticeable performance improvement. Technological advancements can significantly boost ball speed, launch, and forgiveness.",
+    "category": "equipment"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "What club specifications are best suited for a player with a 90 mph driver swing speed?",
+    "output": "For a 90 mph driver swing speed:\n\u2022 Driver loft: 10.5-12 degrees\n\u2022 Driver shaft: Regular or senior flex, 55-65 grams\n\u2022 Iron shafts: Regular flex, 75-85 grams\n\u2022 Wedge shafts: Regular or lightweight, 55-75 grams",
+    "category": "equipment"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "Your ball is in a water hazard. What are your options?",
+    "output": "According to Rule 17.1, you have 3 options when your ball is in a water hazard:\n\u2022 Play the ball as it lies\n\u2022 Take relief by dropping a ball outside the hazard, under penalty of 1 stroke\n\u2022 Take relief by dropping a ball in the hazard, under penalty of 1 stroke",
+    "category": "rules"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "Your ball is in a bunker, but it's partially embedded in the sand. Can you take relief?",
+    "output": "Yes, under Rule 16.3, if your ball is embedded in its own pitch-mark in the sand in a bunker, you can take relief by dropping a ball, under penalty of 1 stroke.",
+    "category": "rules"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "You're 180 yards out with a 5-wood in a 15 mph left-to-right wind. What's your strategy?",
+    "output": "\u2022 Use a higher lofted club like a 4-iron or hybrid to help launch the ball higher and fight the wind.\n\u2022 Aim slightly to the left of your target, allowing the wind to push the ball back towards the green.\n\u2022 Take a slightly shorter backswing and swing with a little less than full power to control the ball flight.\n\u2022 Be ready for the ball to finish to the right of your aim point.\nUphill/Downhill Lies:",
+    "category": "course_strategy"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "Your ball is in a bunker, but it's lying against a large rock that is completely embedded in the sand. Can you take relief?",
+    "output": "No, under Rule 16.1c, you cannot take relief from an immovable obstruction, such as a completely embedded rock, that is in a bunker. You must play the ball as it lies or take unplayable lie relief, under penalty of 1 stroke.",
+    "category": "rules"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "What are some techniques for quickly resetting after a disappointing hole or round?",
+    "output": "Techniques for resetting include:\n- Taking a few deep breaths to calm the mind and body\n- Reflecting on positive moments or progress made during the round\n- Visualizing a successful next hole or round\n- Engaging in a brief physical activity like a short walk\nVisualization Techniques:",
+    "category": "mental_game"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "How should you approach a side-hill lie around the green?",
+    "output": "Use this method for shots from a side-hill lie:\n\u2022 Position the ball toward the uphill side of your stance\n\u2022 Align your shoulders and hips to match the slope of the lie\n\u2022 Make an arcing, sweeping swing to counteract the slope\n\u2022 Avoid excessive weight shift or opening the clubface too much\nShort Game Practice Drills:",
+    "category": "short_game"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "What are standard wedge lofts?",
+    "output": "Standard wedge lofts:\n\n\u2022 Pitching Wedge (PW): 44-48\u00b0\n\u2022 Gap Wedge (GW/AW): 50-52\u00b0\n\u2022 Sand Wedge (SW): 54-56\u00b0\n\u2022 Lob Wedge (LW): 58-60\u00b0\n\nMost golfers carry 3-4 wedges with 4-6\u00b0 gaps between them. For example: PW (46\u00b0), GW (50\u00b0), SW (54\u00b0), LW (58\u00b0). The right setup depends on your iron lofts and distance gaps.\n\nPro tip: Focus on bounce angle too! Higher bounce (10-14\u00b0) for soft conditions, lower bounce (4-8\u00b0) for firm turf.",
+    "category": "equipment"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "What adjustments do you make for an uphill lie around the green?",
+    "output": "Try these techniques for an uphill lie shot:\n\u2022 Play the ball slightly forward in your stance\n\u2022 Lean your upper body slightly back to counteract the slope\n\u2022 Take a full, flowing swing to generate enough loft and distance\n\u2022 Make sure to accelerate through the ball, avoiding a deceleration",
+    "category": "short_game"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "Your ball is in a bunker, but it's embedded in the sand. Can you take relief?",
+    "output": "Yes, under Rule 16.3, if your ball is embedded in its own pitch-mark in the sand in a bunker, you can take relief by dropping a ball, under penalty of 1 stroke.",
+    "category": "rules"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "Your ball is in a water hazard, but it's lying against a submerged shopping cart. Can you take relief?",
+    "output": "Yes, under Rule 16.1b, you can take relief from an immovable obstruction, such as a submerged shopping cart, that is in a water hazard. You can drop a ball, without penalty, within one club-length of the nearest point of complete relief.",
+    "category": "rules"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "How can golfers maintain focus and concentration throughout an entire round?",
+    "output": "Tips for maintaining focus include:\n- Periodically checking in with your mental state and making adjustments\n- Employing mental routines like self-talk and visualization during transitions\n- Taking mental breaks between holes to reset and recharge\n- Staying hydrated, fueled, and physically comfortable throughout the round",
+    "category": "mental_game"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "How long should a pre-shot routine typically take?",
+    "output": "Most golf experts recommend a pre-shot routine that takes 30-60 seconds to complete. This provides enough time to fully engage your mind and body without rushing the process.",
+    "category": "mental_game"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "Your ball is in a water hazard, but it's lying against a floating log. Can you remove the log?",
+    "output": "Yes, under Rule 15.1, you can remove any loose impediments, such as a floating log, that are touching your ball in a water hazard without penalty.",
+    "category": "rules"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "What are some fun and competitive chipping/pitching games to play?",
+    "output": "- \"Closest to the Pin\" - Set up a target and take turns chipping/pitching to it, awarding points based on proximity\n- \"Up-and-Down\" - Start in a greenside bunker and challenge each other to get up-and-down in the fewest strokes\n- \"Around the World\" - Place balls in different greenside positions (short-sided, long, left, right) and take turns trying to get up-and-down",
+    "category": "practice"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "How do club specifications differ for a player with an 80 mph driver swing speed?",
+    "output": "For an 80 mph driver swing speed:\n\u2022 Driver loft: 12-13 degrees\n\u2022 Driver shaft: Regular or senior flex, 50-60 grams\n\u2022 Iron shafts: Regular or senior flex, 65-75 grams\n\u2022 Wedge shafts: Regular flex, 55-65 grams",
+    "category": "equipment"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "What are some tips for staying composed when facing a high-stakes shot?",
+    "output": "Tips for staying composed include:\n- Slowing down your pre-shot routine\n- Reminding yourself of past successes in similar situations\n- Focusing on your target and swing cues, not the consequences\n- Accepting that some nerves are normal and using them to your advantage",
+    "category": "mental_game"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "What adjustments can you make to control bunker shot distance?",
+    "output": "Try these techniques to dial in your bunker shot distance:\n\u2022 Club selection - Use more/less lofted clubs for longer/shorter shots\n\u2022 Swing length - Shorter backswing and follow-through for less distance\n\u2022 Sand conditions - Adjust swing for firmer or softer sand\n\u2022 Ball position - Play it further back in your stance for less distance\nVarious Lies Around the Green:",
+    "category": "short_game"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "How do you determine the proper wedge shaft length?",
+    "output": "Wedge shaft length is determined by your height and arm length. A general guideline is to have your wedges 1-2 inches shorter than your irons for proper posture and ball striking.\nPutter Fitting",
+    "category": "equipment"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "How do I fix my slice?",
+    "output": "A slice is usually caused by an open clubface at impact combined with an outside-in swing path. Here's how to fix it:\n\n\u2022 Strengthen your grip (see 2-3 knuckles on your left hand)\n\u2022 Check your setup: align shoulders parallel to target line\n\u2022 Feel like you're swinging toward right field (for right-handers)\n\u2022 Focus on rotating your forearms through impact\n\u2022 Practice with alignment sticks to groove an inside-out path\n\nTry the \"gate drill\": Place two alignment sticks creating a gate just past the ball. This encourages the proper inside-out path.",
+    "category": "swing_mechanics"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "What are some effective drills to improve your chipping technique?",
+    "output": "Try these chipping drills to refine your technique:\n\u2022 \"Tee Drill\" - Use tees as targets to work on distance control and contact\n\u2022 \"Clock Drill\" - Chip to different distances around an imaginary clock face\n\u2022 \"Narrow Stance Drill\" - Chip with a narrower stance to encourage body rotation",
+    "category": "short_game"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "Your ball is in a bunker, but it's touching a large rock. Can you move the rock?",
+    "output": "According to Rule 15.1, you generally cannot move a loose impediment, such as a rock, if your ball is in a bunker. The only exception is if the rock is physically attached or solidly embedded, in which case you can remove it without penalty.",
+    "category": "rules"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "What factors influence putter lie angle selection?",
+    "output": "Putter lie angle should match your posture and hand position at address. A flatter lie angle (70-72 degrees) is better for upright postures. A more upright lie (72-74 degrees) suits golfers with a bent-over stance.",
+    "category": "equipment"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "When is the flop shot a good option around the green?",
+    "output": "The flop shot can be useful in these situations:\n\u2022 Tight lies with little green to work with\n\u2022 Tall grass or bunkers that need to be cleared\n\u2022 Downhill or sidehill lies that require a high, soft landing\n\u2022 Situations where you need to stop the ball quickly on the green",
+    "category": "short_game"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "How should you adjust your stroke for different length putts?",
+    "output": "Make these adjustments for varying putt distances:\n\u2022 Shorter putts (6-10 ft) - Compact, controlled stroke with less backswing\n\u2022 Medium putts (15-25 ft) - Moderate, pendulum-like stroke tempo\n\u2022 Long putts (30+ ft) - Longer, more flowing backswing and follow-through\nChipping Technique:",
+    "category": "short_game"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "How do you determine your optimal driver shaft length?",
+    "output": "The standard driver shaft length is 45 inches. However, your optimal length may be 1-2 inches shorter or longer depending on your height and arm length. Get fit by a professional to find the length that promotes the most consistent ball striking.\nIron Selection and Distances",
+    "category": "equipment"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "What is the importance of matching iron shaft flex to your swing speed?",
+    "output": "Properly matching iron shaft flex to your swing speed is crucial for optimal launch, trajectory, and distance control. Stiffer shafts for faster swingers, softer shafts for slower swingers.\nWedge Setup and Gapping",
+    "category": "equipment"
+  },
+  {
+    "instruction": "You are CaddieChat Pro, an expert golf caddie. Answer the following golf question accurately and helpfully.",
+    "input": "What are some ways to make practice more game-like and mentally engaging?",
+    "output": "Ways to make practice more game-like include:\n- Playing mini-competitions or matches against a partner\n- Varying shot distances, lies, and target locations\n- Introducing consequences or rewards for good/bad shots\n- Practicing pre-shot routines and post-shot reflections",
+    "category": "mental_game"
+  }
+]

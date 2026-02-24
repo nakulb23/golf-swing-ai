@@ -9,7 +9,7 @@ sys.path.append(str(backend_root / "utils"))
 import numpy as np
 import torch
 import torch.nn.functional as F
-from physics_based_features import GolfSwingPhysicsExtractor, PhysicsBasedSwingClassifier
+from physics_based_features import GolfSwingPhysicsExtractor, PhysicsBasedSwingClassifier, validate_golf_swing
 from view_invariant_features import ViewInvariantFeatureExtractor
 from camera_angle_detector import CameraAngle
 from extract_features_robust import extract_keypoints_from_video_robust
@@ -122,7 +122,30 @@ def predict_with_multi_angle_model(video_path, model_path=None,
     except Exception as e:
         print(f"❌ Error extracting physics features: {str(e)}")
         return None
-    
+
+    # Validate that this is actually a golf swing
+    validation_result = validate_golf_swing(feature_vector, feature_names)
+    print(f"🔍 Swing validation: {validation_result['validation_summary']}")
+    print(f"   Confidence: {validation_result['swing_confidence']:.2f}")
+
+    if not validation_result['is_valid_swing']:
+        print(f"⚠️  Validation issues: {validation_result['validation_issues']}")
+        # Return validation failure result
+        return {
+            'predicted_label': 'invalid',
+            'confidence': 0.0,
+            'confidence_gap': 0.0,
+            'all_probabilities': {},
+            'camera_angle': camera_angle.value if hasattr(camera_angle, 'value') else str(camera_angle),
+            'angle_confidence': float(angle_confidence),
+            'feature_reliability': feature_weights if 'feature_weights' in dir() else {},
+            'physics_features': feature_vector,
+            'feature_names': feature_names,
+            'keypoints_shape': keypoints.shape,
+            'extraction_status': status,
+            'swing_validation': validation_result
+        }
+
     # Validate feature vector dimensions
     expected_features = 35
     if len(feature_vector) != expected_features:
@@ -224,7 +247,10 @@ def predict_with_multi_angle_model(video_path, model_path=None,
         analysis_result['quality_score'] = calculate_prediction_quality(
             confidence, angle_confidence, dimension_mismatch
         )
-        
+
+        # Add swing validation data
+        analysis_result['swing_validation'] = validation_result
+
         return analysis_result
         
     except Exception as e:

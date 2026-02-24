@@ -2658,7 +2658,7 @@ struct KinematicsAnalysisView: View {
         guard let analysis = analysisResult else { return "Complete a swing analysis to see personalized insights." }
 
         let hipLead = analysis.bodyKinematics.hipRotation.rotationTiming < analysis.bodyKinematics.shoulderRotation.rotationTiming
-        let timingDiff = abs(analysis.bodyKinematics.shoulderRotation.rotationTiming - analysis.bodyKinematics.hipRotation.rotationTiming) * 1000
+        let timingDiff = Swift.abs(analysis.bodyKinematics.shoulderRotation.rotationTiming - analysis.bodyKinematics.hipRotation.rotationTiming) * 1000
 
         if hipLead {
             return "Excellent kinematic sequence! Hip rotation leads shoulders by \(Int(timingDiff))ms, promoting optimal energy transfer."
@@ -2907,7 +2907,7 @@ struct SwingVisualization3D: View {
 
                 // Make swing path larger and more realistic
                 let swingRadius = min(size.width, size.height) * 0.35 // Use 35% of available space
-                let rotationScale = abs(rotationEffect)
+                let rotationScale = Swift.abs(rotationEffect)
 
                 // Address position - bottom center
                 let addressPoint = CGPoint(x: centerX, y: centerY + swingRadius * 0.3)
@@ -3228,7 +3228,7 @@ struct ForceAnalysisView_REMOVED: View {
 
     private func getGripPressureMeasurement() -> String {
         guard let analysis = analysisResult else { return "Variance: ±-%" }
-        let variance = Int(abs(analysis.bodyKinematics.armPositions.armExtension - 0.85) * 100)
+        let variance = Int(Swift.abs(analysis.bodyKinematics.armPositions.armExtension - 0.85) * 100)
         return "Variance: ±\(variance)%"
     }
 

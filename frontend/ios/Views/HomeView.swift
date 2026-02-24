@@ -6,7 +6,6 @@ struct HomeView: View {
     @StateObject private var premiumManager = PremiumManager.shared
     @State private var showingLogin = false
     @State private var showingSettings = false
-    @State private var animateContent = false
     @State private var showingPhysicsEnginePaywall = false
     @State private var navigateToProfile = false
     @State private var navigateToAllTools = false
@@ -353,17 +352,11 @@ struct HomeView: View {
                         
                         Spacer(minLength: 60)
                     }
-                    .opacity(animateContent ? 1.0 : 0.0)
-                    .offset(y: animateContent ? 0 : 30)
-                    .animation(.easeOut(duration: 1.0).delay(0.2), value: animateContent)
                 }
             }
             .background(Color(UIColor.systemBackground))
             .navigationTitle("")
             .navigationBarHidden(true)
-            .onAppear {
-                animateContent = true
-            }
         }
         .sheet(isPresented: $showingLogin) {
             LoginView()

@@ -220,16 +220,40 @@ struct CaddieChatView: View {
                               }
                               .id(message.id)
                           }
+
+                          // Streaming bubble: shows live LLM output while generating
+                          if chatEngine.isStreaming && !chatEngine.streamingOutput.isEmpty {
+                              StreamingChatBubble(text: chatEngine.streamingOutput)
+                                  .id("streaming_bubble")
+                                  .transition(.opacity)
+                          } else if chatEngine.isStreaming {
+                              // Show a typing indicator before first token arrives
+                              TypingIndicatorBubble()
+                                  .id("typing_bubble")
+                                  .transition(.opacity)
+                          }
                       }
                       .padding(.horizontal)
                       .padding(.bottom, 20)
                       .padding(.top, 20)
                   }
                   .onChange(of: messages.count) { _, _ in
-                      // Smooth scroll to latest message
                       if let lastMessage = messages.last {
                           withAnimation(.easeOut(duration: 0.3)) {
                               proxy.scrollTo(lastMessage.id, anchor: .bottom)
+                          }
+                      }
+                  }
+                  .onChange(of: chatEngine.streamingOutput) { _, newOutput in
+                      // Scroll to streaming bubble as tokens arrive
+                      if !newOutput.isEmpty {
+                          proxy.scrollTo("streaming_bubble", anchor: .bottom)
+                      }
+                  }
+                  .onChange(of: chatEngine.isStreaming) { _, streaming in
+                      if streaming {
+                          withAnimation(.easeOut(duration: 0.2)) {
+                              proxy.scrollTo("typing_bubble", anchor: .bottom)
                           }
                       }
                   }
@@ -239,6 +263,21 @@ struct CaddieChatView: View {
               VStack(spacing: 12) {
                   Divider()
                       .background(Color.secondary.opacity(0.3))
+
+                  // Streaming status bar — visible only while LLM is generating
+                  if chatEngine.isStreaming {
+                      HStack(spacing: 6) {
+                          ProgressView()
+                              .scaleEffect(0.65)
+                              .progressViewStyle(CircularProgressViewStyle(tint: .green))
+                          Text("CaddieChat is thinking…")
+                              .font(.caption)
+                              .foregroundColor(.secondary)
+                          Spacer()
+                      }
+                      .padding(.horizontal)
+                      .transition(.opacity)
+                  }
 
                   HStack(spacing: 12) {
                       TextField("Ask about your swing, strategy, equipment...", text: $messageText)
@@ -597,6 +636,85 @@ struct CaddieChatView: View {
       }()
   }
 
+// MARK: - Streaming Chat Bubble
+// Displayed while the LLM is generating tokens, updated progressively.
+
+struct StreamingChatBubble: View {
+    let text: String
+
+    var body: some View {
+        HStack(alignment: .bottom, spacing: 0) {
+            VStack(alignment: .leading, spacing: 6) {
+                // Live text — reuses the same styled container as PremiumChatBubble
+                VStack(alignment: .leading, spacing: 0) {
+                    Text(text)
+                        .font(.body)
+                        .foregroundColor(.primary)
+                        .lineSpacing(2)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 14)
+                }
+                .background(
+                    RoundedRectangle(cornerRadius: 18)
+                        .fill(Color(UIColor.secondarySystemBackground))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 18)
+                                .stroke(
+                                    LinearGradient(
+                                        colors: [.green.opacity(0.4), .mint.opacity(0.2)],
+                                        startPoint: .topLeading, endPoint: .bottomTrailing),
+                                    lineWidth: 1)
+                        )
+                )
+
+                // Subtle "generating" label
+                HStack(spacing: 4) {
+                    ProgressView()
+                        .scaleEffect(0.55)
+                        .progressViewStyle(CircularProgressViewStyle(tint: .green))
+                    Text("Generating…")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                }
+            }
+            Spacer(minLength: 48)
+        }
+    }
+}
+
+// MARK: - Typing Indicator Bubble
+// Three animated dots shown before the first streaming token arrives.
+
+struct TypingIndicatorBubble: View {
+    @State private var dotOpacity: [Double] = [1, 0.4, 0.1]
+
+    let timer = Timer.publish(every: 0.35, on: .main, in: .common).autoconnect()
+
+    var body: some View {
+        HStack(alignment: .bottom, spacing: 0) {
+            HStack(spacing: 5) {
+                ForEach(0..<3, id: \.self) { i in
+                    Circle()
+                        .fill(Color.secondary.opacity(dotOpacity[i]))
+                        .frame(width: 7, height: 7)
+                }
+            }
+            .padding(.horizontal, 18)
+            .padding(.vertical, 14)
+            .background(
+                RoundedRectangle(cornerRadius: 18)
+                    .fill(Color(UIColor.secondarySystemBackground))
+            )
+            .onReceive(timer) { _ in
+                withAnimation(.easeInOut(duration: 0.3)) {
+                    dotOpacity = [dotOpacity[2], dotOpacity[0], dotOpacity[1]]
+                }
+            }
+
+            Spacer(minLength: 48)
+        }
+    }
+}
 
   #Preview {
       CaddieChatView()

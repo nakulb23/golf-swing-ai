@@ -59,10 +59,10 @@ class MockCoreMLModels {
             swingType = "good_swing"
             
             // Calculate confidence based on multiple factors
-            let spineScore = max(0, 1.0 - abs(spineAngle - 25) / 25)
-            let shoulderScore = max(0, 1.0 - abs(shoulderTurn - 90) / 45)
-            let tempoScore = max(0, 1.0 - abs(tempo - 3.0) / 2.0)
-            let planeScore = max(0, 1.0 - abs(planeAngle - 45) / 20)
+            let spineScore = max(0, 1.0 - Swift.abs(spineAngle - 25) / 25)
+            let shoulderScore = max(0, 1.0 - Swift.abs(shoulderTurn - 90) / 45)
+            let tempoScore = max(0, 1.0 - Swift.abs(tempo - 3.0) / 2.0)
+            let planeScore = max(0, 1.0 - Swift.abs(planeAngle - 45) / 20)
             
             confidence = (spineScore + shoulderScore + tempoScore + planeScore) / 4.0
             confidence = max(0.6, min(0.95, confidence))
@@ -216,19 +216,19 @@ class MockCoreMLModels {
         
         // Adjust for plane angle
         let idealPlane = 45.0
-        let planeDeviation = abs(planeAngle - idealPlane)
+        let planeDeviation = Swift.abs(planeAngle - idealPlane)
         score -= planeDeviation * 0.5
         
         // Adjust for tempo
         let idealTempo = 3.0
-        let tempoDeviation = abs(tempo - idealTempo)
+        let tempoDeviation = Swift.abs(tempo - idealTempo)
         score -= tempoDeviation * 3.0
         
         // Adjust for shoulder turn
         if shoulderTurn >= 80 && shoulderTurn <= 100 {
             score += 5.0 // Bonus for good shoulder turn
         } else {
-            score -= abs(shoulderTurn - 90) * 0.2
+            score -= Swift.abs(shoulderTurn - 90) * 0.2
         }
         
         return max(40.0, min(95.0, score))

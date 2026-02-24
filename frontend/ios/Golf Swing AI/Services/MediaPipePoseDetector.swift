@@ -156,10 +156,10 @@ class MediaPipePoseDetector: ObservableObject {
     
     func detectPoseSequence(from videoURL: URL) async throws -> [MediaPipePoseResult] {
         print("🎬 Starting real Vision framework pose detection...")
-        
+
         // Use the real Vision framework implementation
-        let visionDetector = await VisionPoseDetector()
-        
+        let visionDetector = VisionPoseDetector()
+
         do {
             let results = try await visionDetector.detectPoseSequence(from: videoURL)
             print("✅ Vision framework detected \(results.count) poses")
@@ -219,10 +219,13 @@ class MediaPipePoseDetector: ObservableObject {
         print("🤖 Running custom AI pose detection...")
         
         // Try to use the GolfPoseDetector for more accurate golf-specific pose detection
-        if await MainActor.run(resultType: GolfPoseDetector?.self, body: { 
+        let hasGolfDetector = await MainActor.run {
             // Get reference to golf pose detector if available
-            return nil // Would get from a shared instance or dependency injection
-        }) != nil {
+            // Would get from a shared instance or dependency injection
+            return nil as GolfPoseDetector?
+        }
+
+        if hasGolfDetector != nil {
             // Use golf-specific pose detection
             return try await runGolfSpecificPoseDetection(image: image)
         } else {

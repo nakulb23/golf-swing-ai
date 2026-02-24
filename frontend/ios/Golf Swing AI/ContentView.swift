@@ -13,7 +13,7 @@ struct MainTabView: View {
     @State private var selectedTab = 0
     @EnvironmentObject var themeManager: ThemeManager
     @EnvironmentObject var authManager: AuthenticationManager
-    
+
     var body: some View {
         TabView(selection: $selectedTab) {
             HomeView()
@@ -29,7 +29,7 @@ struct MainTabView: View {
                     Text("Analysis")
                 }
                 .tag(1)
-            
+
             CaddieChatView()
                 .tabItem {
                     Image(systemName: selectedTab == 2 ? "message.fill" : "message")
@@ -37,14 +37,21 @@ struct MainTabView: View {
                 }
                 .tag(2)
 
+            RoundLogView()
+                .tabItem {
+                    Image(systemName: selectedTab == 3 ? "list.clipboard.fill" : "list.clipboard")
+                    Text("Round Log")
+                }
+                .tag(3)
+
             SettingsView()
                 .environmentObject(themeManager)
                 .environmentObject(authManager)
                 .tabItem {
-                    Image(systemName: selectedTab == 3 ? "gear.fill" : "gear")
+                    Image(systemName: selectedTab == 4 ? "gear.fill" : "gear")
                     Text("Settings")
                 }
-                .tag(3)
+                .tag(4)
         }
         .tint(Color("AccentColor"))
         .preferredColorScheme(themeManager.effectiveColorScheme)
@@ -56,6 +63,9 @@ struct MainTabView: View {
         }
         .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("SwitchToCaddieTab"))) { _ in
             selectedTab = 2
+        }
+        .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("SwitchToRoundLogTab"))) { _ in
+            selectedTab = 3
         }
     }
 }

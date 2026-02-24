@@ -9,6 +9,12 @@ struct SettingsView: View {
     @State private var enableHapticFeedback = true
     @State private var autoSaveVideos = false
     @State private var showingSubscriptionSheet = false
+
+    // Hidden review-mode gesture (Release builds only)
+    // Tap the Version label AppBuildConfig.reviewModeTapCount times to toggle
+    @State private var reviewTapCount = 0
+    @State private var reviewTapTimer: Timer? = nil
+    @State private var showReviewModeAlert = false
     
     private var isSubscriptionActive: Bool {
         premiumManager.hasPhysicsEnginePremium
@@ -82,33 +88,45 @@ struct SettingsView: View {
                             value: LocalAIManager.shared.isModelsLoaded ? "Ready" : "Loading..."
                         )
                     }
-                    
-                    HStack {
-                        VStack(alignment: .leading, spacing: 4) {
-                            HStack {
-                                Image(systemName: "brain.head.profile")
-                                    .foregroundColor(.blue)
-                                Text("AI Model Improvement")
-                                    .font(.subheadline)
-                                    .fontWeight(.medium)
-                            }
-                            
-                            Text("Available in future updates")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                        }
-                        
-                        Spacer()
-                        
-                        Text("Coming Soon")
-                            .font(.caption)
-                            .foregroundColor(.orange)
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 2)
-                            .background(Color.orange.opacity(0.15))
-                            .cornerRadius(4)
+
+                    NavigationLink(destination: ModelDownloadView()) {
+                        SettingsNavigationRow(
+                            icon: "message.badge.waveform",
+                            title: "CaddieChat AI Model",
+                            value: RealLLMCaddieChat.shared.isModelDownloaded ? "Downloaded" : "Not Downloaded"
+                        )
                     }
-                    .padding(.vertical, 4)
+
+                    NavigationLink(destination: FeedbackAdminView()) {
+                        HStack {
+                            VStack(alignment: .leading, spacing: 4) {
+                                HStack {
+                                    Image(systemName: "chart.bar.doc.horizontal")
+                                        .foregroundColor(.blue)
+                                    Text("Feedback & Analytics")
+                                        .font(.subheadline)
+                                        .fontWeight(.medium)
+                                }
+
+                                Text("Review user feedback synced via iCloud")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+
+                            Spacer()
+
+                            let stats = CaddieFeedbackManager.shared.getStats()
+                            if stats.totalRatings > 0 {
+                                Text("\(stats.totalRatings)")
+                                    .font(.caption)
+                                    .foregroundColor(.white)
+                                    .padding(.horizontal, 8)
+                                    .padding(.vertical, 2)
+                                    .background(Capsule().fill(Color.blue))
+                            }
+                        }
+                        .padding(.vertical, 4)
+                    }
                     
                     HStack {
                         Image(systemName: "iphone")
@@ -226,14 +244,17 @@ struct SettingsView: View {
                     }
                 }
                 
-                // MARK: - Developer Section (for testing)
+                // MARK: - Developer Section
+                // ⚠️  Compiled out entirely in Release builds via #if DEBUG.
+                // Real users never see this section.
+                #if DEBUG
                 Section("Developer") {
                     SettingsToggleRow(
                         icon: "hammer.fill",
                         title: "Development Mode",
                         isOn: $premiumManager.isDevelopmentMode
                     )
-                    .onChange(of: premiumManager.isDevelopmentMode) { oldValue, newValue in
+                    .onChange(of: premiumManager.isDevelopmentMode) { _, newValue in
                         premiumManager.setDevelopmentMode(newValue)
                     }
 
@@ -242,161 +263,54 @@ struct SettingsView: View {
                         title: "App Store Review Mode",
                         isOn: $premiumManager.isAppStoreReviewMode
                     )
-                    .onChange(of: premiumManager.isAppStoreReviewMode) { oldValue, newValue in
+                    .onChange(of: premiumManager.isAppStoreReviewMode) { _, newValue in
                         if newValue {
                             premiumManager.enableAppStoreReviewMode()
                         } else {
                             premiumManager.disableAppStoreReviewMode()
                         }
                     }
-                    
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("🔧 Developer & Review Modes")
-                            .font(.caption)
-                            .fontWeight(.semibold)
-                            .foregroundColor(.orange)
 
-                        Text("Development mode enables (DEBUG builds only):")
-                            .font(.caption)
-                            .fontWeight(.medium)
-                            .foregroundColor(.secondary)
+                    // Build config info
+                    Text(AppBuildConfig.buildDescription)
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                        .padding(.horizontal, 4)
 
-                        Text("• Testing premium features without purchase")
-                            .font(.caption2)
-                            .foregroundColor(.secondary)
-
-                        Text("• Access to Physics Engine for testing")
-                            .font(.caption2)
-                            .foregroundColor(.secondary)
-
-                        Text("• Developer debugging tools")
-                            .font(.caption2)
-                            .foregroundColor(.secondary)
-
-                        Text("\n📱 App Store Review Mode enables (ALL builds):")
-                            .font(.caption)
-                            .fontWeight(.medium)
-                            .foregroundColor(.blue)
-
-                        Text("• Premium access for Apple reviewers")
-                            .font(.caption2)
-                            .foregroundColor(.secondary)
-
-                        Text("• Works in production/archived builds")
-                            .font(.caption2)
-                            .foregroundColor(.secondary)
-
-                        Text("• Safe for App Store submission")
-                            .font(.caption2)
-                            .foregroundColor(.secondary)
-                        
-                        // Testing buttons
-                        VStack(spacing: 8) {
-                            HStack(spacing: 16) {
-                                Button(action: {
-                                    premiumManager.resetPremiumAccess()
-                                }) {
-                                    HStack {
-                                        Image(systemName: "arrow.clockwise")
-                                        Text("Reset Premium")
-                                    }
-                                    .font(.caption)
-                                    .foregroundColor(.blue)
-                                }
-                                
-                                Button(action: {
-                                    Task {
-                                        await premiumManager.testStoreKitConfiguration()
-                                    }
-                                }) {
-                                    HStack {
-                                        Image(systemName: "checkmark.circle")
-                                        Text("Test StoreKit")
-                                    }
-                                    .font(.caption)
-                                    .foregroundColor(.green)
-                                }
+                    // StoreKit test buttons
+                    VStack(spacing: 8) {
+                        HStack(spacing: 16) {
+                            Button("Reset Premium") { premiumManager.resetPremiumAccess() }
+                                .font(.caption).foregroundColor(.blue)
+                            Button("Test StoreKit") {
+                                Task { await premiumManager.testStoreKitConfiguration() }
                             }
-                            
-                            HStack(spacing: 16) {
-                                // Force reload button for stubborn StoreKit issues
-                                Button(action: {
-                                    Task {
-                                        await premiumManager.forceReloadProducts()
-                                    }
-                                }) {
-                                    HStack {
-                                        Image(systemName: "arrow.triangle.2.circlepath")
-                                        Text("Force Reload")
-                                    }
-                                    .font(.caption)
-                                    .foregroundColor(.orange)
-                                }
-                                
-                                // Simple direct test
-                                Button(action: {
-                                    Task {
-                                        await premiumManager.simpleStoreKitTest()
-                                    }
-                                }) {
-                                    HStack {
-                                        Image(systemName: "magnifyingglass")
-                                        Text("Simple Test")
-                                    }
-                                    .font(.caption)
-                                    .foregroundColor(.purple)
-                                }
-                            }
-                            
-                            HStack(spacing: 16) {
-                                // Manual StoreKit refresh with aggressive retry
-                                Button(action: {
-                                    Task {
-                                        await premiumManager.manualStoreKitRefresh()
-                                    }
-                                }) {
-                                    HStack {
-                                        Image(systemName: "wrench.and.screwdriver")
-                                        Text("Manual Refresh")
-                                    }
-                                    .font(.caption)
-                                    .foregroundColor(.red)
-                                }
-                                
-                                // StoreKit availability check
-                                Button(action: {
-                                    Task {
-                                        await premiumManager.verifyStoreKitAvailability()
-                                    }
-                                }) {
-                                    HStack {
-                                        Image(systemName: "checkmark.seal")
-                                        Text("Verify Setup")
-                                    }
-                                    .font(.caption)
-                                    .foregroundColor(.blue)
-                                }
-                            }
-                            
-                            // Health check button for comprehensive StoreKit diagnosis
-                            Button(action: {
-                                Task {
-                                    await premiumManager.quickStoreKitHealthCheck()
-                                }
-                            }) {
-                                HStack {
-                                    Image(systemName: "heart.text.square")
-                                    Text("StoreKit Health Check")
-                                }
-                                .font(.caption)
-                                .foregroundColor(.red)
-                            }
+                            .font(.caption).foregroundColor(.green)
                         }
-                        .padding(.top, 4)
+                        HStack(spacing: 16) {
+                            Button("Force Reload") {
+                                Task { await premiumManager.forceReloadProducts() }
+                            }
+                            .font(.caption).foregroundColor(.orange)
+                            Button("Simple Test") {
+                                Task { await premiumManager.simpleStoreKitTest() }
+                            }
+                            .font(.caption).foregroundColor(.purple)
+                        }
+                        HStack(spacing: 16) {
+                            Button("Manual Refresh") {
+                                Task { await premiumManager.manualStoreKitRefresh() }
+                            }
+                            .font(.caption).foregroundColor(.red)
+                            Button("Health Check") {
+                                Task { await premiumManager.quickStoreKitHealthCheck() }
+                            }
+                            .font(.caption).foregroundColor(.red)
+                        }
                     }
-                    .padding(.horizontal, 32)
-                    .padding(.bottom, 4)
+                    .padding(.vertical, 4)
                 }
+                #endif  // DEBUG — end of developer section
                 
                 // MARK: - Support Section
                 Section("Support") {
@@ -427,8 +341,59 @@ struct SettingsView: View {
                 
                 // MARK: - App Info Section
                 Section("About") {
-                    SettingsInfoRow(title: "Version", value: "1.0.0")
-                    SettingsInfoRow(title: "Build", value: "2025.1")
+                    // In Release builds, tapping the version label N times
+                    // (AppBuildConfig.reviewModeTapCount) toggles review mode.
+                    // This lets Apple reviewers unlock premium in go-live builds
+                    // without any visible UI. In DEBUG the developer section handles this.
+                    #if !DEBUG
+                    HStack {
+                        Text("Version")
+                            .font(.body)
+                        Spacer()
+                        Text(AppBuildConfig.appVersion)
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                    }
+                    .padding(.vertical, 4)
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        guard AppBuildConfig.reviewModeTapCount > 0 else { return }
+                        reviewTapCount += 1
+                        reviewTapTimer?.invalidate()
+                        if reviewTapCount >= AppBuildConfig.reviewModeTapCount {
+                            reviewTapCount = 0
+                            showReviewModeAlert = true
+                        } else {
+                            // Reset counter if no new tap within 1.5 s
+                            reviewTapTimer = Timer.scheduledTimer(withTimeInterval: 1.5, repeats: false) { _ in
+                                reviewTapCount = 0
+                            }
+                        }
+                    }
+                    .alert(
+                        premiumManager.isAppStoreReviewMode
+                            ? "Disable Review Mode?"
+                            : "Enable Review Mode?",
+                        isPresented: $showReviewModeAlert
+                    ) {
+                        Button(premiumManager.isAppStoreReviewMode ? "Disable" : "Enable") {
+                            if premiumManager.isAppStoreReviewMode {
+                                premiumManager.disableAppStoreReviewMode()
+                            } else {
+                                premiumManager.enableAppStoreReviewMode()
+                            }
+                        }
+                        Button("Cancel", role: .cancel) { }
+                    } message: {
+                        Text(premiumManager.isAppStoreReviewMode
+                             ? "Premium features will be locked until a real subscription is active."
+                             : "All premium features will be unlocked for App Store review. Current status: \(premiumManager.isAppStoreReviewMode ? "ON" : "OFF")")
+                    }
+                    #else
+                    SettingsInfoRow(title: "Version", value: AppBuildConfig.appVersion)
+                    #endif
+
+                    SettingsInfoRow(title: "Build", value: AppBuildConfig.buildNumber)
                 }
             }
             .background(Color.primaryBackgroundDynamic)

@@ -9,7 +9,7 @@ sys.path.append(str(backend_root / "utils"))
 import numpy as np
 import torch
 import torch.nn.functional as F
-from physics_based_features import GolfSwingPhysicsExtractor, PhysicsBasedSwingClassifier
+from physics_based_features import GolfSwingPhysicsExtractor, PhysicsBasedSwingClassifier, validate_golf_swing
 from extract_features_robust import extract_keypoints_from_video_robust
 import joblib
 import os
@@ -57,6 +57,27 @@ def predict_with_physics_model(video_path, model_path=None,
     except Exception as e:
         print(f"❌ Error extracting physics features: {str(e)}")
         return None
+
+    # Validate that this is actually a golf swing
+    validation_result = validate_golf_swing(feature_vector, feature_names)
+    print(f"🔍 Swing validation: {validation_result['validation_summary']}")
+    print(f"   Confidence: {validation_result['swing_confidence']:.2f}")
+
+    if not validation_result['is_valid_swing']:
+        print(f"⚠️  Validation issues: {validation_result['validation_issues']}")
+        # Return validation failure result instead of None
+        # This allows the API to return a proper error message to the user
+        return {
+            'predicted_label': 'invalid',
+            'confidence': 0.0,
+            'confidence_gap': 0.0,
+            'all_probabilities': {},
+            'physics_features': feature_vector,
+            'feature_names': feature_names,
+            'keypoints_shape': keypoints.shape,
+            'extraction_status': status,
+            'swing_validation': validation_result
+        }
     
     # Load preprocessors
     try:
@@ -173,7 +194,8 @@ def predict_with_physics_model(video_path, model_path=None,
         'physics_features': feature_vector,
         'feature_names': feature_names,
         'keypoints_shape': keypoints.shape,
-        'extraction_status': status
+        'extraction_status': status,
+        'swing_validation': validation_result
     }
 
 def compare_all_approaches(video_path):

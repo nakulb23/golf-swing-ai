@@ -1,0 +1,13 @@
+// Force dSYM generation for all Swift Package Manager dependencies
+// This fixes "Upload Symbols Failed" errors for frameworks like llama.cpp
+
+// Generate dSYM files for Release builds
+DEBUG_INFORMATION_FORMAT = dwarf-with-dsym
+
+// Ensure symbols are generated for all architectures
+STRIP_INSTALLED_PRODUCT = NO
+STRIP_STYLE = debugging
+COPY_PHASE_STRIP = NO
+
+// Include symbols in archive
+DWARF_DSYM_FOLDER_PATH = $(CONFIGURATION_BUILD_DIR)

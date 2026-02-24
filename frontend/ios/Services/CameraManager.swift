@@ -338,9 +338,10 @@ class CameraManager: NSObject, ObservableObject, @unchecked Sendable {
         // Start timer
         recordingTime = 0
         recordingTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
-            Task { @MainActor in
-                guard let self = self else { return }
-                self.recordingTime += 0.1
+            // DispatchQueue.main avoids passing 'self' as a 'sending' parameter
+            // into Task.init's isolated closure, which would trigger a Swift 6 warning.
+            DispatchQueue.main.async { [weak self] in
+                self?.recordingTime += 0.1
             }
         }
         

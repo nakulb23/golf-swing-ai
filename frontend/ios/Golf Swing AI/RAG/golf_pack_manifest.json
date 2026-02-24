@@ -1,0 +1,10 @@
+{
+  "pack_name": "caddiechat_golf_core",
+  "version": "1.0.0",
+  "created_utc": "2026-01-14T00:00:00Z",
+  "chunk_count": 421,
+  "rules_core_count": 63,
+  "embedding_model": "BAAI/bge-small-en-v1.5",
+  "embedding_dimensions": 384,
+  "notes": "Evergreen golf coaching + strategy + rules basics + terms + practice drills. Covers fundamentals, club selection, equipment concepts, course strategy, rules and etiquette, golf terminology, and practice methods."
+}

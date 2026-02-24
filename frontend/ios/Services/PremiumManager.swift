@@ -45,7 +45,19 @@ class PremiumManager: ObservableObject {
         // Start listening for transaction updates immediately at launch
         // This ensures we don't miss any successful purchases
         startTransactionUpdateListener()
-        
+
+        // ── Auto-enable review mode for App Store submissions ─────────────
+        // Controlled by AppBuildConfig.autoEnableReviewMode.
+        // When true (and in a Release build), Apple reviewers get immediate
+        // access to all premium features without purchasing.
+        // Flip AppBuildConfig.autoEnableReviewMode = false before go-live.
+        #if !DEBUG
+        if AppBuildConfig.autoEnableReviewMode {
+            enableAppStoreReviewMode()
+            print("📱 Review mode auto-enabled at launch (AppBuildConfig.autoEnableReviewMode = true)")
+        }
+        #endif
+
         // Load products immediately and retry if needed
         Task {
             print("🔄 Initial product load attempt...")
@@ -77,21 +89,27 @@ class PremiumManager: ObservableObject {
             
             // Final check and provide detailed status
             if availableProducts.isEmpty {
-                print("❌ STOREKIT CONFIGURATION ISSUE:")
                 print("❌ No products loaded after multiple attempts")
-                print("❌ This means:")
-                print("❌ 1. Xcode scheme doesn't have StoreKit configuration set properly")
-                print("❌ 2. Configuration.storekit file path issue")
-                print("❌ 3. Running on device without proper App Store Connect setup")
-                print("❌ IMMEDIATE FIX:")
-                print("❌ 1. Stop the app")
-                print("❌ 2. Clean build folder (Cmd+Shift+K)")
-                print("❌ 3. Restart Xcode")
-                print("❌ 4. Run the app again")
-                
-                // Try to validate the StoreKit configuration
                 validateStoreKitSetup()
                 await simpleStoreKitTest()
+
+                // ── Development / Simulator fallback ───────────────────────
+                // In a DEBUG build running on the simulator, StoreKit testing
+                // requires the scheme's Run → Options → StoreKit Configuration
+                // to be set.  If it isn't (common after a clean build or Xcode
+                // restart), we silently enable dev mode so work can continue.
+                #if DEBUG && targetEnvironment(simulator)
+                print("🔧 DEBUG/Simulator: StoreKit unavailable — enabling dev mode automatically")
+                print("🔧 To fix permanently: Edit Scheme → Run → Options → StoreKit Configuration → Configuration.storekit")
+                await MainActor.run {
+                    isDevelopmentMode = true
+                    hasPhysicsEnginePremium = true
+                    isSubscriptionActive = true
+                    purchaseError = nil   // suppress the scary banner
+                }
+                #else
+                print("❌ StoreKit unavailable on this device/build — check App Store Connect sandbox setup")
+                #endif
             } else {
                 print("✅ StoreKit successfully configured with \(availableProducts.count) products")
                 for product in availableProducts {
@@ -99,8 +117,10 @@ class PremiumManager: ObservableObject {
                 }
             }
         }
-        
-        checkPurchaseStatus()
+
+        Task {
+            await checkPurchaseStatus()
+        }
     }
     
     deinit {
@@ -133,8 +153,8 @@ class PremiumManager: ObservableObject {
                 await transaction.finish()
                 
                 // Update subscription status
-                checkPurchaseStatus()
-                
+                await checkPurchaseStatus()
+
                 print("✅ Premium access granted via transaction update")
             }
             
@@ -240,19 +260,20 @@ class PremiumManager: ObservableObject {
         guard let product = availableProducts.first(where: { $0.id == productID }) else {
             print("❌ Product not found: \(productID)")
             print("❌ Available: \(availableProducts.map { $0.id })")
-            if availableProducts.isEmpty {
-                print("❌ No StoreKit products available - cannot process purchase")
-                print("❌ URGENT FIX NEEDED:")
-                print("❌ 1. Stop the app completely")
-                print("❌ 2. In Xcode: Product → Scheme → Edit Scheme")
-                print("❌ 3. Run tab → Options → StoreKit Configuration")
-                print("❌ 4. Set to 'Configuration.storekit' and check the enable box")
-                print("❌ 5. Clean build (Cmd+Shift+K) and restart simulator")
-                purchaseError = "Store unavailable: StoreKit not configured. Check Xcode scheme settings in Run → Options → StoreKit Configuration."
-            } else {
-                purchaseError = "Product not found: \(productID)"
-            }
+
+            #if DEBUG && targetEnvironment(simulator)
+            // StoreKit isn't configured in the scheme — silently grant access in dev.
+            print("🔧 DEBUG/Simulator: Granting premium access without StoreKit (scheme not configured)")
+            isDevelopmentMode = true
+            hasPhysicsEnginePremium = true
+            isSubscriptionActive = true
             isLoading = false
+            #else
+            purchaseError = availableProducts.isEmpty
+                ? "Store temporarily unavailable. Please try again later."
+                : "Product not found: \(productID)"
+            isLoading = false
+            #endif
             return
         }
         
@@ -313,7 +334,7 @@ class PremiumManager: ObservableObject {
         
         do {
             try await AppStore.sync()
-            checkPurchaseStatus()
+            await checkPurchaseStatus()
         } catch {
             purchaseError = "Failed to restore purchases: \(error.localizedDescription)"
         }
@@ -321,10 +342,8 @@ class PremiumManager: ObservableObject {
         isLoading = false
     }
     
-    func checkPurchaseStatus() {
-        Task {
-            await checkSubscriptionStatus()
-        }
+    func checkPurchaseStatus() async {
+        await checkSubscriptionStatus()
     }
     
     private func checkSubscriptionStatus() async {
@@ -459,7 +478,9 @@ class PremiumManager: ObservableObject {
         isAppStoreReviewMode = false
         print("📱 App Store Review Mode disabled - Checking actual premium status")
         // Check actual purchase status
-        checkPurchaseStatus()
+        Task {
+            await checkPurchaseStatus()
+        }
     }
     
     // MARK: - Paywall Controls

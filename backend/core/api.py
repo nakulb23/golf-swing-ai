@@ -270,7 +270,24 @@ async def predict_swing(file: UploadFile = File(...)):
                 result = predict_with_physics_model(tmp_path)
             if result is None:
                 raise HTTPException(status_code=400, detail="Failed to process video with both models")
-        
+
+        # Check if swing validation failed
+        if result.get('predicted_label') == 'invalid':
+            validation = result.get('swing_validation', {})
+            validation_summary = validation.get('validation_summary', 'Unable to detect golf swing')
+            validation_issues = validation.get('validation_issues', [])
+
+            # Return a user-friendly error with details
+            error_detail = validation_summary
+            if validation_issues:
+                error_detail += f". Issues: {'; '.join(validation_issues[:3])}"  # Show up to 3 issues
+
+            print(f"❌ Swing validation failed: {error_detail}")
+            raise HTTPException(
+                status_code=400,
+                detail=f"Golf swing not detected: {error_detail}. Please upload a video showing a clear golf swing."
+            )
+
         # Try to get detailed biomechanics analysis
         detailed_result = None
         try:
@@ -312,7 +329,11 @@ async def predict_swing(file: UploadFile = File(...)):
             "extraction_status": result.get('extraction_status', 'success'),
             "analysis_type": "detailed_multi_angle" if detailed_result else ("multi_angle" if 'camera_angle' in result else "traditional"),
             "model_version": "3.0_detailed" if detailed_result else "2.0_multi_angle",
-            "has_detailed_analysis": detailed_result is not None
+            "has_detailed_analysis": detailed_result is not None,
+
+            # Swing validation data
+            "swing_validation_confidence": float(result.get('swing_validation', {}).get('swing_confidence', 1.0)),
+            "swing_validation_summary": result.get('swing_validation', {}).get('validation_summary', 'Golf swing detected')
         }
         
         return JSONResponse(content=response)

@@ -5,11 +5,20 @@ import Foundation
       static let baseURL = "https://golfai.duckdns.org:8443"
 
       struct API {
-          static let health = "/health"
-          static let chat = "/chat"
-          static let predict = "/predict"
+          static let health    = "/health"
+          static let chat      = "/chat"
+          static let predict   = "/predict"
           static let trackBall = "/track-ball"
-          static let docs = "/docs"
+          static let docs      = "/docs"
+      }
+
+      struct Auth {
+          static let register             = "/auth/register"
+          static let login                = "/auth/login"
+          static let refresh              = "/auth/refresh"
+          static let me                   = "/auth/me"
+          static let resetPasswordRequest = "/auth/reset-password/request"
+          static let resetPasswordConfirm = "/auth/reset-password/confirm"
       }
 
       struct Messages {

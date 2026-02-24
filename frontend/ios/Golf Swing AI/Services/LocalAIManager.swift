@@ -66,11 +66,11 @@ extension LocalSwingAnalyzer {
         )
         
         // Calculate angle from vertical
-        let deltaX = shoulderCenter.x - hipCenter.x
-        let deltaY = shoulderCenter.y - hipCenter.y
+        let deltaX = Double(shoulderCenter.x - hipCenter.x)
+        let deltaY = Double(shoulderCenter.y - hipCenter.y)
         let angle = atan2(deltaX, deltaY) * 180 / .pi
-        
-        return abs(angle)
+
+        return Swift.abs(angle)
     }
     
     private func calculateHipRotation(from poseData: PoseData) -> Double {
@@ -80,11 +80,11 @@ extension LocalSwingAnalyzer {
         guard let left = leftHip, let right = rightHip else { return 45.0 }
         
         // Calculate hip line angle
-        let deltaX = right.position.x - left.position.x
-        let deltaY = right.position.y - left.position.y
-        let angle = atan2(deltaY, deltaX) * 180 / .pi
-        
-        return abs(angle)
+        let deltaX = Double(right.position.x - left.position.x)
+        let deltaY = Double(right.position.y - left.position.y)
+        let angle = atan2(deltaX, deltaY) * 180 / .pi
+
+        return Swift.abs(angle)
     }
     
     private func calculateShoulderRotation(from poseData: PoseData) -> Double {
@@ -94,11 +94,11 @@ extension LocalSwingAnalyzer {
         guard let left = leftShoulder, let right = rightShoulder else { return 90.0 }
         
         // Calculate shoulder line angle
-        let deltaX = right.position.x - left.position.x
-        let deltaY = right.position.y - left.position.y
+        let deltaX = Double(right.position.x - left.position.x)
+        let deltaY = Double(right.position.y - left.position.y)
         let angle = atan2(deltaY, deltaX) * 180 / .pi
-        
-        return abs(angle)
+
+        return Swift.abs(angle)
     }
     
     private func calculateWeightTransfer(from poseData: PoseData) -> WeightTransfer {
@@ -120,8 +120,8 @@ extension LocalSwingAnalyzer {
         )
         
         // Calculate weight distribution based on hip position relative to ankles
-        let leftDist = abs(hipCenter.x - left.position.x)
-        let rightDist = abs(hipCenter.x - right.position.x)
+        let leftDist = Swift.abs(Double(hipCenter.x) - Double(left.position.x))
+        let rightDist = Swift.abs(Double(hipCenter.x) - Double(right.position.x))
         let totalDist = leftDist + rightDist
         
         let leftWeight = totalDist > 0 ? (rightDist / totalDist) * 100 : 50.0
@@ -218,10 +218,10 @@ extension LocalSwingAnalyzer {
         var armHang = 85.0 // Default
         
         if let shoulder = leftShoulder, let elbow = leftElbow {
-            let deltaX = elbow.position.x - shoulder.position.x
-            let deltaY = elbow.position.y - shoulder.position.y
+            let deltaX = Double(elbow.position.x - shoulder.position.x)
+            let deltaY = Double(elbow.position.y - shoulder.position.y)
             armHang = atan2(deltaY, deltaX) * 180 / .pi
-            armHang = abs(90 - armHang) // Convert to hang angle from vertical
+            armHang = Swift.abs(90 - armHang) // Convert to hang angle from vertical
         }
         
         // Determine posture rating based on angles
@@ -262,10 +262,12 @@ extension LocalSwingAnalyzer {
             // Calculate shaft angle from wrist line
             let wristVector = CGPoint(x: rightW.position.x - leftW.position.x,
                                      y: rightW.position.y - leftW.position.y)
-            
+
             // Calculate angle from horizontal
-            shaftAngle = atan2(wristVector.y, wristVector.x) * 180 / .pi
-            shaftAngle = abs(shaftAngle)
+            let deltaX = Double(wristVector.x)
+            let deltaY = Double(wristVector.y)
+            shaftAngle = atan2(deltaY, deltaX) * 180 / .pi
+            shaftAngle = Swift.abs(shaftAngle)
             
             // Clamp to reasonable range
             shaftAngle = min(max(shaftAngle, 20.0), 80.0)
@@ -873,9 +875,9 @@ class LocalSwingAnalyzer: ObservableObject {
         
         // Determine quality based on weight transfer pattern
         let quality: String
-        if abs(avgLeft - 50) < 10 && abs(avgRight - 50) < 10 {
+        if Swift.abs(avgLeft - 50) < 10 && Swift.abs(avgRight - 50) < 10 {
             quality = "excellent"
-        } else if abs(avgLeft - 50) < 20 && abs(avgRight - 50) < 20 {
+        } else if Swift.abs(avgLeft - 50) < 20 && Swift.abs(avgRight - 50) < 20 {
             quality = "good"
         } else {
             quality = "needs_work"
@@ -902,7 +904,7 @@ class LocalSwingAnalyzer: ObservableObject {
                         faceKeypointsCount += 1
                     }
                 case .leftShoulder, .rightShoulder:
-                    if abs(keypoint.position.x - 0.5) > 0.1 {
+                    if Swift.abs(Double(keypoint.position.x) - 0.5) > 0.1 {
                         sideKeypointsCount += 1
                     }
                 default:
@@ -1019,9 +1021,9 @@ class LocalSwingAnalyzer: ObservableObject {
                     x: rightShoulder.position.x - leftShoulder.position.x,
                     y: rightShoulder.position.y - leftShoulder.position.y
                 )
-                
-                let angle = atan2(shoulderLine.y, shoulderLine.x) * 180 / .pi
-                totalAngle += abs(Double(angle))
+
+                let angle = atan2(Double(shoulderLine.y), Double(shoulderLine.x)) * 180 / .pi
+                totalAngle += Swift.abs(angle)
                 count += 1
             }
         }
@@ -1036,7 +1038,7 @@ class LocalSwingAnalyzer: ObservableObject {
         
         for pose in golfPoses {
             let weightTransfer = pose.biomechanics.weightTransfer
-            let centeredness = abs(weightTransfer.leftPercentage - weightTransfer.rightPercentage)
+            let centeredness = Swift.abs(weightTransfer.leftPercentage - weightTransfer.rightPercentage)
             let balanceScore = max(0, 100 - centeredness * 2)
             totalBalance += balanceScore
         }
@@ -1085,18 +1087,18 @@ class LocalSwingAnalyzer: ObservableObject {
     
     private func createClubFaceAnalysis(_ avgClubfaceAngle: Double) -> ClubFaceAnalysis {
         let rating: String
-        if abs(avgClubfaceAngle) < 2.0 {
+        if Swift.abs(avgClubfaceAngle) < 2.0 {
             rating = "Square"
-        } else if abs(avgClubfaceAngle) < 5.0 {
+        } else if Swift.abs(avgClubfaceAngle) < 5.0 {
             rating = avgClubfaceAngle > 0 ? "Slightly Open" : "Slightly Closed"
         } else {
             rating = avgClubfaceAngle > 0 ? "Very Open" : "Very Closed"
         }
-        
+
         return ClubFaceAnalysis(
             face_angle_at_impact: avgClubfaceAngle,
             face_angle_rating: rating,
-            consistency_score: max(0, 100 - abs(avgClubfaceAngle) * 10),
+            consistency_score: max(0, 100 - Swift.abs(avgClubfaceAngle) * 10),
             impact_position: ImpactPosition(
                 toe_heel_impact: "Center",
                 high_low_impact: "Center",
@@ -1106,8 +1108,8 @@ class LocalSwingAnalyzer: ObservableObject {
             elite_benchmark: SwingEliteBenchmark(
                 elite_average: 0.0,
                 amateur_average: 3.5,
-                your_percentile: max(0, min(100, 100 - abs(avgClubfaceAngle) * 20)),
-                comparison_text: "Your face angle is \(String(format: "%.1f", abs(avgClubfaceAngle)))° from square"
+                your_percentile: max(0, min(100, 100 - Swift.abs(avgClubfaceAngle) * 20)),
+                comparison_text: "Your face angle is \(String(format: "%.1f", Swift.abs(avgClubfaceAngle)))° from square"
             )
         )
     }
@@ -1275,9 +1277,9 @@ class LocalSwingAnalyzer: ObservableObject {
             }
         }
         
-        // Analyze path consistency  
-        let avgAngle = pathAngles.isEmpty ? 0 : pathAngles.reduce(0, +) / Double(pathAngles.count)
-        let angleVariation = pathAngles.isEmpty ? 0 : pathAngles.map { abs($0 - avgAngle) }.reduce(0, +) / Double(pathAngles.count)
+        // Analyze path consistency
+        let avgAngle = pathAngles.isEmpty ? 0.0 : pathAngles.reduce(0, +) / Double(pathAngles.count)
+        let angleVariation = pathAngles.isEmpty ? 0.0 : pathAngles.map { Swift.abs($0 - avgAngle) }.reduce(0, +) / Double(pathAngles.count)
         
         // Determine path type and efficiency
         let pathType: String
@@ -1302,8 +1304,8 @@ class LocalSwingAnalyzer: ObservableObject {
         }
         
         // Add energy loss points based on speed consistency
-        let avgSpeed = pathSpeeds.isEmpty ? 0 : pathSpeeds.reduce(0, +) / Double(pathSpeeds.count)
-        let speedVariation = pathSpeeds.isEmpty ? 0 : pathSpeeds.map { abs($0 - avgSpeed) }.reduce(0, +) / Double(pathSpeeds.count)
+        let avgSpeed = pathSpeeds.isEmpty ? 0.0 : pathSpeeds.reduce(0, +) / Double(pathSpeeds.count)
+        let speedVariation = pathSpeeds.isEmpty ? 0.0 : pathSpeeds.map { Swift.abs($0 - avgSpeed) }.reduce(0, +) / Double(pathSpeeds.count)
         
         if speedVariation > avgSpeed * 0.3 {
             energyLossPoints.append("Inconsistent acceleration")
@@ -1322,8 +1324,8 @@ class LocalSwingAnalyzer: ObservableObject {
     
     private func generateClubFaceRecommendations(_ angle: Double) -> [String] {
         var recs: [String] = []
-        
-        if abs(angle) < 3 {
+
+        if Swift.abs(angle) < 3 {
             recs.append("Excellent clubface control")
         } else if angle > 3 {
             recs.append("Clubface is open - strengthen grip or focus on release")
@@ -1572,7 +1574,7 @@ class LocalSwingAnalyzer: ObservableObject {
         if (2.8...3.3).contains(tempo) {
             perfectScore += 0.15
         }
-        if abs(clubPath) < 3 {
+        if Swift.abs(clubPath) < 3 {
             perfectScore += 0.10
         }
         if balance > 0.8 && efficiency > 0.8 {
@@ -1660,7 +1662,7 @@ class LocalSwingAnalyzer: ObservableObject {
         if efficiency < 0.6 {
             balanceIssueScore += 0.2  // Poor overall efficiency
         }
-        if abs(spineAngle - 25) > 15 {
+        if Swift.abs(spineAngle - 25) > 15 {
             balanceIssueScore += 0.15 // Poor setup posture
         }
         
@@ -1677,7 +1679,7 @@ class LocalSwingAnalyzer: ObservableObject {
         if (2.3...3.8).contains(tempo) {
             goodScore += 0.15
         }
-        if abs(clubPath) < 8 {
+        if Swift.abs(clubPath) < 8 {
             goodScore += 0.1
         }
         if balance > 0.6 && efficiency > 0.6 {
@@ -1964,7 +1966,7 @@ class LocalSwingAnalyzer: ObservableObject {
                 
                 if distance > 0.02 { // Minimum movement threshold
                     // Calculate angle based on movement pattern
-                    let angle = atan2(abs(deltaY), abs(deltaX)) * 180 / .pi
+                    let angle = atan2(Swift.abs(deltaY), Swift.abs(deltaX)) * 180 / .pi
                     let clampedAngle = max(25, min(65, angle))
                     
                     print("🔧 Alternative calculated angle: \(String(format: "%.2f", clampedAngle))°")
@@ -2080,7 +2082,7 @@ class LocalSwingAnalyzer: ObservableObject {
             // 2. Symmetrical shoulder positioning (both shoulders at similar height)
             if let leftShoulder = pose.keypoints.first(where: { $0.type == .leftShoulder })?.position,
                let rightShoulder = pose.keypoints.first(where: { $0.type == .rightShoulder })?.position {
-                let shoulderHeightDiff = abs(leftShoulder.y - rightShoulder.y)
+                let shoulderHeightDiff = Swift.abs(Double(leftShoulder.y) - Double(rightShoulder.y))
                 if shoulderHeightDiff < 0.05 { // Very similar height = back view symmetry
                     backViewIndicators += 1
                     print("🔍 Frame \(i): Back view indicator - Symmetrical shoulders (height diff: \(String(format: "%.3f", shoulderHeightDiff)))")
@@ -2792,9 +2794,9 @@ class SwingFeatureExtractor {
     
     private struct SeededRandomGenerator {
         private var seed: UInt64
-        
+
         init(seed: Int) {
-            self.seed = UInt64(abs(seed))
+            self.seed = UInt64(Swift.abs(seed))
         }
         
         mutating func randomDouble(in range: ClosedRange<Double>) -> Double {

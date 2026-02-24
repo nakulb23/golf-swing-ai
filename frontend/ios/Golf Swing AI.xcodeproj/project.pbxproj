@@ -44,7 +44,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		11B5441795A647CB9C0275159C3B1BC5 /* Configuration.storekit */ = {isa = PBXFileReference; lastKnownFileType = text; name = Configuration.storekit; path = "Golf Swing AI.xcodeproj/project.xcworkspace/Configuration.storekit"; sourceTree = SOURCE_ROOT; };
+		11B5441795A647CB9C0275159C3B1BC5 /* Configuration.storekit */ = {isa = PBXFileReference; lastKnownFileType = text; path = Configuration.storekit; sourceTree = SOURCE_ROOT; };
 		3571F2BC2CB0D469C9DBD538 /* CameraManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraManager.swift; sourceTree = "<group>"; };
 		CFB40C452DF20678005A1B24 /* Golf Swing AI.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Golf Swing AI.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		CFB40C552DF20679005A1B24 /* Golf Swing AITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Golf Swing AITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };

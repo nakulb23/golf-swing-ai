@@ -1,3 +1,16 @@
+# Large model files (too big for GitHub)
+*.gguf
+*.bin
+
+# SSL private keys — never commit these
+ssl_certs/*.key
+ssl_certs/*.pem
+*.key
+*.pem
+
+# Auth database — contains user data, keep off version control
+backend/users.db
+
 # Xcode
 #
 # gitignore contributors: remember to update Global/Xcode.gitignore, Objective-C.gitignore & Swift.gitignore

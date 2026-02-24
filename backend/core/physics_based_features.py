@@ -436,6 +436,197 @@ class PhysicsBasedSwingClassifier(nn.Module):
     def forward(self, x):
         return self.feature_processor(x)
 
+
+def validate_golf_swing(feature_vector, feature_names):
+    """
+    Validate if the extracted features represent a golf swing.
+
+    Returns:
+        dict with:
+        - is_valid_swing: bool
+        - swing_confidence: float (0-1)
+        - validation_issues: list of strings describing issues
+        - validation_details: dict with detailed scores
+    """
+
+    # Create feature dictionary for easy access
+    features = dict(zip(feature_names, feature_vector))
+
+    validation_issues = []
+    scores = {}
+
+    # 1. VELOCITY PATTERN CHECK
+    # Golf swings have characteristic acceleration - hands accelerate through impact
+    max_velocity = features.get('max_velocity', 0)
+    avg_velocity = features.get('avg_velocity', 0)
+
+    # Minimum motion threshold - must have significant movement
+    if max_velocity < 0.01:
+        validation_issues.append("Insufficient motion detected - no swing movement found")
+        scores['velocity_score'] = 0.0
+    elif max_velocity < 0.03:
+        validation_issues.append("Very low hand velocity - may not be a full swing")
+        scores['velocity_score'] = 0.3
+    else:
+        # Good velocity indicates actual swing motion
+        velocity_ratio = max_velocity / (avg_velocity + 0.001)
+        if velocity_ratio > 1.5:  # Peak should be significantly higher than average
+            scores['velocity_score'] = min(1.0, velocity_ratio / 3.0)
+        else:
+            scores['velocity_score'] = 0.5
+            validation_issues.append("Velocity pattern inconsistent with golf swing")
+
+    # 2. RANGE OF MOTION CHECK
+    # Golf swings require significant arm movement through an arc
+    total_path_length = features.get('total_path_length', 0)
+    swing_width = features.get('swing_width', 0)
+    swing_height = features.get('swing_height', 0)
+
+    if total_path_length < 0.3:
+        validation_issues.append("Insufficient range of motion for golf swing")
+        scores['motion_score'] = 0.2
+    elif total_path_length < 0.8:
+        scores['motion_score'] = 0.5
+        validation_issues.append("Limited range of motion - partial swing or chip")
+    else:
+        scores['motion_score'] = min(1.0, total_path_length / 2.0)
+
+    # Check swing arc proportions
+    if swing_width > 0 and swing_height > 0:
+        aspect_ratio = swing_height / swing_width
+        # Golf swing should have reasonable height-to-width ratio
+        if aspect_ratio < 0.3 or aspect_ratio > 3.0:
+            validation_issues.append("Swing arc proportions inconsistent with golf swing")
+            scores['arc_score'] = 0.3
+        else:
+            scores['arc_score'] = 0.8
+    else:
+        scores['arc_score'] = 0.2
+        validation_issues.append("Could not determine swing arc shape")
+
+    # 3. BODY ROTATION CHECK
+    # Golf swings require shoulder and hip rotation
+    max_shoulder_turn = features.get('max_shoulder_turn', 0)
+    max_hip_turn = features.get('max_hip_turn', 0)
+
+    if max_shoulder_turn < 20:
+        validation_issues.append("Insufficient shoulder rotation for golf swing")
+        scores['shoulder_score'] = 0.2
+    elif max_shoulder_turn < 50:
+        scores['shoulder_score'] = 0.5
+    else:
+        scores['shoulder_score'] = min(1.0, max_shoulder_turn / 100.0)
+
+    if max_hip_turn < 10:
+        validation_issues.append("Insufficient hip rotation for golf swing")
+        scores['hip_score'] = 0.2
+    elif max_hip_turn < 25:
+        scores['hip_score'] = 0.5
+    else:
+        scores['hip_score'] = min(1.0, max_hip_turn / 50.0)
+
+    # 4. SWING PLANE CONSISTENCY
+    # Golf swings should have a relatively consistent plane
+    plane_consistency = features.get('plane_consistency', 0)
+    swing_plane_consistency = features.get('swing_plane_consistency', 0)
+
+    avg_consistency = (plane_consistency + swing_plane_consistency) / 2
+    if avg_consistency < 0.3:
+        validation_issues.append("Erratic movement pattern - not a controlled golf swing")
+        scores['consistency_score'] = 0.2
+    elif avg_consistency < 0.5:
+        scores['consistency_score'] = 0.5
+    else:
+        scores['consistency_score'] = min(1.0, avg_consistency)
+
+    # 5. SWING PLANE ANGLE CHECK
+    # Golf swing plane should be in reasonable range (30-70 degrees from vertical)
+    avg_plane_angle = features.get('avg_plane_angle', 45)
+
+    if avg_plane_angle < 20 or avg_plane_angle > 80:
+        validation_issues.append(f"Swing plane angle ({avg_plane_angle:.1f}°) outside golf swing range")
+        scores['plane_angle_score'] = 0.2
+    elif avg_plane_angle < 30 or avg_plane_angle > 70:
+        scores['plane_angle_score'] = 0.6
+    else:
+        scores['plane_angle_score'] = 0.9
+
+    # 6. IMPACT TIMING CHECK
+    # Peak velocity should occur in the later portion of the swing (downswing/impact)
+    impact_timing = features.get('impact_timing', 0.5)
+
+    if impact_timing < 0.3:
+        validation_issues.append("Peak velocity too early - not a golf swing pattern")
+        scores['timing_score'] = 0.2
+    elif impact_timing < 0.4 or impact_timing > 0.9:
+        scores['timing_score'] = 0.5
+    else:
+        # Good timing - impact in expected range
+        scores['timing_score'] = 0.9
+
+    # 7. BALANCE CHECK
+    # Golfers maintain reasonable balance during swing
+    balance_stability = features.get('balance_stability', 0)
+
+    if balance_stability < 0.2:
+        validation_issues.append("Poor balance - excessive body movement")
+        scores['balance_score'] = 0.3
+    else:
+        scores['balance_score'] = min(1.0, balance_stability * 1.5)
+
+    # Calculate overall swing confidence
+    weights = {
+        'velocity_score': 0.20,
+        'motion_score': 0.20,
+        'arc_score': 0.10,
+        'shoulder_score': 0.10,
+        'hip_score': 0.10,
+        'consistency_score': 0.10,
+        'plane_angle_score': 0.05,
+        'timing_score': 0.10,
+        'balance_score': 0.05
+    }
+
+    swing_confidence = sum(scores.get(key, 0) * weight for key, weight in weights.items())
+
+    # Determine if valid swing
+    # Require minimum confidence and no critical issues
+    critical_issues = [
+        "Insufficient motion detected",
+        "Erratic movement pattern"
+    ]
+
+    has_critical_issue = any(
+        any(critical in issue for critical in critical_issues)
+        for issue in validation_issues
+    )
+
+    # Valid if confidence > 0.4 and no critical issues
+    is_valid_swing = swing_confidence > 0.4 and not has_critical_issue
+
+    # Generate summary message
+    if is_valid_swing:
+        if swing_confidence > 0.7:
+            summary = "High confidence golf swing detected"
+        elif swing_confidence > 0.5:
+            summary = "Golf swing detected with moderate confidence"
+        else:
+            summary = "Possible golf swing detected - low confidence"
+    else:
+        if has_critical_issue:
+            summary = "Video does not appear to contain a golf swing"
+        else:
+            summary = "Unable to confirm golf swing - please ensure video shows a clear golf swing"
+
+    return {
+        'is_valid_swing': is_valid_swing,
+        'swing_confidence': float(swing_confidence),
+        'validation_issues': validation_issues,
+        'validation_details': scores,
+        'validation_summary': summary
+    }
+
+
 def process_dataset_with_physics_features(data_dir, output_file="physics_features.npz"):
     """Process a dataset to extract physics-based features"""
     
